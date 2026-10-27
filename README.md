@@ -44,3 +44,15 @@ Full list: `LICENSES.md`.
 ## Tested laptops
 
 ## Architecture
+
+### HTTP API (`backend/app/api/routes.py`)
+
+| Method and path | What it does |
+|---|---|
+| `POST /api/lessons` `{topic, level, language, target_seconds}` | queues a lesson (one runs at a time), returns `{job_id, ...status}` |
+| `GET /api/lessons/{id}` | status: `stage` (plan, translate, voice, timing, export, done), `progress`, `fallback_used`, `timings`, `timeline_ready`, `mp4_ready` |
+| `GET /api/lessons/{id}/events` | the same status as Server-Sent Events, until the job is done or failed |
+| `POST /api/lessons/{id}/export` | retry the MP4 export (the lesson keeps playing if export fails) |
+| `GET /api/lessons/{id}/lesson` | the lesson plan, with `meta.fallback`, `meta.source`, `meta.reason` |
+
+Results (`timeline.json`, `lesson.wav`, `lesson.mp4`, `captions.srt`) are served under `/media/lessons/{id}/`.

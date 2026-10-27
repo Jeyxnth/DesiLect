@@ -20,8 +20,8 @@ from .jobs import JOBS, ConceptRequest
 
 log = logging.getLogger("blu.pipeline")
 
-# (stage, progress when the stage starts); progress is 1.0 when everything is done
-STAGES = (("plan", 0.0), ("translate", 0.3), ("narrate", 0.35), ("export", 0.6))
+# Progress when each stage starts; the UI labels them Planning, Translating, Voicing, Timing, Exporting.
+STAGE_PROGRESS = {"plan": 0.0, "translate": 0.3, "voice": 0.35, "timing": 0.55, "export": 0.6, "done": 1.0}
 MAX_ATTEMPTS = 2
 
 # Planner failure -> the sentence the user sees in the fallback notice
@@ -124,14 +124,10 @@ def run_pipeline(
     server is started for the export. TODO(step 8): real translation; TODO(step 9): Tamil TTS.
     """
     job = JOBS.get(job_id)
-    if job is None:
+    if job is None or job.request is None:
         return
     req = job.request
     out_dir = lesson_dir(job_id)
-
-    def status(stage: str, progress: float) -> None:
-        JOBS.update(job_id, stage=stage, progress=progress)
-        write_json(out_dir / "status.json", JOBS.get(job_id).public()["status"])  # type: ignore[union-attr]
 
     def note_fallback(lesson: dict[str, Any]) -> None:
         meta = lesson.get("meta", {})
@@ -140,43 +136,66 @@ def run_pipeline(
 
     JOBS.update(job_id, state="running")
     try:
-        status("plan", 0.0)
+        _status(job_id, "plan")
         with timed_stage(job_id, "plan"):
             lesson, plan_meta = plan_lesson(req.topic, req.level, req.target_seconds, job_id, client)
         note_fallback(lesson)
         write_json(out_dir / "plan_meta.json", plan_meta)
 
         if req.language != "en":
-            status("translate", 0.3)
+            _status(job_id, "translate")
             with timed_stage(job_id, "translate"):
                 lesson = translate_lesson(lesson, req.language)  # falls back to the pre-translated sample (G2)
             note_fallback(lesson)
         write_json(out_dir / "lesson.json", lesson)
 
-        status("narrate", 0.35)
         with timed_stage(job_id, "narrate"):
-            build_timeline(lesson, req.language, out_dir)
+            build_timeline(lesson, req.language, out_dir, on_stage=lambda stage: _status(job_id, stage))
         JOBS.update(job_id, timeline_ready=True)  # the player can open the lesson now
     except Exception as exc:  # noqa: BLE001 - report on the job instead of crashing the worker
         log.exception("pipeline failed")
+        _status(job_id, "done")
         JOBS.update(job_id, state="failed", error=str(exc))
         return
 
     if export:
-        status("export", 0.6)
-        try:  # the lesson already plays in the browser, so a failed MP4 is not a failed job
-            ensure_frontend_built()
-            if base_url:
-                export_lesson(job_id, base_url)
-            else:
-                with local_server() as url:
-                    export_lesson(job_id, url)
-            JOBS.update(job_id, mp4_ready=True)
-        except Exception as exc:  # noqa: BLE001
-            log.exception("export failed")
-            JOBS.update(job_id, export_error=str(exc))
-    status("done", 1.0)
+        export_job(job_id, base_url)
+    else:
+        _status(job_id, "done")
+        JOBS.update(job_id, state="done")
+
+
+def run_job(job_id: str, request: ConceptRequest | None = None) -> None:
+    """Entry point the API queues (the step-5 name). The request is already stored on the job."""
+    run_pipeline(job_id)
+
+
+def export_job(job_id: str, base_url: str | None = None) -> None:
+    """Export the MP4 for a lesson whose timeline is ready (also used by Retry export). Never raises.
+
+    The lesson already plays in the browser, so a failed MP4 is recorded as export_error, not a failed job.
+    """
+    JOBS.update(job_id, state="running", export_error=None, mp4_ready=False)
+    _status(job_id, "export")
+    try:
+        ensure_frontend_built()
+        if base_url:
+            export_lesson(job_id, base_url)
+        else:
+            with local_server() as url:
+                export_lesson(job_id, url)
+        JOBS.update(job_id, mp4_ready=True)
+    except Exception as exc:  # noqa: BLE001
+        log.exception("export failed")
+        JOBS.update(job_id, export_error=str(exc))
+    _status(job_id, "done")
     JOBS.update(job_id, state="done")
+
+
+def _status(job_id: str, stage: str) -> None:
+    """Move the job to a stage and mirror its status to outputs/lessons/<id>/status.json."""
+    JOBS.set_stage(job_id, stage, STAGE_PROGRESS[stage])
+    write_json(lesson_dir(job_id) / "status.json", JOBS.get(job_id).public()["status"])  # type: ignore[union-attr]
 
 
 def main(argv: list[str] | None = None) -> int:

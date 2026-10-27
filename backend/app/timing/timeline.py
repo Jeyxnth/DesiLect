@@ -6,7 +6,7 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import numpy as np
 import soundfile as sf
@@ -91,12 +91,16 @@ def build_timeline(
     voice: str | None = None,
     speed: float = 1.0,
     use_cache: bool = True,
+    on_stage: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     """Synthesise narration and write the lesson's audio, timeline and captions.
 
     Writes out_dir/audio/s{scene}_{k}.wav, lesson.wav, timeline.json, captions.srt, timings.json
     and returns the timeline dict (validated against shared/schema/timeline.schema.json).
+    on_stage is told "voice" before synthesis and "timing" before the timeline is assembled.
     """
+    if on_stage:
+        on_stage("voice")
     out_dir = Path(out_dir)
     (out_dir / "audio").mkdir(parents=True, exist_ok=True)
     gap = round(SENTENCE_GAP_S * SAMPLE_RATE)
@@ -137,6 +141,8 @@ def build_timeline(
     finally:
         release_all()  # unload the model right after the stage (H3)
 
+    if on_stage:
+        on_stage("timing")
     wav = np.zeros(cursor, dtype=np.float32)
     for start, audio in placed:
         wav[start : start + len(audio)] = audio

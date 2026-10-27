@@ -48,8 +48,11 @@ function useWidth(ref: React.RefObject<HTMLElement>): number {
   return w;
 }
 
-/** Interactive player: audio drives the clock; controls seek by scene. */
-export default function Player({ timeline }: { timeline: Timeline }) {
+/**
+ * Interactive player: audio drives the clock; controls seek by scene.
+ * autoplay starts playback on mount (the browser may still refuse it; then Play works as usual).
+ */
+export default function Player({ timeline, autoplay = false }: { timeline: Timeline; autoplay?: boolean }) {
   const [audioFailed, setAudioFailed] = useState(false);
   const clock = useMemo<Clock>(() => {
     if (audioFailed) return new ManualClock(); // no audio: scrubbing only
@@ -60,6 +63,9 @@ export default function Player({ timeline }: { timeline: Timeline }) {
     return new AudioClock(audio);
   }, [timeline, audioFailed]);
   useEffect(() => () => clock.pause(), [clock]);
+  useEffect(() => {
+    if (autoplay) clock.play();
+  }, [clock, autoplay]);
 
   const { t, playing } = useClock(clock);
   const fitRef = useRef<HTMLDivElement>(null);

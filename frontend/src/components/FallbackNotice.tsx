@@ -3,7 +3,7 @@ export default function FallbackNotice({ reason, source, topic }: { reason?: str
   const sample = source?.startsWith("sample:") ? sampleLabel(source.slice("sample:".length)) : null;
   return (
     <div className="fallback-notice" role="status">
-      <strong>⚠ Showing a built-in sample lesson, not a newly generated one</strong>
+      <strong>⚠ Fallback lesson used: a built-in sample, not a newly generated lesson</strong>
       <p>{reason ?? "The lesson could not be generated."}</p>
       <p>
         {topic && <>You asked for: “{topic}”. </>}

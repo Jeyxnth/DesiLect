@@ -1,76 +1,67 @@
 import { useEffect, useState } from "react";
-import { getJob, getLesson, mp4Exists } from "../api/jobs";
+import { getLesson, retryExport, watchStatus, type Job } from "../api/jobs";
 import FallbackNotice from "../components/FallbackNotice";
 import { loadTimeline } from "../player/loadTimeline";
 import Player from "../player/Player";
+import { navState, navigate } from "../router";
 import type { Lesson, Timeline } from "../types/lesson";
 
-const POLL_MS = 2000;
-
-type Mp4State = { kind: "checking" } | { kind: "exporting" } | { kind: "ready" } | { kind: "missing"; error?: string };
-
-/** /lesson/:id: loads the timeline and plays it; shows the fallback notice and the MP4 when it is ready. */
+/** /lesson/:id: plays the lesson; shows the fallback notice, MP4 export status and downloads. */
 export default function PlayerPage({ id }: { id: string }) {
   const [timeline, setTimeline] = useState<Timeline | null>(null);
   const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState("");
-  const [mp4, setMp4] = useState<Mp4State>({ kind: "checking" });
+  const [watch, setWatch] = useState(0); // bump to follow the status again (after Retry export)
+  const [autoplay] = useState(() => navState().autoplay === true);
 
   useEffect(() => {
-    setTimeline(null);
-    setLesson(null);
-    setError("");
     loadTimeline(id).then(setTimeline).catch((e: Error) => setError(e.message));
     getLesson(id).then(setLesson).catch(() => setLesson(null));
   }, [id]);
 
-  // Follow the export: poll the job while it runs; without a job (samples, restarted server) just look for the file.
-  useEffect(() => {
-    let stopped = false;
-    let timer = 0;
-    const check = async () => {
-      try {
-        const job = await getJob(id);
-        if (stopped) return;
-        if (!job) {
-          setMp4((await mp4Exists(id)) ? { kind: "ready" } : { kind: "missing" });
-        } else if (job.status.mp4_ready) {
-          setMp4({ kind: "ready" });
-        } else if (job.state === "done" || job.state === "failed") {
-          setMp4({ kind: "missing", error: job.export_error ?? job.error ?? undefined });
-        } else {
-          setMp4({ kind: "exporting" });
-          timer = window.setTimeout(check, POLL_MS);
-        }
-      } catch {
-        if (!stopped) setMp4({ kind: "missing" });
-      }
-    };
-    void check();
-    return () => {
-      stopped = true;
-      window.clearTimeout(timer);
-    };
-  }, [id]);
+  useEffect(() => watchStatus(id, setJob, () => setJob(null)), [id, watch]);
+
+  const retry = async () => {
+    try {
+      setJob(await retryExport(id));
+      setWatch((n) => n + 1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
 
   const media = `/media/lessons/${encodeURIComponent(id)}`;
+  const status = job?.status;
+  const exporting = job !== null && !status?.mp4_ready && !job.export_error && (job.state === "running" || job.state === "queued");
+  const fallback = lesson?.meta?.fallback ? lesson.meta : null;
+
   return (
     <div className="page">
       <header className="player-header">
         <h1>{lesson?.title ?? "Lesson"}</h1>
-        <a href="/">New lesson</a>
+        <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>New lesson</a>
       </header>
-      {lesson?.meta?.fallback && <FallbackNotice reason={lesson.meta.reason} source={lesson.meta.source} topic={lesson.meta.topic} />}
+      {fallback && <FallbackNotice reason={fallback.reason} source={fallback.source} topic={fallback.topic} />}
       {error && <p className="error" role="alert">{error}</p>}
-      {timeline ? <Player key={timeline.lesson_id} timeline={timeline} /> : !error && <p>Loading...</p>}
+      {timeline ? <Player key={timeline.lesson_id} timeline={timeline} autoplay={autoplay} /> : !error && <p>Loading...</p>}
       {timeline && (
-        <p className="downloads">
-          {mp4.kind === "ready" && <a href={`${media}/lesson.mp4`} download={`${id}.mp4`}>Download MP4</a>}
-          {mp4.kind === "exporting" && <span className="muted">Exporting the MP4 (about 40 s)...</span>}
-          {mp4.kind === "missing" && <span className="muted">MP4 not available{mp4.error ? `: ${mp4.error}` : ""}</span>}
+        <div className="downloads">
+          {status?.mp4_ready ? (
+            <a className="button" href={`${media}/lesson.mp4`} download={`${id}.mp4`}>Download MP4</a>
+          ) : (
+            <button type="button" className="button" disabled>
+              {exporting ? `Exporting MP4... ${Math.round(status?.timings.export ?? 0)} s` : "Download MP4"}
+            </button>
+          )}
+          {job?.export_error && (
+            <button type="button" className="button" onClick={retry}>Retry export</button>
+          )}
           <a href={`${media}/captions.srt`} download={`${id}.srt`}>Download captions (.srt)</a>
-        </p>
+        </div>
       )}
+      {job?.export_error && <p className="error" role="alert">MP4 export failed: {job.export_error}. The lesson still plays here.</p>}
+      {timeline && !job && <p className="muted downloads">MP4 status unavailable.</p>}
     </div>
   );
 }

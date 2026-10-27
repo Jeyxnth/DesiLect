@@ -1,21 +1,29 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { createLesson, getJob, type Job } from "../api/jobs";
+import { useEffect, useState, type FormEvent } from "react";
+import { createLesson, watchStatus, type Job } from "../api/jobs";
 import FallbackNotice from "../components/FallbackNotice";
+import { navigate } from "../router";
 import type { ConceptRequest, Language, Level } from "../types/lesson";
 
-const POLL_MS = 1000;
-
 /** Topics the built-in samples cover, so the demo always has a known-good path. */
-const SHORTCUTS = ["How does a Python loop work?", "Photosynthesis", "The Pythagorean theorem"];
+const EXAMPLES = ["How does a Python loop work?", "Photosynthesis", "The Pythagorean theorem"];
 
-/** Stages in pipeline order with what the user sees; times are typical on a CPU-only laptop. */
+/** Pipeline stages in order (ids from backend/app/pipeline/orchestrator.py); times are typical on a CPU-only laptop. */
 const STAGES: { id: string; label: string; hint?: string }[] = [
-  { id: "plan", label: "Planning the lesson", hint: "about 35 s, up to 65 s if the plan needs a retry" },
+  { id: "plan", label: "Planning", hint: "about 35 s, up to 65 s if the plan needs a retry" },
   { id: "translate", label: "Translating" },
-  { id: "narrate", label: "Recording the narration" },
+  { id: "voice", label: "Voicing" },
+  { id: "timing", label: "Timing" },
+  { id: "export", label: "Exporting", hint: "continues in the player" },
 ];
 
-/** Stage 1: concept input, then job progress until the lesson can play. */
+const LEVELS: { value: Level; label: string }[] = [
+  { value: "beginner", label: "Beginner" },
+  { value: "intermediate", label: "Intermediate" },
+];
+
+type StageState = "done" | "active" | "todo" | "skipped";
+
+/** Stage 1: concept input, then live job progress until the lesson can play. */
 export default function InputPage() {
   const [req, setReq] = useState<ConceptRequest>({
     topic: "How does a Python loop work?",
@@ -25,50 +33,42 @@ export default function InputPage() {
   });
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [elapsed, setElapsed] = useState(0);
-  const startedAt = useRef(0);
-  const jobId = job?.id;
+  const busy = job !== null && (job.state === "queued" || job.state === "running") && !error;
+  const jobId = job?.job_id;
 
   useEffect(() => {
-    if (!busy || !jobId) return;
-    const timer = window.setInterval(async () => {
-      setElapsed(Math.round((Date.now() - startedAt.current) / 1000));
-      try {
-        const next = await getJob(jobId);
-        if (!next) throw new Error("The server lost this job (was it restarted?). Please try again.");
+    if (!jobId) return;
+    return watchStatus(
+      jobId,
+      (next) => {
         setJob(next);
-        if (next.state === "failed") {
-          setBusy(false);
-          setError(next.error ?? "Lesson generation failed.");
-        } else if (next.status.timeline_ready) {
-          window.location.assign(`/lesson/${encodeURIComponent(next.lesson_id)}`);
-        }
-      } catch (e) {
-        setBusy(false);
-        setError(e instanceof Error ? e.message : String(e));
-      }
-    }, POLL_MS);
-    return () => window.clearInterval(timer);
-  }, [busy, jobId]);
+        if (next.state === "failed") setError(next.error ?? "Lesson generation failed.");
+        else if (next.status.timeline_ready) navigate(`/lesson/${encodeURIComponent(next.lesson_id)}`, { autoplay: true });
+      },
+      setError,
+    );
+  }, [jobId]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError("");
     setJob(null);
-    setElapsed(0);
-    startedAt.current = Date.now();
     try {
       setJob(await createLesson({ ...req, topic: req.topic.trim() }));
-      setBusy(true);
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg === "Failed to fetch" ? "The backend is not reachable. Is make dev running?" : msg);
     }
   };
 
-  const stages = STAGES.filter((s) => s.id !== "translate" || req.language !== "en");
-  const currentIndex = stages.findIndex((s) => s.id === job?.status.stage);
+  const language = job?.request?.language ?? req.language;
+  const currentIndex = STAGES.findIndex((s) => s.id === job?.status.stage);
+  const stageState = (id: string, i: number): StageState => {
+    if (id === "translate" && language === "en") return "skipped";
+    if (job?.status.stage === "done") return "done";
+    return i < currentIndex ? "done" : i === currentIndex ? "active" : "todo";
+  };
+  const ahead = job?.state === "queued" ? job.status.queue_ahead : null;
 
   return (
     <div className="page input-page">
@@ -78,24 +78,34 @@ export default function InputPage() {
           <input
             value={req.topic}
             minLength={3}
-            maxLength={200}
+            maxLength={120}
             required
             disabled={busy}
+            placeholder="Type any concept, e.g. How does a Python loop work?"
             onChange={(e) => setReq({ ...req, topic: e.target.value })}
           />
         </label>
-        <div className="shortcuts">
-          <span>Try:</span>
-          {SHORTCUTS.map((t) => (
-            <button type="button" key={t} disabled={busy} onClick={() => setReq({ ...req, topic: t })}>{t}</button>
+        <div className="chips" aria-label="Examples">
+          {EXAMPLES.map((t) => (
+            <button type="button" key={t} className="chip" disabled={busy} onClick={() => setReq({ ...req, topic: t })}>{t}</button>
           ))}
         </div>
-        <label>Level
-          <select value={req.level} disabled={busy} onChange={(e) => setReq({ ...req, level: e.target.value as Level })}>
-            <option value="beginner">Beginner</option>
-            <option value="intermediate">Intermediate</option>
-          </select>
-        </label>
+        <div className="field">
+          <span className="field-label" id="level-label">Level</span>
+          <div className="toggle" role="group" aria-labelledby="level-label">
+            {LEVELS.map((l) => (
+              <button
+                type="button"
+                key={l.value}
+                aria-pressed={req.level === l.value}
+                disabled={busy}
+                onClick={() => setReq({ ...req, level: l.value })}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <label>Language
           <select value={req.language} disabled={busy} onChange={(e) => setReq({ ...req, language: e.target.value as Language })}>
             <option value="en">English</option>
@@ -104,30 +114,37 @@ export default function InputPage() {
           </select>
         </label>
         <label>Length: {req.target_seconds} s
-          <input type="range" min={30} max={90} disabled={busy} value={req.target_seconds} onChange={(e) => setReq({ ...req, target_seconds: Number(e.target.value) })} />
+          <input type="range" min={30} max={90} step={5} disabled={busy} value={req.target_seconds} onChange={(e) => setReq({ ...req, target_seconds: Number(e.target.value) })} />
         </label>
-        <button type="submit" disabled={busy || req.topic.trim().length < 3}>
-          {busy ? "Creating..." : error && job ? "Try again" : "Create lesson"}
+        <button type="submit" className="primary" disabled={busy || req.topic.trim().length < 3}>
+          {busy ? "Generating..." : error && job ? "Try again" : "Generate"}
         </button>
       </form>
 
-      {job && (busy || job.state === "failed") && (
+      {job && (
         <section className="job" aria-live="polite">
+          {ahead !== null && ahead > 0 && (
+            <p className="muted">Waiting for {ahead} other lesson{ahead > 1 ? "s" : ""} to finish (one is made at a time).</p>
+          )}
           <ol className="stages">
-            {stages.map((s, i) => {
-              const state = i < currentIndex ? "done" : i === currentIndex ? "active" : "todo";
+            {STAGES.map((s, i) => {
+              const state = stageState(s.id, i);
+              const seconds = job.status.timings[s.id];
               return (
                 <li key={s.id} className={`stage-${state}`}>
-                  <span className="stage-mark">{state === "done" ? "✓" : state === "active" ? "▶" : "·"}</span>
-                  {s.label}
-                  {state === "active" && s.hint && <span className="stage-hint"> ({s.hint})</span>}
+                  <span className="stage-mark" aria-hidden="true">{{ done: "✓", active: "▶", todo: "·", skipped: "–" }[state]}</span>
+                  <span className="stage-label">{s.label}</span>
+                  <span className="stage-time">
+                    {state === "skipped" ? "not needed" : seconds !== undefined ? `${seconds.toFixed(1)} s` : ""}
+                  </span>
+                  {state === "active" && s.hint && <span className="stage-hint">{s.hint}</span>}
                 </li>
               );
             })}
           </ol>
           <div className="job-bar"><div className="job-bar-fill" style={{ width: `${Math.round(job.status.progress * 100)}%` }} /></div>
-          <p className="muted">{elapsed} s elapsed. The player opens as soon as the narration is ready; the MP4 keeps exporting there.</p>
-          {job.status.fallback_used && <FallbackNotice reason={job.status.fallback_reason} topic={job.request.topic} />}
+          {job.status.fallback_used && <FallbackNotice reason={job.status.fallback_reason} topic={job.request?.topic} />}
+          <p className="muted">The player opens and starts as soon as the narration is ready; the MP4 keeps exporting there.</p>
         </section>
       )}
 
