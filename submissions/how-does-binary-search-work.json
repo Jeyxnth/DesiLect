@@ -1,0 +1,106 @@
+{
+  "topic": "How does binary search work?",
+  "level": "beginner",
+  "target_seconds": 60,
+  "planner": "llama3.2:3b",
+  "lessons": {
+    "en": {
+      "lesson_id": "1273b4341f4d",
+      "mp4": "how-does-binary-search-work_en.mp4",
+      "srt": "how-does-binary-search-work_en.srt",
+      "title": "How Binary Search Works",
+      "timeline_seconds": 41.71,
+      "ffprobe": {
+        "subtitle_codec": "mov_text",
+        "subtitle_language": "eng",
+        "width": 1280,
+        "height": 720,
+        "video_codec": "h264",
+        "pix_fmt": "yuv420p",
+        "audio_codec": "aac",
+        "duration": 41.733008,
+        "size_bytes": 812203
+      },
+      "check": "ok",
+      "export": {
+        "mode": "smooth",
+        "fps": 15,
+        "photos": 601,
+        "budget_s": 125.1
+      },
+      "timings": {
+        "plan_attempt_1": 11.16,
+        "plan_attempt_2": 9.08,
+        "plan": 20.458,
+        "rss_mb": {
+          "plan": 59.5,
+          "plan_ollama": 875.3,
+          "narrate": 592.9,
+          "export_smooth": 1262.5
+        },
+        "timeline": {
+          "wall_s": 41.813,
+          "tts_synth_s": 41.667,
+          "tts_audio_s": 36.69,
+          "tts_rtf": 1.136,
+          "tts_engine": "kokoro",
+          "tts_voice": "hf_alpha",
+          "cache_hits": 1,
+          "cache_misses": 12,
+          "total_seconds": 41.71
+        },
+        "narrate": 41.834,
+        "export_smooth": 36.365
+      }
+    },
+    "hi": {
+      "lesson_id": "f30fc5c35fbd",
+      "mp4": "how-does-binary-search-work_hi.mp4",
+      "srt": "how-does-binary-search-work_hi.srt",
+      "title": "Binary Search कैसे काम करता है",
+      "timeline_seconds": 57.62,
+      "ffprobe": {
+        "subtitle_codec": "mov_text",
+        "subtitle_language": "hin",
+        "width": 1280,
+        "height": 720,
+        "video_codec": "h264",
+        "pix_fmt": "yuv420p",
+        "audio_codec": "aac",
+        "duration": 57.62,
+        "size_bytes": 1120689
+      },
+      "check": "ok",
+      "export": {
+        "mode": "smooth",
+        "fps": 15,
+        "photos": 823,
+        "budget_s": 172.9
+      },
+      "timings": {
+        "plan": 0.002,
+        "rss_mb": {
+          "plan": 110.5,
+          "plan_ollama": 100.7,
+          "translate": 2661.9,
+          "narrate": 995.4,
+          "export_smooth": 1601.4
+        },
+        "translate": 31.973,
+        "timeline": {
+          "wall_s": 56.444,
+          "tts_synth_s": 56.216,
+          "tts_audio_s": 52.06,
+          "tts_rtf": 1.08,
+          "tts_engine": "kokoro",
+          "tts_voice": "hf_alpha",
+          "cache_hits": 1,
+          "cache_misses": 12,
+          "total_seconds": 57.62
+        },
+        "narrate": 56.458,
+        "export_smooth": 44.71
+      }
+    }
+  }
+}

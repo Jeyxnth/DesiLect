@@ -1,71 +1,230 @@
 # DesiLect (Blu Visual Teacher)
 
-## Setup
+Type any concept, such as "How does binary search work?", and get a 30 to 90 second narrated visual lesson in English, Hindi or
+Tamil: animated diagrams, highlighted code and captions in the learner's own script, playing in the browser right away and saved as a
+720p MP4. Everything runs on an ordinary CPU-only laptop with no internet and no cloud AI. A small local LLM plans the lesson as
+JSON, IndicTrans2 translates it, Kokoro and AI4Bharat Indic-TTS voice it, and the audio decides the timing of every scene. If any
+stage fails, a working fallback takes over and the screen says so, so the lesson still plays.
+
+**Built with Llama** (the planner is Meta Llama 3.2; see [Models, voices, fonts and tools](#models-voices-fonts-and-tools)).
+
+## Submission videos
+
+Both lessons were made by this app, offline. Planner: llama3.2:3b, beginner level, 60 s target. The Hindi version re-voices the same
+English plan (translated, voiced, timed and exported again), exactly as the player's "Same lesson in" does.
+
+| # | Topic | Language | Video | Captions | Length |
+|---|---|---|---|---|---|
+| 1 (our topic) | How does binary search work? | English | [`how-does-binary-search-work_en.mp4`](submissions/how-does-binary-search-work_en.mp4) | [`.srt`](submissions/how-does-binary-search-work_en.srt) | 41.7 s |
+| | | Hindi | [`how-does-binary-search-work_hi.mp4`](submissions/how-does-binary-search-work_hi.mp4) | [`.srt`](submissions/how-does-binary-search-work_hi.srt) | 57.6 s |
+| 2 (judges' topic) | Explain how caffeine works | English | [`explain-how-caffeine-works_en.mp4`](submissions/explain-how-caffeine-works_en.mp4) | [`.srt`](submissions/explain-how-caffeine-works_en.srt) | 41.0 s |
+| | | Hindi | [`explain-how-caffeine-works_hi.mp4`](submissions/explain-how-caffeine-works_hi.mp4) | [`.srt`](submissions/explain-how-caffeine-works_hi.srt) | 61.0 s |
+
+- **Checks.** Each MP4 is 1280x720 H.264 (yuv420p, 30 fps) with AAC audio and a soft subtitle track (eng / hin). Its length matches
+  the timeline, its narration peaks at -1 dB, and it has no gap longer than 1.5 s. The captions are also burned in.
+  `submissions/<topic>.json` records the lesson ids, the ffprobe output and the stage timings.
+- **How they were picked.** Binary search is the first plan the planner gave (after its built-in retry). For caffeine, the first render
+  had cut-off duplicate diagram labels. That was a validator bug, fixed in step 13. The planner then wrote five plans with the same
+  settings, and the most accurate one was rendered (`--plan-from`). Of the other four, two had wrong labels such as "Adenosine blocks", and
+  three ended by telling students to try a cup of coffee.
+- **Re-render:** `.venv/Scripts/python scripts/render_submission.py "<topic>" --lang hi` (add `--plan-from <lesson id>` to voice a stored
+  plan). It refuses to save a lesson that needed any fallback.
+- The Hindi is IndicTrans2 output and has not had a native speaker's check yet. Two known rough spots: "दिमाग को जागो" (should be
+  जगाएँ) in caffeine, and an awkward recap sentence in binary search.
+
+## Architecture
 
 ```
-make setup
+  concept, level, language, length, voice, speed            (React input page -> POST /api/lessons)
+        |
+        v
+ 1 PLAN       Ollama llama3.2:3b on 127.0.0.1 -> lesson JSON (3-6 scenes: title_card, diagram, code_walkthrough)
+        |     validated against shared/schema; 2 attempts      fallback: closest built-in sample lesson
+        v
+ 2 TRANSLATE  IndicTrans2 en->hi/ta (PyTorch CPU), glossary keeps code and terms in English, then unloaded
+        |                                                       fallback: pre-translated sample, or English narration
+        v
+ 3 VOICE      Kokoro (en, hi) / Indic-TTS (ta), one sentence at a time, normalised + trimmed + cached
+        |                                                       fallback: the sample's bundled audio (shared/tts_cache)
+        v
+ 4 TIME       backend/app/timing/timeline.py: scene length = its audio + pauses -> timeline.json, lesson.wav, captions.srt
+        |
+        v
+ 5 RENDER     player: SVG + CSS scenes as a pure function of (timeline, t), clocked by the audio element
+              export: headless Chromium seeks the render page -> JPEG frames piped to FFmpeg -> H.264/AAC MP4, ffprobe-checked
+                                                                fallback: keyframe export; if both fail the lesson still plays
+```
+
+One stage runs at a time and each model is unloaded after its stage (8 GB laptops). Every stage writes its wall time and peak
+memory to `outputs/lessons/<id>/timings.json`. `shared/` (JSON schemas, samples, glossary, bundled audio) is the contract between the
+FastAPI backend (`backend/app`) and the React + Vite frontend (`frontend/src`). The model only ever writes JSON data: nothing it
+writes is executed or rendered as HTML, and code is shown as text.
+
+## Setup (online, once)
+
+Needs about 7 GB of disk for models (IndicTrans2 2.1 GB, Indic-TTS 1.6 GB, Kokoro 0.3 GB, llama3.2:3b 2 GB; Indic Parler-TTS
+3.6 GB more if you want the opt-in Tamil voice) plus about 3 GB for Python packages. Windows commands shown; on Linux/macOS use
+`.venv/bin/python`. If the other laptop already has everything, copying `models/` across is enough for step 4.
+
+**Install first:** Python 3.11 or newer (tested on 3.13.3), Node.js 20 or newer (tested on 22.20.0), Git, FFmpeg with libx264
+(`winget install Gyan.FFmpeg`, then reopen the terminal), and Ollama (ollama.com). `make` is optional: Windows has none by default,
+so the commands below are spelled out (the `Makefile` targets are the same commands). Run them in Git Bash from the repo root.
+
+```
+git clone https://github.com/Jeyxnth/DesiLect.git
+cd DesiLect
+
+# 1. Python and Node dependencies (make setup does the first four lines)
+py -3.13 -m venv .venv                                       # or py -3.11; plain `python` may be an older version
+.venv/Scripts/python -m pip install --upgrade pip
+.venv/Scripts/python -m pip install -r backend/requirements.txt
+(cd frontend && npm install)
 .venv/Scripts/python -m pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU-only build
 .venv/Scripts/python -m pip install -r backend/requirements-models.txt
-.venv/Scripts/python -m pip install git+https://github.com/huggingface/parler-tts.git   # Tamil TTS (step 9)
-.venv/Scripts/python -m pip install transformers==4.46.3   # parler-tts downgrades it; put the tested pin back
-.venv/Scripts/python -m pip install --no-deps coqui-tts==0.28.0 coqui-tts-trainer==0.4.0 coqpit-config==0.2.5 torchcodec==0.17.0 monotonic-alignment-search==0.2.1 anyascii==0.3.3 pysbd==0.3.4 inflect num2words typeguard more-itertools jaraco.functools docopt   # default Tamil TTS (Indic-TTS); --no-deps keeps transformers pinned
-.venv/Scripts/hf auth login            # once: IndicTrans2 and Indic Parler-TTS are gated (accept their terms on huggingface.co first)
-.venv/Scripts/python scripts/download_models.py kokoro ollama indictrans2 indic-tts-ta indic-parler-tts   # one-time, needs network (H2 exception)
-python scripts/doctor.py --smoke                         # preflight: checks every dependency, prints the fix for each gap
+.venv/Scripts/python -m pip install git+https://github.com/huggingface/parler-tts.git   # also brings libraries Indic-TTS uses
+.venv/Scripts/python -m pip install transformers==4.46.3    # parler-tts downgrades it; put the tested pin back
+.venv/Scripts/python -m pip install --no-deps coqui-tts==0.28.0 coqui-tts-trainer==0.4.0 coqpit-config==0.2.5 torchcodec==0.17.0 monotonic-alignment-search==0.2.1 anyascii==0.3.3 pysbd==0.3.4 inflect num2words typeguard more-itertools jaraco.functools docopt
+
+# 2. Capture browser for the MP4 export
+.venv/Scripts/python -m playwright install chromium         # (an installed Chrome or Edge also works)
+
+# 3. Planner model (Ollama must be running)
+ollama pull llama3.2:3b
+
+# 4. Models: IndicTrans2 is gated, so accept its terms on huggingface.co first, then log in once
+.venv/Scripts/hf auth login
+.venv/Scripts/python scripts/download_models.py kokoro indictrans2 indic-tts-ta    # add indic-parler-tts for the opt-in voice
+
+# 5. Build the frontend and check everything
+(cd frontend && npm run build)
+.venv/Scripts/python scripts/doctor.py --smoke              # must end with 0 failed
 ```
 
-Translation (step 8): `python -m app.translate.indictrans --sample photosynthesis --lang hi ta` (from `backend/`)
-translates an English lesson offline. Code, numbers and `shared/glossary.json` terms stay in English.
-A full lesson takes about 8-13 s per language on this laptop. `transformers` is pinned to 4.46.3: IndicTrans2's model code
-crashes in newer versions. The model is loaded with `local_files_only`, so after the one-time download no account or network is needed;
-another laptop can simply copy the `models/` folder.
-
-On a fresh or test laptop run `python scripts/doctor.py` first. It needs only Python, reports what is missing
-(Python 3.11, Node 20, FFmpeg, browser, models, Ollama, fonts) and exits non-zero if anything required for the
-current step is absent. Do not start testing until it reports 0 failed.
+Why the odd install order: IndicTrans2 needs `transformers==4.46.3`, parler-tts pins 4.46.1, and a normal coqui-tts install would
+upgrade to 5.x, so coqui-tts goes in without dependencies. Afterwards `pip check` reports "parler-tts 0.2.2 has requirement
+transformers==4.46.1"; that is expected and harmless. `.env` is optional (`cp .env.example .env`); no keys or accounts are needed at runtime.
 
 ## Run offline
 
+Turn Wi-Fi off, start Ollama, then:
+
 ```
-make sample    # narrates the sample lesson and writes outputs/lessons/sample-en/lesson.mp4 (+ captions.srt)
-make dev       # backend :8000, frontend :5173; play at /lesson/sample-en
+.venv/Scripts/python scripts/check_offline.py                                    # make offline-check
+.venv/Scripts/python -m uvicorn app.main:app --app-dir backend --port 8000      # make dev-backend
 ```
 
-Other bundled samples render to their own folder, e.g.
-`python scripts/render_sample.py --sample photosynthesis --lang hi` writes `outputs/lessons/sample-photosynthesis-hi/`.
+The offline check confirms every model, font, tool and browser is on disk, finds no external URLs, and confirms nothing reaches the
+internet. `make dev` also starts the Vite dev server on :5173, which is only needed for frontend work.
 
-Built-in samples (the G2 fallback when the planner fails), each in en/hi/ta: `python_loop` (code + row diagram),
-`binary_search` (stack diagram + code), `photosynthesis` (row + cycle diagrams), `pythagorean_theorem` (maths).
-The closest one to the requested topic is used, and the UI says so.
+Open **http://localhost:8000**, type a concept, pick level, language, voice and speed, and press Generate. The stages tick off;
+the player opens and starts as soon as the narration is ready (about 1 to 3 minutes), and **Download MP4** enables when the export
+finishes. "Same lesson in" re-voices the lesson in another language without planning again. Keys: Space play/pause, Left/Right
+previous/next scene, R replay. `.venv/Scripts/python scripts/render_sample.py` (`make sample`) renders a bundled sample with no planner at all.
 
-Player keys: Space play/pause, ← → previous/next scene, R replay.
+## How fallback works
 
-The planner takes about 35 s per plan on a CPU-only laptop (about 65 s when the first plan is rejected and retried);
-with a GPU Ollama is about 4x faster. Set `OLLAMA_NUM_GPU=0` in `.env` to measure the CPU-only time on a GPU laptop.
+The demo never breaks: each stage has a fallback, and the screen always says when one was used.
 
-## Models and licences
-
-| Model / library | Used for | Licence |
+| Stage fails | What plays instead | What the screen says |
 |---|---|---|
-| Kokoro-82M via kokoro-onnx (voices `hf_alpha`, `hm_omega`) | English (Indian accent) and Hindi TTS | Apache-2.0 (kokoro-onnx: MIT) |
-| Llama 3.2 3B Instruct via Ollama (`llama3.2:3b`) | lesson planner. **Built with Llama.** | Llama 3.2 Community License |
-| eSpeak NG (via espeakng-loader) | phonemes | GPL-3.0-or-later |
-| ONNX Runtime, NumPy, soundfile | CPU inference, audio | MIT / BSD-3-Clause |
-| IndicTrans2 en-indic dist-200M + IndicTransToolkit (PyTorch CPU) | English -> Hindi / Tamil translation | MIT |
-| Indic Parler-TTS (`ai4bharat/indic-parler-tts`) + parler-tts | Tamil TTS (voice `jaya`) | Apache-2.0 |
-| Noto Sans, Noto Sans Mono (bundled in `frontend/public/fonts`) | UI, captions, code | SIL Open Font License 1.1 |
+| Planner: Ollama stopped, model missing, timeout, or two invalid plans | the closest of four built-in lessons (Python loop, binary search, photosynthesis, Pythagoras), in the chosen language | "Fallback lesson used: a built-in sample", the reason, and which sample |
+| Translation: model missing or bad output | a built-in sample uses its checked translation; a new lesson stays in English | "Translation unavailable" |
+| Voice: model missing, out of memory, engine error | the closest sample, voiced from its bundled audio (no model has to load) | "Fallback lesson used", reason "Voice generation failed" |
+| Smooth MP4 export: browser error, over its time budget, or a bad file | the keyframe export (one frame per change) | the MP4 still downloads |
+| Both exports | nothing to download, but the lesson plays in the browser | "MP4 export failed" with a **Retry export** button |
 
-Full list: `LICENSES.md`.
+The planner's JSON is checked against `shared/schema/lesson.schema.json` plus content rules (scene count, word budget for the
+length, short distinct diagram labels, code at most 12 x 50, no markup, English only). A rejected first plan is retried once with
+the errors listed. Failure drills for all of this: `.venv/Scripts/python scripts/drill.py` (`make drill`; see step 12 below).
 
-> Translation review status: the Hindi samples are machine translations that **need a native speaker check**.
-> Made by the IndicTrans2 pipeline (step 8): `shared/samples/photosynthesis.hi.json`, `shared/samples/binary_search.hi.json`;
-> earlier machine-assisted drafts: `shared/samples/python_loop.hi.json`, `shared/samples/pythagorean_theorem.hi.json`.
-> The four Tamil samples were rewritten in step 9 in **spoken classroom Tamil** (e.g. செய்யுது, பார்ப்போம், இன்னைக்கு), because the
-> formal written Tamil sounded wrong when narrated; they are awaiting the team's native-speaker review.
-> Live translations still come from IndicTrans2, which writes formal Tamil, so a new Tamil lesson will sound bookish.
-> Things to look at: word order around English terms kept by the glossary (e.g. "oxygen", "sorted list"), and diagram labels.
+## How audio sets timing
 
-## Voices (step 9)
+Only `backend/app/timing/timeline.py` decides durations, and it decides them from the voice. Each narration sentence is synthesised
+on its own, peak-normalised, and trimmed of silence. A caption cue then starts exactly where its sentence starts, and a scene lasts
+as long as its sentences plus a 0.15 s gap between them and a 0.6 s pause at the end. Diagram items appear and code lines highlight
+at the sentence that talks about them. `lesson.wav` is built from the same samples, so the timeline total equals the audio length
+exactly. In the browser the audio element is the clock, so picture and voice cannot drift. The MP4 export seeks the same render page
+frame by frame, so the video has the same timing. A Hindi lesson is longer than its English plan because the Hindi narration takes
+longer to say, and the scenes simply stretch to fit it.
+
+## Tested laptops
+
+Budget: a 60 s lesson ready, MP4 included, in about 5 minutes on the weakest laptop. Otherwise, lower the planner to `qwen2.5:1.5b`,
+the export to keyframe, and the TTS threads. Full stage tables are in `docs/bench.md` (`python scripts/bench.py --run` appends one per
+machine), and the offline matrix is in `docs/offline-test.md`.
+
+| Laptop | CPU | RAM | OS | Planner | 60 s lesson: en / hi / ta | Peak RAM | Verdict |
+|---|---|---|---|---|---|---|---|
+| Dev laptop | Intel Core i7-13650HX, 14 cores / 20 threads | 24 GB | Windows 11 | llama3.2:3b on CPU (`OLLAMA_NUM_GPU=0`), 45 s per plan | 112 s / 144 s / 173 s | 2.66 GB (planner, inside Ollama); app 2.1 GB at export | within budget, nothing lowered |
+| Second laptop (8 GB) | TODO | 8 GB | TODO | | **not measured yet**: run `python scripts/bench.py --run` and, with Wi-Fi off, `python scripts/drill.py --wifi-off` | | |
+
+Stage seconds on the dev laptop (en / hi / ta): plan 45 / 45 / 46, translate - / 19 / 11, voice + timing 12 / 18 / 37, smooth MP4
+export 54 / 60 / 76. The offline matrix (3 topics x 3 languages x 2 levels) and six failure drills all passed on the dev laptop
+behind an in-process network block (`docs/offline-test.md`). The run with Wi-Fi physically off, and the check on a real phone, are
+still to do.
+
+## Known limitations
+
+- **Translations are machine-made.** Live Hindi and Tamil come from IndicTrans2. Its Tamil is formal and bookish, and it can
+  mistranslate. For example, in the first caffeine render "doesn't work as well" became "doesn't work" in Hindi. The bundled
+  Tamil samples were rewritten by hand in spoken classroom Tamil. The Hindi samples still await a native speaker's check.
+- **A 3B planner writes simple lessons.** Facts are not verified. Plans can run short of the target length (for example, a 44 s
+  English lesson when 60 s was asked for), and a plan sometimes needs its retry. Hindi and Tamil lessons run 10-40% longer
+  than the English plan.
+- **Speed.** A lesson takes about 2 to 3 minutes on the dev laptop with the planner on its CPU. With a GPU, Ollama plans in about
+  10 s. The opt-in Parler Tamil voice is 5 to 9 times slower than real time.
+- **One lesson at a time.** Requests queue behind each other. Repeating an identical request returns the earlier lesson instantly.
+- **Not yet done:** the benchmark on the 8 GB laptop, the Wi-Fi-off matrix run, and a check on a real phone (an emulated phone at 4x
+  and 6x CPU slowdown plays smoothly).
+- **Versions.** The rules target Python 3.11 and Node 20. The dev laptop runs Python 3.13.3 and Node 22.20.0, and everything was
+  tested there.
+- **Scope.** Three languages (en, hi, ta); a fourth was left out at feature freeze. Hindi is voiced by Kokoro, so English terms in it
+  are read through a transliteration table. Voice and diagram choices are limited to the three scene types.
+
+## Team
+
+TODO: names and roles of both team members (fill in before submitting).
+
+## Models, voices, fonts and tools
+
+Every item, with its exact licence name and where it was checked, is in [`LICENSES.md`](LICENSES.md), which also lists all the
+Python and frontend libraries.
+
+| Item | Version | Used for | Licence | Source |
+|---|---|---|---|---|
+| Llama 3.2 3B Instruct (`llama3.2:3b`), **Built with Llama** | Llama 3.2 (Q4_K_M) | lesson planner | Llama 3.2 Community License Agreement + Acceptable Use Policy | Meta, via the Ollama library |
+| Ollama | 0.40.2 | local model server | MIT | ollama.com |
+| IndicTrans2 en-indic dist-200M | HF snapshot | en -> hi, ta translation | MIT License | `ai4bharat/indictrans2-en-indic-dist-200M` |
+| IndicTransToolkit `IndicProcessor` (vendored port) | 1.1.1 | translation pre/post-processing | MIT | PyPI `IndicTransToolkit` |
+| Kokoro-82M (ONNX), voices `hf_alpha`, `hm_omega` | v1.0 | English and Hindi voice | Apache-2.0 | `hexgrad/Kokoro-82M`; files from the kokoro-onnx release |
+| kokoro-onnx | 0.6.1 | runs Kokoro on CPU | MIT License | PyPI |
+| eSpeak NG (in espeakng-loader 0.2.4) | bundled | phonemes for Kokoro | GPL-3.0-or-later (loader: MIT) | PyPI `espeakng-loader` |
+| AI4Bharat Indic-TTS Tamil (FastPitch + HiFi-GAN), voices `female`, `male` | v1 checkpoints | Tamil voice (default) | MIT License | github.com/AI4Bharat/Indic-TTS release |
+| coqui-tts | 0.28.0 | runs Indic-TTS | MPL-2.0 | PyPI |
+| Indic Parler-TTS, voice `jaya` (opt-in) | HF snapshot | Tamil voice, `TAMIL_TTS=parler` | apache-2.0 | `ai4bharat/indic-parler-tts` |
+| parler-tts | 0.2.2 | runs Indic Parler-TTS | Apache License 2.0 | github.com/huggingface/parler-tts |
+| Noto Sans, Noto Sans Mono, Noto Sans Devanagari, Noto Sans Tamil | hinted TTF (Indic as WOFF2) | all on-screen text and captions | SIL Open Font License, Version 1.1 | notofonts (bundled in `frontend/public/fonts`) |
+| FFmpeg + libx264 | 8.1 (gyan.dev full build) | MP4 encode and ffprobe checks | GPL-3.0-or-later (this build) / GPL-2.0-or-later; run as a separate program | gyan.dev via winget |
+| Playwright + Chromium | 1.64.1 | headless capture for the MP4 | Apache-2.0 / BSD-3-Clause | PyPI; `playwright install chromium` |
+| PyTorch (CPU), Transformers, ONNX Runtime | 2.14.1, 4.46.3, 1.31.1 | model runtimes | BSD-3-Clause, Apache-2.0, MIT | PyPI / download.pytorch.org |
+| FastAPI, Uvicorn, Pydantic, jsonschema, httpx, NumPy, soundfile, psutil | see LICENSES.md | backend | MIT / BSD-3-Clause | PyPI |
+| React, React DOM, Vite, TypeScript | 18.3.1, 18.3.1, 5.4.21, 5.9.3 | frontend | MIT, MIT, MIT, Apache-2.0 | npm |
+
+## Engineering notes (by build step)
+
+### Translation (step 8)
+
+`python -m app.translate.indictrans --sample photosynthesis --lang hi ta` (from `backend/`) translates an English lesson offline.
+Code, numbers and `shared/glossary.json` terms stay in English. A full lesson takes about 8-13 s per language on the dev laptop.
+`transformers` is pinned to 4.46.3 because IndicTrans2's model code crashes in newer versions. The model loads with
+`local_files_only`, so no account or network is needed after the one-time download.
+
+> Translation review status: the Hindi samples are machine translations that **need a native speaker check**
+> (`shared/samples/photosynthesis.hi.json`, `binary_search.hi.json` from IndicTrans2; `python_loop.hi.json`, `pythagorean_theorem.hi.json`
+> machine-assisted drafts). The four Tamil samples were rewritten in step 9 in **spoken classroom Tamil**, because formal written Tamil
+> sounded wrong when narrated. Live translations still come from IndicTrans2, which writes formal Tamil.
+
+### Voices (step 9)
 
 | Language | Engine | Voice | Notes |
 |---|---|---|---|
@@ -95,7 +254,7 @@ same language instead, from the bundled audio below, and the UI shows the fallba
 manifest in `shared/tts_cache/manifest/<lang>.json`). Lookup order is `outputs/cache/tts`, then `shared/tts_cache`, then the engine, so a sample lesson
 needs no TTS at demo time. Re-run it after editing a sample, the transliteration table or `backend/app/tts/audio.py` (bump `POSTPROCESS_VERSION`).
 
-**Voice speed.** The input page offers Slow / Normal / Fast (0.85x / 1.0x / 1.15x; the API accepts `speed` 0.7-1.3). Kokoro and Indic-TTS
+**Voice speed.** The input page offers Slow / Normal / Fast (0.9x / 1.0x / 1.1x; the API accepts `speed` 0.7-1.3). Kokoro and Indic-TTS
 apply it directly; Parler only approximates it through its description. Bundled sample audio is at 1.0x, so a sample voiced at another speed
 needs the engine; if that fails, the 1.0x bundled audio is used.
 
@@ -121,7 +280,7 @@ all 0-26 ms from the timeline. Keyframe mode: 57 s lesson in 10 s. A forced 1 s 
 caption bar wraps with `Intl.Segmenter` (word boundaries, grapheme boundaries inside an over-long word) into at most two lines instead of a
 CSS line clamp, which clipped matras.
 
-### Speed on this laptop (14 cores, 20 threads; not the weakest laptop)
+#### Speed on this laptop (14 cores, 20 threads; not the weakest laptop)
 
 | Stage | Real-time factor (synthesis time / audio time) | Whole sample (4 scenes) |
 |---|---|---|
@@ -130,7 +289,7 @@ CSS line clamp, which clipped matras.
 | Tamil, Indic Parler-TTS (14 threads, float32) | **5.36** | 262 s to voice the 52.5 s `python_loop` sample (12 sentences, about 22 s each); a 60 s lesson takes about 5.5 min. A second run over the other three samples (34 sentences, 22 min wall) measured **8.6**, so budget 5-9x |
 | Tamil, Indic-TTS Plan B (14 threads) | **0.48** | 26 s to voice the 58 s `python_loop` sample (female; male 0.48 too); model loads in about 3 s |
 
-### Tamil voice: Plan B decision
+#### Tamil voice: Plan B decision
 
 Rule: if Indic Parler-TTS is slower than 3x real time on the weakest laptop, add a second engine behind the same `TTSEngine` interface
 (AI4Bharat Indic-TTS FastPitch + HiFi-GAN) and select it with `TAMIL_TTS` in `.env`.
@@ -149,7 +308,7 @@ Install notes: coqui-tts is installed **without dependencies** (see `backend/req
 transformers and huggingface_hub and break IndicTrans2 and Parler. The released config points its speaker list at the authors' training folder, so the
 engine writes a corrected copy at load time.
 
-## Bonus features (step 11, feature freeze)
+### Bonus features (step 11, feature freeze)
 
 - **Reuse cache.** A finished lesson is indexed by sha1(normalised topic, level, language, length, voice, speed, `PIPELINE_VERSION`)
   in `outputs/cache/lessons/`. Repeating the request returns that lesson at once (`"cached": true`; measured 27 ms). Only lessons with
@@ -171,7 +330,7 @@ Measured through the app on this laptop: English lesson (male voice) planned in 
 Hindi in 113 s total (plan reused in 0.002 s, translate 23 s, voice 48 s, export 43 s), peak 1.85 GB during export. Kokoro ran at
 0.85-1.14x real time in these runs against 0.25x when measured alone earlier (re-measured in step 12, below).
 
-## Offline testing and hardening (step 12)
+### Offline testing and hardening (step 12)
 
 ```
 make offline-check                 # python scripts/check_offline.py [--deep]
@@ -179,6 +338,9 @@ make drill ARGS=--wifi-off         # python scripts/drill.py: 18-lesson matrix +
 python scripts/bench.py --run      # fresh 60 s lessons in en/hi/ta -> docs/bench.md (OLLAMA_NUM_GPU=0 for a CPU-only planner)
 make serve-lan                     # the app on the LAN for the phone check; python scripts/phone_check.py emulates one
 ```
+
+Without make, `make serve-lan` is `(cd frontend && npm run build)` then
+`.venv/Scripts/python -m uvicorn app.main:app --app-dir backend --host 0.0.0.0 --port 8000`.
 
 - **`check_offline.py`** forces `HF_HUB_OFFLINE` / `TRANSFORMERS_OFFLINE`, blocks every non-loopback socket inside its own process, then checks
   that the Ollama model, IndicTrans2, Kokoro, Indic-TTS (and Parler when `TAMIL_TTS=parler`), the fonts, the samples and their bundled
@@ -214,22 +376,6 @@ draw-on (`stroke-dashoffset`), which the profile did not implicate, so it stays.
 **Memory.** Loading, using and unloading IndicTrans2, Indic-TTS and Kokoro three times in one process settles at about 0.9 GB resident after the
 first round and does not grow (torch / onnxruntime keep their arenas). Peaks: the planner 2.4 GB in Ollama (planning only; `keep_alive: 0`
 frees it), translation about 1.7 GB, Tamil voice about 2.1 GB, export up to 2.2 GB (app + Chromium + ffmpeg).
-
-## Tested laptops
-
-Budget: a 60 s lesson ready, MP4 included, in about 5 minutes on the weakest laptop; otherwise lower the planner to `qwen2.5:1.5b`, the
-export to keyframe, and the TTS threads. Full tables in `docs/bench.md` (`python scripts/bench.py --run` appends one per machine).
-
-| Laptop | Planner | en 60 s lesson | hi | ta | Peak RAM | Verdict |
-|---|---|---|---|---|---|---|
-| Dev: i7-13650HX, 14 cores / 20 threads, 24 GB, Windows 11 | llama3.2:3b on CPU (`OLLAMA_NUM_GPU=0`), 45 s | 112 s | 144 s | 173 s | 2.66 GB (planner in Ollama); app 2.1 GB at export | within budget, nothing lowered |
-| Weakest: 8 GB laptop | **not measured yet**: run `python scripts/bench.py --run` and `make drill ARGS=--wifi-off` on it | | | | | |
-
-Stage seconds on the dev laptop (en / hi / ta): plan 45 / 45 / 46, translate - / 19 / 11, voice + timing 12 / 18 / 37, smooth MP4 export
-54 / 60 / 76. Kokoro measured alone in step 9 was 0.25x real time; in these runs most sentences came from the voice cache, so the per-miss
-real-time factor printed by bench (which includes loading the model) is not comparable.
-
-## Architecture
 
 ### HTTP API (`backend/app/api/routes.py`)
 

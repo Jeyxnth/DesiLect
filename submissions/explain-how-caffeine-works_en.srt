@@ -1,0 +1,43 @@
+1
+00:00:00,000 --> 00:00:00,820
+Welcome!
+
+2
+00:00:00,970 --> 00:00:03,290
+Today we will learn how caffeine works.
+
+3
+00:00:03,440 --> 00:00:07,050
+Caffeine is a stimulant that helps our bodies work faster.
+
+4
+00:00:07,650 --> 00:00:10,670
+Caffeine blocks a chemical called adenosine.
+
+5
+00:00:10,820 --> 00:00:14,980
+This makes our brains release more dopamine, which gives us energy.
+
+6
+00:00:15,580 --> 00:00:19,660
+As adenosine is blocked, our brains wake up and become more alert.
+
+7
+00:00:19,810 --> 00:00:22,800
+Our hearts beat faster and we can focus better.
+
+8
+00:00:23,400 --> 00:00:27,960
+Caffeine also affects our body temperature, heart rate, and blood pressure.
+
+9
+00:00:28,110 --> 00:00:30,900
+This helps us feel more alert and awake.
+
+10
+00:00:31,500 --> 00:00:36,810
+To recap, caffeine blocks adenosine, increasing dopamine and boosting energy.
+
+11
+00:00:36,960 --> 00:00:40,400
+This helps our bodies work faster and feel more alert.

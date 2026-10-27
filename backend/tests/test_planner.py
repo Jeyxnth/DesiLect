@@ -297,3 +297,35 @@ def test_last_planner_attempt_accepts_a_lesson_that_is_somewhat_short():
     seconds = round(words / 2.3 * 1.4)  # the lesson is about 30% shorter than asked for
     assert parse_and_validate(raw, seconds)[0] is None
     assert parse_and_validate(raw, seconds, tolerance=0.5)[0] is not None
+
+
+def caffeine_like_plan() -> dict:
+    """The shape llama3.2 gave for "Explain how caffeine works" (step 13): sentences as diagram items."""
+    lesson = json.loads((SAMPLES_DIR / "photosynthesis.en.json").read_text(encoding="utf-8"))
+    diagram = next(s for s in lesson["scenes"] if s["type"] == "diagram")
+    diagram["items"] = ["Adenosine is a chemical that makes us feel tired", "Caffeine blocks adenosine",
+                        "Caffeine blocks adenosine again"]
+    diagram["arrows"] = [{"from": 0, "to": 1}, {"from": 1, "to": 2}]
+    return lesson
+
+
+def test_long_diagram_items_are_rejected_so_the_retry_asks_for_labels():
+    """Step 13 bug: items were cut to 24 characters before validation, giving "Caffeine blocks" twice on screen."""
+    lesson, errors = parse_and_validate(json.dumps(caffeine_like_plan()), None, cut_labels=False)
+    assert lesson is None
+    assert any("items/0: is too long" in e and "not a sentence" in e for e in errors)
+
+
+def test_last_attempt_cuts_items_and_drops_the_duplicates_it_makes():
+    lesson, errors = parse_and_validate(json.dumps(caffeine_like_plan()), None, cut_labels=True)
+    assert errors == []
+    diagram = next(s for s in lesson["scenes"] if s["type"] == "diagram")
+    assert diagram["items"] == ["Adenosine is a chemical", "Caffeine blocks"]  # the repeat is gone
+    assert diagram["arrows"] == [{"from": 0, "to": 1}]  # the arrow to the dropped item went with it
+
+
+def test_repeated_items_are_a_validation_error():
+    lesson = json.loads((SAMPLES_DIR / "photosynthesis.en.json").read_text(encoding="utf-8"))
+    diagram = next(s for s in lesson["scenes"] if s["type"] == "diagram")
+    diagram["items"][1] = diagram["items"][0].upper()
+    assert any("repeats an earlier item" in e for e in validate_lesson(lesson))

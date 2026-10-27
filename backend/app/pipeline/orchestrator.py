@@ -87,8 +87,9 @@ def plan_lesson(
             break
         seconds = time.perf_counter() - start
         attempt_seconds.append(round(seconds, 2))
-        tolerance = LAST_TRY_WORD_TOLERANCE if attempt == MAX_ATTEMPTS else WORD_BUDGET_TOLERANCE
-        lesson, errors = parse_and_validate(raw, target_seconds, tolerance)
+        last = attempt == MAX_ATTEMPTS  # the last try is lenient: cut over-long labels rather than fall back
+        tolerance = LAST_TRY_WORD_TOLERANCE if last else WORD_BUDGET_TOLERANCE
+        lesson, errors = parse_and_validate(raw, target_seconds, tolerance, cut_labels=last)
         log_raw(attempt, seconds, raw + ("\n--- rejected: " + "; ".join(errors) if errors else "\n--- accepted"))
         if lesson is not None:
             break

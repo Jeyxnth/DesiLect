@@ -8,3 +8,4 @@ numpy>=1.26
 soundfile>=0.12
 kokoro-onnx>=0.4,<1
 onnxruntime>=1.17
+playwright>=1.44,<2   # headless capture for the MP4 export; then: python -m playwright install chromium

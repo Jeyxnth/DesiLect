@@ -1,0 +1,105 @@
+{
+  "topic": "Explain how caffeine works",
+  "level": "beginner",
+  "target_seconds": 60,
+  "planner": "llama3.2:3b",
+  "plan_from": "caffeine-plan-2",
+  "lessons": {
+    "en": {
+      "lesson_id": "8807f5c17d79",
+      "mp4": "explain-how-caffeine-works_en.mp4",
+      "srt": "explain-how-caffeine-works_en.srt",
+      "title": "How Caffeine Works",
+      "timeline_seconds": 41.0,
+      "ffprobe": {
+        "subtitle_codec": "mov_text",
+        "subtitle_language": "eng",
+        "width": 1280,
+        "height": 720,
+        "video_codec": "h264",
+        "pix_fmt": "yuv420p",
+        "audio_codec": "aac",
+        "duration": 41.0,
+        "size_bytes": 792052
+      },
+      "check": "ok",
+      "export": {
+        "mode": "smooth",
+        "fps": 15,
+        "photos": 590,
+        "budget_s": 123.0
+      },
+      "timings": {
+        "plan": 0.034,
+        "rss_mb": {
+          "plan": 55.6,
+          "plan_ollama": 100.7,
+          "narrate": 557.2,
+          "export_smooth": 1287.7
+        },
+        "timeline": {
+          "wall_s": 32.786,
+          "tts_synth_s": 32.619,
+          "tts_audio_s": 30.35,
+          "tts_rtf": 1.075,
+          "tts_engine": "kokoro",
+          "tts_voice": "hf_alpha",
+          "cache_hits": 3,
+          "cache_misses": 8,
+          "total_seconds": 41.0
+        },
+        "narrate": 32.802,
+        "export_smooth": 35.498
+      }
+    },
+    "hi": {
+      "lesson_id": "9bb5059da6ea",
+      "mp4": "explain-how-caffeine-works_hi.mp4",
+      "srt": "explain-how-caffeine-works_hi.srt",
+      "title": "कैसे काम करता है कैफ़ीन",
+      "timeline_seconds": 60.97,
+      "ffprobe": {
+        "subtitle_codec": "mov_text",
+        "subtitle_language": "hin",
+        "width": 1280,
+        "height": 720,
+        "video_codec": "h264",
+        "pix_fmt": "yuv420p",
+        "audio_codec": "aac",
+        "duration": 61.0,
+        "size_bytes": 1202764
+      },
+      "check": "ok",
+      "export": {
+        "mode": "smooth",
+        "fps": 15,
+        "photos": 872,
+        "budget_s": 182.9
+      },
+      "timings": {
+        "plan": 0.004,
+        "rss_mb": {
+          "plan": 110.8,
+          "plan_ollama": 100.7,
+          "translate": 2148.6,
+          "narrate": 1818.3,
+          "export_smooth": 2488.4
+        },
+        "translate": 21.225,
+        "timeline": {
+          "wall_s": 38.769,
+          "tts_synth_s": 38.515,
+          "tts_audio_s": 38.81,
+          "tts_rtf": 0.992,
+          "tts_engine": "kokoro",
+          "tts_voice": "hf_alpha",
+          "cache_hits": 4,
+          "cache_misses": 7,
+          "total_seconds": 60.97
+        },
+        "narrate": 38.792,
+        "export_smooth": 45.99
+      }
+    }
+  }
+}

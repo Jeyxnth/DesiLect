@@ -1,0 +1,51 @@
+1
+00:00:00,000 --> 00:00:00,820
+Welcome!
+
+2
+00:00:00,970 --> 00:00:03,750
+Today we will learn how binary search works.
+
+3
+00:00:03,900 --> 00:00:06,860
+It's a way to find something in a list, very fast.
+
+4
+00:00:07,460 --> 00:00:10,990
+We have a list of numbers, and we want to find a target number.
+
+5
+00:00:11,140 --> 00:00:14,550
+The list is sorted, which means the numbers are in order.
+
+6
+00:00:15,150 --> 00:00:18,260
+We find the middle number, and compare it to our target.
+
+7
+00:00:18,410 --> 00:00:20,030
+If it's the same, we're done!
+
+8
+00:00:20,180 --> 00:00:22,310
+If not, we repeat the process.
+
+9
+00:00:22,910 --> 00:00:26,760
+If the middle number is less than our target, we look at the bigger half.
+
+10
+00:00:26,910 --> 00:00:29,410
+If it's greater, we look at the smaller half.
+
+11
+00:00:29,560 --> 00:00:32,350
+We keep repeating until we find our target.
+
+12
+00:00:32,950 --> 00:00:38,940
+To recap, binary search finds a number in a sorted list by repeatedly dividing the list in half.
+
+13
+00:00:39,090 --> 00:00:41,110
+It's very fast and efficient!

@@ -88,7 +88,14 @@ def _semantic_errors(lesson: dict[str, Any], target_words: int | None = None, to
             if lesson.get("language") == "en":  # the schema leaves room for Indic scripts; English stays short
                 for j, item in enumerate(scene["items"] if n else []):
                     if isinstance(item, str) and len(item) > EN_ITEM_MAX:
-                        errors.append(f"scenes/{i}/items/{j}: is too long (at most {EN_ITEM_MAX} characters)")
+                        errors.append(f"scenes/{i}/items/{j}: is too long (at most {EN_ITEM_MAX} characters; "
+                                      "use a 1-4 word label, not a sentence)")
+            seen: set[str] = set()
+            for j, item in enumerate(scene["items"] if n else []):
+                key = " ".join(str(item).lower().split())
+                if key in seen:
+                    errors.append(f"scenes/{i}/items/{j}: repeats an earlier item; every item must be different")
+                seen.add(key)
             for j, arrow in enumerate(scene["arrows"] if isinstance(scene.get("arrows"), list) else []):
                 if not isinstance(arrow, dict):
                     continue
@@ -194,9 +201,36 @@ def _clean(text: str) -> str:
     return " ".join(text.split())
 
 
-def sanitize(lesson: Any) -> Any:
+def _drop_repeated_items(scene: dict[str, Any]) -> None:
+    """Remove items that repeat an earlier one (as cutting can make them) and the arrows that touched them."""
+    items = scene.get("items")
+    if not isinstance(items, list):
+        return
+    keep, index, seen = [], {}, set()
+    for j, item in enumerate(items):
+        key = " ".join(str(item).lower().split())
+        if key not in seen:
+            seen.add(key)
+            index[j] = len(keep)
+            keep.append(item)
+    if len(keep) == len(items) or len(keep) < 2:  # nothing repeated, or too few left: let validation report it
+        return
+    scene["items"] = keep
+    if isinstance(scene.get("arrows"), list):
+        arrows = []
+        for arrow in scene["arrows"]:
+            if isinstance(arrow, dict) and arrow.get("from") in index and arrow.get("to") in index:
+                arrows.append({**arrow, "from": index[arrow["from"]], "to": index[arrow["to"]]})
+        scene["arrows"] = arrows
+
+
+def sanitize(lesson: Any, cut_labels: bool = True) -> Any:
     """Return a cleaned copy: trimmed, spaces collapsed, over-long headings cut at a word boundary,
-    code trimmed per line (indentation kept). The model's own `meta` is dropped (the backend sets it)."""
+    code trimmed per line (indentation kept). The model's own `meta` is dropped (the backend sets it).
+
+    cut_labels=False leaves over-long diagram items and arrow labels as written, so validation rejects them and the
+    retry asks the model for short labels (cutting sentences gave fragments such as "Caffeine blocks" twice).
+    With cut_labels=True (the last attempt) they are cut, and items the cut made identical are dropped."""
     if not isinstance(lesson, dict):
         return lesson
     out = copy.deepcopy(lesson)
@@ -213,11 +247,14 @@ def sanitize(lesson: Any) -> Any:
                 scene[key] = "\n".join(lines).rstrip()
             elif isinstance(text, str):
                 scene[key] = cut_at_word(_clean(text), limits[key]) if key in limits else _clean(text)
+        item_max, label_max = (EN_ITEM_MAX, EN_LABEL_MAX) if cut_labels else (10_000, 10_000)
         if isinstance(scene.get("items"), list):
-            scene["items"] = [cut_at_word(_clean(x), EN_ITEM_MAX) if isinstance(x, str) else x for x in scene["items"]]
+            scene["items"] = [cut_at_word(_clean(x), item_max) if isinstance(x, str) else x for x in scene["items"]]
+            if cut_labels:
+                _drop_repeated_items(scene)
         for arrow in scene.get("arrows", []) if isinstance(scene.get("arrows"), list) else []:
             if isinstance(arrow, dict) and isinstance(arrow.get("label"), str):
-                arrow["label"] = cut_at_word(_clean(arrow["label"]), EN_LABEL_MAX)
+                arrow["label"] = cut_at_word(_clean(arrow["label"]), label_max)
     return out
 
 
@@ -256,11 +293,12 @@ def validate_lesson(data: Any, target_words: int | None = None, tolerance: float
 
 
 def parse_and_validate(
-    raw: str, target_seconds: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE
+    raw: str, target_seconds: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE, cut_labels: bool = True
 ) -> tuple[dict[str, Any] | None, list[str]]:
     """Parse model output, sanitise, screen, validate. Returns (lesson | None, errors).
 
     target_seconds enables the word-budget check (about 2.3 words per second, +/- tolerance).
+    cut_labels=False (a planner attempt that can still be retried) rejects over-long diagram labels instead of cutting them.
     """
     try:
         data = json.loads(extract_json_text(raw))
@@ -268,7 +306,7 @@ def parse_and_validate(
         return None, [f"invalid JSON: {exc}"]
     if not isinstance(data, dict):
         return None, ["the top level must be a JSON object"]
-    lesson = sanitize(data)
+    lesson = sanitize(data, cut_labels)
     errors = unsafe_strings(lesson) or foreign_script_strings(lesson)
     if errors:
         return None, errors
