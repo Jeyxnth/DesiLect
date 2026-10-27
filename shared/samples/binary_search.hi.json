@@ -6,8 +6,8 @@
     {
       "type": "title_card",
       "heading": "binary search कैसे काम करता है",
-      "subheading": "क्रमबद्ध सूची में किसी वस्तु को तेजी से ढूंढें",
-      "narration": "आपका स्वागत है! आज हम binary search सीखेंगे। यह बहुत जल्दी एक sorted list में एक item पाता है।"
+      "subheading": "sorted list में कोई item जल्दी ढूंढें",
+      "narration": "नमस्ते! आज हम binary search सीखेंगे। यह sorted list में कोई भी item बहुत जल्दी ढूंढ लेता है।"
     },
     {
       "type": "diagram",
@@ -15,38 +15,38 @@
       "layout": "stack",
       "items": [
         "16 sorted संख्याएँ",
-        "8 बाएँ",
-        "4 बाएँ",
-        "2 बाएँ",
+        "8 बचीं",
+        "4 बचीं",
+        "2 बचीं",
         "मिल गया!"
       ],
       "arrows": [
         {
           "from": 0,
           "to": 1,
-          "label": "आधा कर दें"
+          "label": "आधा करो"
         },
         {
           "from": 1,
           "to": 2,
-          "label": "आधा कर दें"
+          "label": "आधा करो"
         },
         {
           "from": 2,
           "to": 3,
-          "label": "आधा कर दें"
+          "label": "आधा करो"
         },
         {
           "from": 3,
           "to": 4,
-          "label": "जाँच करें"
+          "label": "जाँचो"
         }
       ],
-      "narration": "16 sorted नंबरों से शुरू करें। प्रत्येक चेक बीच में देखता है और आधे हिस्से को गिरा देता है जो हमारी संख्या को नहीं पकड़ सकता है। तो 16 बन जाता है 8, फिर 4, फिर 2, और फिर हम इसे पाते हैं!"
+      "narration": "मान लीजिए हमारे पास 16 sorted संख्याएँ हैं। हर बार हम बीच वाली संख्या देखते हैं और वह आधा हिस्सा छोड़ देते हैं जिसमें हमारी संख्या हो ही नहीं सकती। इस तरह 16 से 8, फिर 4, फिर 2 संख्याएँ बचती हैं, और आखिर में हमारी संख्या मिल जाती है!"
     },
     {
       "type": "code_walkthrough",
-      "heading": "Binary search में Python",
+      "heading": "Python में binary search",
       "code": "def binary_search(items, target):\n    low, high = 0, len(items) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if items[mid] == target:\n            return mid\n        if items[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1",
       "language_hint": "python",
       "highlight_lines": [
@@ -54,13 +54,13 @@
         6,
         8
       ],
-      "narration": "पहले हम mid पर काम करते हैं, उस हिस्से के बीच में जिसे हम अभी भी खोजते हैं। यदि mid पर item, target के बराबर है, तो हम mid लौटाते हैं। यदि यह बहुत छोटा है, तो हम फिर से mid और loop को नीचे ले जाते हैं।"
+      "narration": "सबसे पहले हम mid निकालते हैं, यानी उस हिस्से का बीच जिसमें अभी खोज बाकी है। अगर mid वाला item, target के बराबर है, तो हम mid return कर देते हैं। अगर वह छोटा है, तो हम low को mid के आगे ले जाते हैं और loop फिर से चलता है।"
     },
     {
       "type": "title_card",
-      "heading": "रीकैप करें",
-      "subheading": "बीच की जाँच करें, आधा छोड़ें, दोहराएँ",
-      "narration": "रीकैप करने के लिए, binary search बीच की जाँच करता है और हर बार आधा फेंक देता है। यहाँ तक कि दस लाख items में से एक list को भी केवल लगभग बीस चेक की आवश्यकता होती है। बस याद रखें, list पहले sorted होना चाहिए!"
+      "heading": "सारांश",
+      "subheading": "बीच देखो, आधा छोड़ो, दोहराओ",
+      "narration": "संक्षेप में, binary search हर बार बीच वाला item देखता है और आधी list छोड़ देता है। दस लाख items वाली list में भी लगभग बीस बार देखना काफ़ी होता है। बस याद रखिए, list पहले से sorted होनी चाहिए!"
     }
   ]
 }
