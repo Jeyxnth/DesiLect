@@ -45,6 +45,8 @@ class Job:
     error: str | None = None
     failed_stage: str | None = None  # the stage that raised, when state is "failed"
     export_error: str | None = None  # MP4 failed; the lesson still plays
+    export_progress: float | None = None  # 0..1 while the MP4 is captured (smooth mode), None before export starts
+    export_mode: str | None = None  # "smooth" or "keyframe": how the MP4 was actually made
     timings: dict[str, float] = field(default_factory=dict)  # finished stages, seconds
     stage_started: float = field(default_factory=time.time)
     created_at: float = field(default_factory=time.time)
@@ -68,6 +70,8 @@ class Job:
                 "mp4_ready": self.mp4_ready,
                 "timings": timings,
                 "failed_stage": self.failed_stage,
+                "export_progress": None if self.export_progress is None else round(self.export_progress, 3),
+                "export_mode": self.export_mode,
                 "queue_ahead": ahead,  # jobs before this one in the queue (0 = next), None when not queued
             },
             "error": self.error,

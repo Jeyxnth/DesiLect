@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from ..cache.store import lesson_dir, record_timing, timed_stage, write_json
+from ..cache.store import lesson_dir, read_json, record_timing, timed_stage, write_json
 from ..config import get_settings
 from ..export.capture import ensure_frontend_built, export_lesson, local_server
 from ..planner.fallback import fallback_lesson
@@ -212,16 +212,23 @@ def export_job(job_id: str, base_url: str | None = None) -> None:
 
     The lesson already plays in the browser, so a failed MP4 is recorded as export_error, not a failed job.
     """
-    JOBS.update(job_id, state="running", export_error=None, mp4_ready=False)
+    JOBS.update(job_id, state="running", export_error=None, mp4_ready=False, export_progress=0.0, export_mode=None)
     _status(job_id, "export")
+    start = STAGE_PROGRESS["export"]
+
+    def on_progress(fraction: float) -> None:
+        JOBS.update(job_id, export_progress=fraction, progress=start + (1.0 - start) * fraction)
+
     try:
         ensure_frontend_built()
         if base_url:
-            export_lesson(job_id, base_url)
+            export_lesson(job_id, base_url, on_progress=on_progress)
         else:
             with local_server() as url:
-                export_lesson(job_id, url)
-        JOBS.update(job_id, mp4_ready=True)
+                export_lesson(job_id, url, on_progress=on_progress)
+        info_path = lesson_dir(job_id) / "export.json"
+        mode = read_json(info_path).get("mode") if info_path.is_file() else None
+        JOBS.update(job_id, mp4_ready=True, export_progress=1.0, export_mode=mode)
     except Exception as exc:  # noqa: BLE001
         log.exception("export failed")
         JOBS.update(job_id, export_error=str(exc))

@@ -88,6 +88,8 @@ def test_pipeline_runs_with_ollama_down_and_reports_status(monkeypatch):
         "mp4_ready": True,
         "failed_stage": None,
         "queue_ahead": None,
+        "export_progress": 1.0,
+        "export_mode": None,  # the stubbed export writes no export.json
     }
     assert set(timings) == {"plan", "voice", "timing", "export"}  # English skips translate
     lesson = client.get(f"/api/lessons/{job['id']}/lesson").json()

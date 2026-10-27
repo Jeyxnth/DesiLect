@@ -1,9 +1,9 @@
 import { useMemo } from "react";
-import type { Arrow, Beat, DiagramScene as Diagram } from "../types/lesson";
+import type { Arrow, Beat, DiagramScene as Diagram, Language } from "../types/lesson";
 import { ARROW_DELAY_S, ARROW_DRAW_S, ITEM_IN_S, clamp01, fadeIn, progress, revealTime } from "./anim";
 import { fitSize, textWidth, useFontsReady, wrapLabel } from "./measure";
 import type { SceneProps } from "./registry";
-import { BODY_PX, HEADING_PX, HEADING_Y, MIN_BODY_PX, SAFE, STAGE_W } from "./tokens";
+import { BODY_PX, HEADING_PX, HEADING_Y, LINE_SCALE, MIN_BODY_PX, SAFE, STAGE_W } from "./tokens";
 
 // Content area inside the 1280x528 scene SVG, below the heading.
 const LEFT = SAFE;
@@ -42,29 +42,29 @@ type Pt = { x: number; y: number };
 const arrowLabelSize = (size: number) => Math.max(16, size - 6);
 
 /** Box sizes for every label at one font size (one line, or two balanced lines if that is narrower). */
-function sizeBoxes(items: string[], size: number, maxLineW: number, padY = PAD_Y): { w: number; h: number; lines: string[] }[] {
-  const wrapped = items.map((label) => wrapLabel(label, size, maxLineW));
+function sizeBoxes(items: string[], size: number, maxLineW: number, lang: Language, padY = PAD_Y): { w: number; h: number; lines: string[] }[] {
+  const wrapped = items.map((label) => wrapLabel(label, size, maxLineW, { lang }));
   const lineCount = Math.max(...wrapped.map((w) => w.lines.length));
-  const h = lineCount * size * 1.25 + 2 * padY;
+  const h = lineCount * size * 1.25 * LINE_SCALE[lang] + 2 * padY;
   return wrapped.map((w) => ({ w: Math.max(MIN_BOX_W, w.width + 2 * PAD_X), h, lines: w.lines }));
 }
 
 /** Width an arrow label needs, or 0. */
-function labelW(arrow: Arrow | undefined, size: number): number {
-  return arrow?.label ? textWidth(arrow.label, arrowLabelSize(size)) : 0;
+function labelW(arrow: Arrow | undefined, size: number, lang: Language): number {
+  return arrow?.label ? textWidth(arrow.label, arrowLabelSize(size), { lang }) : 0;
 }
 
 function adjacentArrow(arrows: Arrow[], a: number, b: number): Arrow | undefined {
   return arrows.find((x) => (x.from === a && x.to === b) || (x.from === b && x.to === a));
 }
 
-function layoutRow(items: string[], arrows: Arrow[]): Layout {
+function layoutRow(items: string[], arrows: Arrow[], lang: Language): Layout {
   const n = items.length;
   const hasCurves = arrows.some((a) => Math.abs(a.to - a.from) > 1);
   for (let size = BODY_PX; size >= MIN_BODY_PX; size--) {
-    const gaps = Array.from({ length: n - 1 }, (_, k) => Math.max(MIN_GAP, labelW(adjacentArrow(arrows, k, k + 1), size) + LABEL_ROOM));
+    const gaps = Array.from({ length: n - 1 }, (_, k) => Math.max(MIN_GAP, labelW(adjacentArrow(arrows, k, k + 1), size, lang) + LABEL_ROOM));
     const maxLineW = (AREA_W - gaps.reduce((a, b) => a + b, 0)) / n - 2 * PAD_X;
-    const sized = sizeBoxes(items, size, maxLineW);
+    const sized = sizeBoxes(items, size, maxLineW, lang);
     const total = sized.reduce((a, b) => a + b.w, 0) + gaps.reduce((a, b) => a + b, 0);
     if (total <= AREA_W || size === MIN_BODY_PX) {
       const cy = hasCurves ? TOP + AREA_H * 0.62 : TOP + AREA_H * 0.5;
@@ -80,17 +80,17 @@ function layoutRow(items: string[], arrows: Arrow[]): Layout {
   throw new Error("unreachable");
 }
 
-function layoutStack(items: string[], arrows: Arrow[]): Layout {
+function layoutStack(items: string[], arrows: Arrow[], lang: Language): Layout {
   const n = items.length;
   for (let size = BODY_PX; size >= MIN_BODY_PX; size--) {
-    const sized = sizeBoxes(items, size, AREA_W * 0.5, STACK_PAD_Y);
+    const sized = sizeBoxes(items, size, AREA_W * 0.5, lang, STACK_PAD_Y);
     const w = Math.max(...sized.map((b) => b.w)); // one column, equal widths
     const h = sized[0]?.h ?? 0;
     const room = Math.min(56, (AREA_H - n * h) / Math.max(1, n - 1));
     if (room >= STACK_MIN_GAP || size === MIN_BODY_PX) {
       const gap = Math.max(room, STACK_MIN_GAP); // arrows stay long enough to read
       const total = n * h + (n - 1) * gap;
-      const sideLabels = Math.max(0, ...arrows.map((a) => labelW(a, size)));
+      const sideLabels = Math.max(0, ...arrows.map((a) => labelW(a, size, lang)));
       const cx = 640 - (sideLabels ? Math.min(160, sideLabels / 2 + 20) : 0);
       const y0 = TOP + (AREA_H - total) / 2;
       const boxes = sized.map((b, k) => ({ ...b, w, cx, cy: y0 + k * (h + gap) + h / 2 }));
@@ -100,10 +100,10 @@ function layoutStack(items: string[], arrows: Arrow[]): Layout {
   throw new Error("unreachable");
 }
 
-function layoutCycle(items: string[]): Layout {
+function layoutCycle(items: string[], lang: Language): Layout {
   const n = items.length;
   for (let size = BODY_PX; size >= MIN_BODY_PX; size--) {
-    const sized = sizeBoxes(items, size, 250);
+    const sized = sizeBoxes(items, size, 250, lang);
     const maxW = Math.max(...sized.map((b) => b.w));
     const h = sized[0]?.h ?? 0;
     const ry = (AREA_H - h) / 2;
@@ -199,22 +199,22 @@ export function diagramAnimationStarts(scene: Diagram, beats: Beat[]): number[] 
  * Diagram: items as boxes in a row, on a cycle or in a stack. Item k scales in at its beat; arrows
  * draw on once both ends are visible. Only transform, opacity and stroke-dashoffset change over time.
  */
-export default function DiagramScene({ scene, localT, beats }: SceneProps<Diagram>) {
+export default function DiagramScene({ scene, localT, beats, lang }: SceneProps<Diagram>) {
   const fonts = useFontsReady();
   const arrows = useMemo(
     () => (scene.arrows ?? []).filter((a) => a.from !== a.to && scene.items[a.from] !== undefined && scene.items[a.to] !== undefined),
     [scene],
   );
   const layout = useMemo(
-    () => (scene.layout === "cycle" ? layoutCycle(scene.items) : scene.layout === "stack" ? layoutStack(scene.items, arrows) : layoutRow(scene.items, arrows)),
-    [scene, arrows, fonts], // fonts: re-measure once the real fonts have loaded
+    () => (scene.layout === "cycle" ? layoutCycle(scene.items, lang) : scene.layout === "stack" ? layoutStack(scene.items, arrows, lang) : layoutRow(scene.items, arrows, lang)),
+    [scene, arrows, fonts, lang], // fonts: re-measure once the real fonts have loaded
   );
   const centre = { x: 640, y: TOP + AREA_H / 2 };
   const reveal = scene.items.map((_, k) => revealTime(beats, k));
   let newest = -1;
   reveal.forEach((r, k) => { if (r <= localT && (newest < 0 || r >= (reveal[newest] ?? 0))) newest = k; });
 
-  const headingSize = fitSize(scene.heading, HEADING_PX, 30, AREA_W, { bold: true });
+  const headingSize = fitSize(scene.heading, HEADING_PX, 30, AREA_W, { bold: true, lang });
   const content = layout.scale < 1 ? `translate(640 ${centre.y}) scale(${layout.scale}) translate(-640 ${-centre.y})` : undefined;
 
   return (
@@ -251,7 +251,7 @@ export default function DiagramScene({ scene, localT, beats }: SceneProps<Diagra
           const s = fadeIn(localT, reveal[k] ?? 0, ITEM_IN_S);
           if (s <= 0) return null;
           const isNew = k === newest;
-          const lineH = layout.size * 1.25;
+          const lineH = layout.size * 1.25 * LINE_SCALE[lang];
           const firstBaseline = b.cy - ((b.lines.length - 1) * lineH) / 2 + layout.size * 0.35;
           return (
             <g key={k} opacity={s} transform={`translate(${b.cx} ${b.cy}) scale(${0.85 + 0.15 * s}) translate(${-b.cx} ${-b.cy})`}>

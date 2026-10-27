@@ -13,25 +13,25 @@
 }
 @font-face {
   font-family: "Noto Sans Devanagari";
-  src: local("Noto Sans Devanagari"), url("/fonts/NotoSansDevanagari-Regular.ttf") format("truetype");
+  src: local("Noto Sans Devanagari"), url("/fonts/NotoSansDevanagari-Regular.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Noto Sans Devanagari";
-  src: local("Noto Sans Devanagari Bold"), url("/fonts/NotoSansDevanagari-Bold.ttf") format("truetype");
+  src: local("Noto Sans Devanagari Bold"), url("/fonts/NotoSansDevanagari-Bold.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
 }
 @font-face {
   font-family: "Noto Sans Tamil";
-  src: local("Noto Sans Tamil"), url("/fonts/NotoSansTamil-Regular.ttf") format("truetype");
+  src: local("Noto Sans Tamil"), url("/fonts/NotoSansTamil-Regular.woff2") format("woff2");
   font-weight: 400;
   font-display: swap;
 }
 @font-face {
   font-family: "Noto Sans Tamil";
-  src: local("Noto Sans Tamil Bold"), url("/fonts/NotoSansTamil-Bold.ttf") format("truetype");
+  src: local("Noto Sans Tamil Bold"), url("/fonts/NotoSansTamil-Bold.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
 }
@@ -69,6 +69,7 @@
 
   --font-ui: "Noto Sans", "Noto Sans Devanagari", "Noto Sans Tamil", system-ui, sans-serif;
   --font-code: "Noto Sans Mono", ui-monospace, Consolas, monospace;
+  --caption-lh: 1.3;
 }
 
 * { box-sizing: border-box; }
@@ -99,13 +100,18 @@ body {
    and opacity change per frame; nothing that moves has a filter or shadow. */
 .stage-fit { width: min(100%, calc((100vh - 140px) * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; position: relative; overflow: hidden; border-radius: 12px; background: var(--panel); }
 .stage-scaler { width: 1280px; height: 720px; transform-origin: 0 0; }
-.stage-canvas { position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden; }
+.stage-canvas { position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden; font-family: var(--font-ui); }
+/* Font stack and line height from the lesson language (Stage sets lang from timeline.language; scenes/tokens.ts mirrors this). */
+.stage-canvas[lang="en"] { --font-ui: "Noto Sans", system-ui, sans-serif; }
+.stage-canvas[lang="hi"] { --font-ui: "Noto Sans Devanagari", "Noto Sans", system-ui, sans-serif; --caption-lh: 1.6; }
+.stage-canvas[lang="ta"] { --font-ui: "Noto Sans Tamil", "Noto Sans", system-ui, sans-serif; --caption-lh: 1.6; }
 .step-pill { position: absolute; left: var(--safe); top: 20px; height: 36px; line-height: 36px; padding: 0 16px; border-radius: 18px; background: var(--panel-2); color: var(--muted); font-size: 20px; font-weight: 700; white-space: nowrap; }
 .scene-area { position: absolute; left: 0; top: 72px; width: 1280px; height: 528px; }
 .scene-area svg { width: 1280px; height: 528px; display: block; }
-.caption-bar { position: absolute; left: 0; top: 600px; width: 1280px; height: 104px; padding: 0 var(--safe); display: flex; align-items: center; justify-content: center; text-align: center; background: var(--caption-band); font-size: var(--caption-px); line-height: 1.3; }
+.caption-bar { position: absolute; left: 0; top: 600px; width: 1280px; height: 104px; padding: 0 var(--safe); display: flex; align-items: center; justify-content: center; text-align: center; background: var(--caption-band); font-size: var(--caption-px); line-height: var(--caption-lh); }
 .caption-bar.empty { background: transparent; }
-.caption-bar span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+/* Lines are wrapped in CaptionBar (Intl.Segmenter, at most two); no CSS clamp, which clips Indic matras. */
+.caption-bar .caption-line { display: block; white-space: nowrap; }
 .progress { position: absolute; left: 0; top: 704px; width: 1280px; height: 16px; display: flex; align-items: flex-end; cursor: pointer; background: var(--caption-band); }
 .progress-track { position: relative; width: 100%; height: 6px; background: #050a16; }
 .progress-fill { height: 100%; width: 100%; background: var(--accent); transform-origin: 0 50%; }

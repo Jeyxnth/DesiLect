@@ -8,7 +8,7 @@ import pytest
 
 from app.cache.store import read_json
 from app.config import REPO_ROOT
-from app.export.capture import capture_times, smooth_shots
+from app.export.capture import capture_times, fresh_frames
 from app.export.ffmpeg import ffprobe_summary, write_ffconcat
 
 
@@ -20,44 +20,102 @@ def test_capture_times_settle_inside_own_interval():
     assert capture_times([0.0], 3.0, 0.0) == [0.0]
 
 
-def test_smooth_shots_animate_at_fps_and_hold_still_stretches():
-    shots = smooth_shots([0.0, 2.0], total=4.0, settle=0.5, fps=10)
-    times = [t for t, _ in shots]
-    # 0.0-0.5 animating (every 0.1 s), still until 2.0 (held), 2.0-2.5 animating, then held to the end
-    assert times[:6] == [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
-    assert 0.6 not in times and 1.9 not in times
-    assert times[6:12] == [2.0, 2.1, 2.2, 2.3, 2.4, 2.5]
-    assert len(times) == 12
-    assert sum(d for _, d in shots) == pytest.approx(4.0)
-    assert shots[5] == (0.5, 1.5) and shots[-1] == (2.5, 1.5)  # held frames last until the next change
+def test_fresh_frames_photograph_animations_and_repeat_still_stretches():
+    plan = fresh_frames([0.0, 2.0], total=4.0, settle=0.5, fps=10)
+    assert len(plan) == 40  # one frame per 1/10 s
+    fresh = [i for i, f in enumerate(plan) if f]
+    # 0.0-0.5 animating (new photo every frame), still until 2.0 (repeated), 2.0-2.5 animating, then repeated
+    assert fresh == [0, 1, 2, 3, 4, 5, 20, 21, 22, 23, 24, 25]
 
 
-def test_smooth_shots_catch_a_keyframe_between_grid_points():
-    shots = smooth_shots([0.0, 1.03], total=2.0, settle=0.0, fps=10)
-    times = [t for t, _ in shots]
-    assert times == [0.0, 1.1]  # 1.03 changes the picture: the next grid point shows it
-    assert sum(d for _, d in shots) == pytest.approx(2.0)
+def test_fresh_frames_catch_a_keyframe_between_grid_points():
+    plan = fresh_frames([0.0, 1.03], total=2.0, settle=0.0, fps=10)
+    assert [i for i, f in enumerate(plan) if f] == [0, 11]  # 1.03 changes the picture: frame 11 (1.1 s) shows it
 
 
-def test_smooth_export_falls_back_to_keyframes(tmp_path, monkeypatch):
+@pytest.fixture
+def lesson(tmp_path, monkeypatch):
+    """A lesson folder with a timeline, export stubs that record what ran, and no real browser or ffmpeg."""
+    from contextlib import nullcontext
+
     from app.export import capture
 
     out = tmp_path / "lessons" / "x1"
     out.mkdir(parents=True)
+    (out / "timeline.json").write_text('{"total_seconds": 10.0, "language": "ta"}', encoding="utf-8")
     monkeypatch.setattr(capture, "lesson_dir", lambda lid, create=True: out)
-    monkeypatch.setattr(capture, "timed_stage", lambda *a: __import__("contextlib").nullcontext())
-
-    def broken(*a, **k):
-        raise RuntimeError("chromium crashed")
-
-    monkeypatch.setattr(capture, "capture_frames", broken)
+    monkeypatch.setattr(capture, "timed_stage", lambda *a: nullcontext())
+    monkeypatch.setattr(capture, "check_mp4", lambda path, total: [])
     monkeypatch.setattr(capture, "capture_keyframes", lambda *a, **k: [(out / "k.png", 1.0)])
-    encoded = []
-    monkeypatch.setattr(capture, "encode_keyframes", lambda frames, *a: encoded.append(frames))
+    ran = []
+    monkeypatch.setattr(capture, "encode_keyframes", lambda frames, *a, **k: ran.append(("keyframe", k.get("lang"))))
+    return capture, out, ran
+
+
+def test_smooth_export_is_the_default_and_records_its_mode(lesson, monkeypatch):
+    capture, out, ran = lesson
+    budgets = []
+
+    def smooth(lesson_id, out_dir, base_url, fps, budget, on_progress):
+        budgets.append(budget)
+        return out_dir / "lesson.mp4", 42
+
+    monkeypatch.setattr(capture, "capture_smooth", smooth)
     capture.export_lesson("x1", "http://x")
-    assert encoded == [[(out / "k.png", 1.0)]]
+    assert ran == [] and budgets == [60.0]  # 3x a 10 s lesson is below the 60 s minimum budget
+    assert read_json(out / "export.json") == {"mode": "smooth", "fps": 15, "photos": 42, "budget_s": 60.0}
+    assert capture.smooth_budget(100.0) == 300.0
+
+
+@pytest.mark.parametrize("failure", ["crash", "budget", "check"])
+def test_smooth_export_falls_back_to_keyframes(lesson, monkeypatch, failure):
+    capture, out, ran = lesson
+
+    def smooth(*a, **k):
+        if failure == "crash":
+            raise RuntimeError("chromium crashed")
+        if failure == "budget":
+            raise capture.ExportBudgetExceeded("smooth capture passed its 60s budget at 40%")
+        return out / "lesson.mp4", 10
+
+    checks = iter([["duration 3.00s, timeline says 10.00s"], []])  # smooth MP4 bad, keyframe MP4 good
+    monkeypatch.setattr(capture, "capture_smooth", smooth)
+    if failure == "check":
+        monkeypatch.setattr(capture, "check_mp4", lambda path, total: next(checks))
+    capture.export_lesson("x1", "http://x")
+    assert ran == [("keyframe", "ta")]  # soft subtitle track tagged with the lesson language
     info = read_json(out / "export.json")
-    assert info["mode"] == "keyframe" and "chromium crashed" in info["smooth_failed"]
+    expected = {"crash": "chromium crashed", "budget": "budget", "check": "duration 3.00s"}[failure]
+    assert info["mode"] == "keyframe" and expected in info["smooth_failed"]
+
+
+def test_export_fails_loudly_when_the_final_mp4_is_wrong(lesson, monkeypatch):
+    capture, out, ran = lesson
+    (out / "lesson.mp4").write_bytes(b"not really a video")
+    monkeypatch.setattr(capture, "check_mp4", lambda path, total: ["resolution 640x360, expected 1280x720"])
+    with pytest.raises(capture.ExportCheckFailed, match="640x360"):
+        capture.export_lesson("x1", "http://x", mode="keyframe")
+    assert not (out / "lesson.mp4").exists() and (out / "lesson.rejected.mp4").is_file()  # nothing to download
+
+
+def test_check_mp4_lists_every_problem(monkeypatch):
+    from app.export import ffmpeg
+
+    good = {"width": 1280, "height": 720, "video_codec": "h264", "pix_fmt": "yuv420p", "audio_codec": "aac", "duration": 50.1}
+    monkeypatch.setattr(ffmpeg, "ffprobe_summary", lambda p: good)
+    assert ffmpeg.check_mp4(Path("x.mp4"), 50.0) == []
+    bad = dict(good, width=1920, height=1080, pix_fmt="yuvj420p", audio_codec="mp3", duration=48.0)
+    monkeypatch.setattr(ffmpeg, "ffprobe_summary", lambda p: bad)
+    problems = ffmpeg.check_mp4(Path("x.mp4"), 50.0)
+    assert len(problems) == 4 and any("1920x1080" in p for p in problems) and any("48.00s" in p for p in problems)
+
+
+def test_srt_is_utf8_without_bom(tmp_path):
+    from app.export.ffmpeg import write_srt
+
+    out = write_srt({"scenes": [{"cues": [{"start": 0.0, "end": 1.0, "text": "வணக்கம்!"}]}]}, tmp_path / "c.srt")
+    raw = out.read_bytes()
+    assert not raw.startswith(bytes([0xEF, 0xBB, 0xBF])) and "வணக்கம்".encode("utf-8") in raw
 
 
 def test_ffconcat_has_exact_durations_and_repeats_last_file(tmp_path):
@@ -100,3 +158,5 @@ def test_export_smoke_full_sample_under_60s():
     assert info["video_codec"] == "h264" and info["audio_codec"] == "aac" and info["pix_fmt"] == "yuv420p"
     assert abs(info["duration"] - total) <= 0.2
     assert (out / "captions.srt").is_file()
+    assert info["subtitle_codec"] == "mov_text" and info["subtitle_language"] == "eng"  # soft caption track
+    assert read_json(out / "export.json")["mode"] == "smooth"

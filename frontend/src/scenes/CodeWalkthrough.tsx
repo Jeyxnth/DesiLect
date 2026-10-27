@@ -65,7 +65,7 @@ export default function CodeWalkthrough({ scene, localT, beats, cues, lang: uiLa
   const term = noteIndex >= 0 ? cueTerms[noteIndex] : null;
   const noteAlpha = term ? fadeIn(localT, cues[noteIndex]?.start ?? 0, NOTE_IN_S) : 0;
   const noteX = x0 + cardW + NOTE_GAP;
-  const headingSize = fitSize(scene.heading, HEADING_PX, 30, STAGE_W - 2 * SAFE, { bold: true });
+  const headingSize = fitSize(scene.heading, HEADING_PX, 30, STAGE_W - 2 * SAFE, { bold: true, lang: uiLang });
 
   return (
     <svg viewBox="0 0 1280 528" role="img" aria-label={scene.heading}>

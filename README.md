@@ -99,12 +99,27 @@ needs no TTS at demo time. Re-run it after editing a sample, the transliteration
 apply it directly; Parler only approximates it through its description. Bundled sample audio is at 1.0x, so a sample voiced at another speed
 needs the engine; if that fails, the 1.0x bundled audio is used.
 
-**MP4 export.** `export_lesson` defaults to **smooth** mode: the render page is photographed 15 times a second while anything animates and one
-frame is held through still stretches (`smooth_shots` in `backend/app/export/capture.py`), then encoded as 1280x720 H.264 `yuv420p` + AAC.
-If smooth capture fails for any reason the keyframe export (one frame per change) runs instead (G2). `outputs/lessons/<id>/export.json` records
-the mode used. Captions are drawn by the browser, so Hindi and Tamil use the bundled Noto Sans Devanagari / Tamil fonts on every laptop.
-`python scripts/render_sample.py --lang ta [--mode keyframe]` renders a sample. Measured: the 58 s Tamil sample in 54 s wall; a generated
-75 s Tamil lesson (1,059 frames) in 72 s.
+**MP4 export (step 10).** `export_lesson` defaults to **smooth** mode: one headless page seeks the render page every 1/15 s
+and pipes JPEG frames (quality 90) straight into `ffmpeg -f image2pipe -framerate 15 -i - ...` (H.264 veryfast CRF 23, yuv420p, 30 fps
+out, AAC 128k, `+faststart`). Frames where nothing can change re-send the previous image instead of a new screenshot (`fresh_frames` in
+`backend/app/export/capture.py`). Smooth capture has a time budget of 3x the lesson length (at least 60 s), enforced by a watchdog that
+kills ffmpeg; if smooth fails, runs over budget or its MP4 fails the check, the **keyframe** export (one frame per change) runs instead (G2).
+`outputs/lessons/<id>/export.json` records the mode used, and the job status shows it plus the capture progress percent.
+
+- Every MP4 is checked with ffprobe: 1280x720, h264, yuv420p, aac, duration within 0.2 s of the timeline. A failing MP4 is renamed
+  `lesson.rejected.mp4` and the export fails loudly (`export_error` in the job, red error in the player; the lesson still plays).
+- Captions are burned in (drawn by the browser in the bundled Noto fonts) **and** added as a soft `mov_text` track tagged eng/hin/tam.
+  `captions.srt` (UTF-8, no BOM) sits next to the MP4.
+- Downloads are named `<topic-slug>_<lang>.mp4` / `.srt`, e.g. `how-does-a-python-loop-work_ta.mp4`.
+- Length is set with `-t`, not `-shortest`: with a subtitle input, `-shortest` makes ffmpeg stop reading piped frames without exiting.
+- `python scripts/render_sample.py --lang ta [--sample binary_search] [--mode keyframe]` renders a sample.
+
+Measured on this laptop (smooth): Python-loop en 43 s lesson in 33 s, hi 50 s in 38 s, ta 58 s in 46 s, Tamil binary search 63 s in 50 s;
+all 0-26 ms from the timeline. Keyframe mode: 57 s lesson in 10 s. A forced 1 s budget fell back to keyframe and passed the check.
+
+**Hindi and Tamil text.** The stage font stack comes from `timeline.language`; Hindi and Tamil lines are 1.25x taller (matras), and the
+caption bar wraps with `Intl.Segmenter` (word boundaries, grapheme boundaries inside an over-long word) into at most two lines instead of a
+CSS line clamp, which clipped matras.
 
 ### Speed on this laptop (14 cores, 20 threads; not the weakest laptop)
 

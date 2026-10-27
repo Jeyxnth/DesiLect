@@ -11,6 +11,8 @@ export interface JobStatus {
   timings: Record<string, number>; // seconds per stage; the running stage counts up live
   failed_stage: string | null; // the stage that raised, when the job failed
   queue_ahead: number | null; // jobs before this one (0 = running or next), null when not queued
+  export_progress: number | null; // 0..1 while the MP4 is captured, null before export starts
+  export_mode: "smooth" | "keyframe" | null; // how the MP4 was made, once it is ready
 }
 
 export interface Job {

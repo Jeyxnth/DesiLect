@@ -3,7 +3,7 @@ import type { TitleCardScene } from "../types/lesson";
 import { fadeIn } from "./anim";
 import { fitSize, wrapLabel } from "./measure";
 import type { SceneProps } from "./registry";
-import { BODY_PX, SAFE, STAGE_W } from "./tokens";
+import { BODY_PX, LINE_SCALE, SAFE, STAGE_W } from "./tokens";
 
 const HEADING_IN = 0; // heading slides up and fades in over 0.5 s
 const SUB_IN = 0.25; // the subheading follows
@@ -77,22 +77,22 @@ function Icon({ kind }: { kind: IconKind }): ReactElement {
  * Title card: the heading slides up and fades in over 0.5 s, the subheading follows, then a small
  * topic icon. Only transform and opacity animate. Pure function of localT.
  */
-export default function TitleCard({ scene, localT }: SceneProps<TitleCardScene>) {
+export default function TitleCard({ scene, localT, lang }: SceneProps<TitleCardScene>) {
   const h = fadeIn(localT, HEADING_IN, IN_S);
   const s = fadeIn(localT, SUB_IN, IN_S);
   const ic = fadeIn(localT, ICON_IN, IN_S);
 
   // One line at the largest size that fits; otherwise two balanced lines.
-  let size = fitSize(scene.heading, TITLE_MAX, TITLE_MIN, WIDTH, { bold: true });
+  let size = fitSize(scene.heading, TITLE_MAX, TITLE_MIN, WIDTH, { bold: true, lang });
   let lines = [scene.heading];
   if (size === TITLE_MIN) {
     size = 48;
-    lines = wrapLabel(scene.heading, size, WIDTH, { bold: true }).lines;
+    lines = wrapLabel(scene.heading, size, WIDTH, { bold: true, lang }).lines;
   }
-  const lineH = size * 1.2;
+  const lineH = size * 1.2 * LINE_SCALE[lang];
   const headTop = 268 - ((lines.length - 1) * lineH) / 2;
   const sub = scene.subheading ?? "";
-  const subSize = sub ? fitSize(sub, BODY_PX + 4, BODY_PX - 6, WIDTH) : 0;
+  const subSize = sub ? fitSize(sub, BODY_PX + 4, BODY_PX - 6, WIDTH, { lang }) : 0;
   const subY = headTop + (lines.length - 1) * lineH + 70;
 
   return (
