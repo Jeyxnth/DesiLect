@@ -3,44 +3,48 @@ from __future__ import annotations
 
 from ..config import get_settings
 from .base import TTSEngine
+from .indic_tts_engine import IndicTTSEngine
 from .kokoro_engine import KokoroEngine
 from .parler_engine import ParlerEngine
 
-# lang -> (engine name, default voice)
+# lang -> (engine name, default voice). Tamil's engine is chosen by TAMIL_TTS (see TAMIL_ENGINES).
 LANG_ENGINES: dict[str, tuple[str, str]] = {
     "en": ("kokoro", "hf_alpha"),  # Indian-accented English: a Hindi voice speaking en-us phonemes
     "hi": ("kokoro", "hf_alpha"),
     "ta": ("parler", "jaya"),
 }
-_ENGINE_CLASSES: dict[str, type] = {"kokoro": KokoroEngine, "parler": ParlerEngine}
+# TAMIL_TTS value -> (engine name, default voice)
+TAMIL_ENGINES: dict[str, tuple[str, str]] = {
+    "parler": ("parler", "jaya"),
+    "indic-tts": ("indic-tts", "female"),  # Plan B: FastPitch + HiFi-GAN, about 10x faster than Parler on CPU
+}
+_ENGINE_CLASSES: dict[str, type] = {"kokoro": KokoroEngine, "parler": ParlerEngine, "indic-tts": IndicTTSEngine}
 
-# Voices a learner can pick (step 11): lang -> [(voice id, label, gender)]
-VOICES: dict[str, list[tuple[str, str, str]]] = {
-    "en": [("hf_alpha", "Alpha", "female"), ("hm_omega", "Omega", "male")],
-    "hi": [("hf_alpha", "Alpha", "female"), ("hm_omega", "Omega", "male")],
+# Voices a learner can pick (step 11): engine -> [(voice id, label, gender)]
+ENGINE_VOICES: dict[str, list[tuple[str, str, str]]] = {
+    "kokoro": [("hf_alpha", "Alpha", "female"), ("hm_omega", "Omega", "male")],
     # Indic Parler-TTS's other Tamil speaker, Kavitha, drags words and cut a short sentence; it has no male one
-    "ta": [("jaya", "Jaya", "female")],
+    "parler": [("jaya", "Jaya", "female")],
+    "indic-tts": [("female", "Female", "female"), ("male", "Male", "male")],
 }
 
 _active: dict[str, TTSEngine] = {}
 
 
-def list_voices(lang: str) -> list[dict[str, str]]:
-    if lang not in VOICES:
-        raise ValueError(f"unsupported language: {lang}")
-    engine = LANG_ENGINES[lang][0]
-    return [{"id": v, "label": label, "gender": gender, "engine": engine} for v, label, gender in VOICES[lang]]
-
-
 def _engine_for(lang: str) -> tuple[str, str]:
     if lang not in LANG_ENGINES:
         raise ValueError(f"unsupported language: {lang}")
-    name, voice = LANG_ENGINES[lang]
-    if lang == "ta" and get_settings().tamil_tts != "parler":
-        raise NotImplementedError(
-            f"TAMIL_TTS={get_settings().tamil_tts!r}: no Plan B Tamil engine is built (see README, Tamil voice)"
-        )
-    return name, voice
+    if lang == "ta":
+        choice = get_settings().tamil_tts
+        if choice not in TAMIL_ENGINES:
+            raise NotImplementedError(f"TAMIL_TTS={choice!r}: choose one of {', '.join(TAMIL_ENGINES)}")
+        return TAMIL_ENGINES[choice]
+    return LANG_ENGINES[lang]
+
+
+def list_voices(lang: str) -> list[dict[str, str]]:
+    engine = _engine_for(lang)[0]
+    return [{"id": v, "label": label, "gender": gender, "engine": engine} for v, label, gender in ENGINE_VOICES[engine]]
 
 
 def get_engine(lang: str) -> tuple[TTSEngine, str]:

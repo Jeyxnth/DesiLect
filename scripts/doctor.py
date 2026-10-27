@@ -96,7 +96,7 @@ def check_python() -> None:
     mods = {"fastapi": 1, "pydantic": 1, "jsonschema": 1, "uvicorn": 1, "numpy": 2, "soundfile": 2,
             "onnxruntime": 2, "kokoro_onnx": 2, "espeakng_loader": 2, "httpx": 1, "pytest": 1, "playwright": 4,
             "torch": 8, "transformers": 8, "sentencepiece": 8, "sacremoses": 8, "indicnlp": 8, "regex": 8,
-            "parler_tts": 9, "psutil": 9}
+            "parler_tts": 9, "psutil": 9, "TTS": 9}
     for mod, since in mods.items():
         code, out = venv_run(f"import {mod}")
         fix = "Run: .venv/Scripts/python -m pip install -r backend/requirements.txt" + (
@@ -160,10 +160,11 @@ def check_models() -> None:
         report("Voices hf_alpha / hm_omega present", code == 0 and out.strip().endswith("1"), "",
                "Re-download: delete models/kokoro/voices-v1.0.bin and run scripts/download_models.py kokoro")
     for label, d, since in (("IndicTrans2 model", "indictrans2", 8),
-                            ("Indic Parler-TTS model", "indic-parler-tts", 9)):
+                            ("Indic Parler-TTS model", "indic-parler-tts", 9),
+                            ("Indic-TTS Tamil model (Plan B)", "indic-tts-ta", 9)):
         p = REPO / "models" / d
         report(label, p.is_dir() and any(p.iterdir()), "" if p.is_dir() else "missing",
-               "Run once while online: python scripts/download_models.py " + ("indictrans2" if since == 8 else "indic-parler-tts"), since)
+               "Run once while online: python scripts/download_models.py " + d, since)
 
 
 def check_ollama() -> None:

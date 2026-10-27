@@ -18,6 +18,18 @@
     "hi": { "program": "प्रोग्राम", "screen": "स्क्रीन" },
     "ta": { "program": "program", "screen": "திரை" }
   },
+  "tts_numbers": {
+    "_comment": "Spoken number words for the TTS text only (step 9); captions keep the digits. 0-999 are read as words, longer numbers digit by digit, 3.5 as 'three point five'. Spoken classroom forms.",
+    "ta": {
+      "units": ["பூஜ்ஜியம்", "ஒண்ணு", "ரெண்டு", "மூணு", "நாலு", "அஞ்சு", "ஆறு", "ஏழு", "எட்டு", "ஒம்போது",
+                "பத்து", "பதினொண்ணு", "பன்னெண்டு", "பதிமூணு", "பதினாலு", "பதினஞ்சு", "பதினாறு", "பதினேழு", "பதினெட்டு", "பத்தொம்போது"],
+      "tens": ["", "", "இருபது", "முப்பது", "நாப்பது", "அம்பது", "அறுபது", "எழுபது", "எம்பது", "தொண்ணூறு"],
+      "tens_prefix": ["", "", "இருபத்தி", "முப்பத்தி", "நாப்பத்தி", "அம்பத்தி", "அறுபத்தி", "எழுபத்தி", "எம்பத்தி", "தொண்ணூத்தி"],
+      "hundreds": ["", "நூறு", "இருநூறு", "முன்னூறு", "நானூறு", "ஐநூறு", "அறுநூறு", "எழுநூறு", "எண்ணூறு", "தொள்ளாயிரம்"],
+      "hundreds_prefix": ["", "நூத்தி", "இருநூத்தி", "முன்னூத்தி", "நானூத்தி", "ஐநூத்தி", "அறுநூத்தி", "எழுநூத்தி", "எண்ணூத்தி", "தொள்ளாயிரத்தி"],
+      "point": "புள்ளி"
+    }
+  },
   "tts_translit": {
     "_comment": "Spoken form of English terms, used for the TTS text only (step 9); captions keep the original. Whole-word, case-insensitive, longer keys win. Single letters are variable names such as i, a, b, c.",
     "hi": {

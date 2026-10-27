@@ -21,3 +21,9 @@ regex>=2024.0
 # Both IndicTrans2 and Indic Parler-TTS are tested with 4.46.3. Afterwards `pip check` reports
 # "parler-tts 0.2.2 has requirement transformers==4.46.1": expected, harmless. `python scripts/doctor.py` checks the version.
 psutil>=5.9   # physical core count for torch.set_num_threads
+#
+# step 9, Plan B Tamil engine (TAMIL_TTS=indic-tts): AI4Bharat Indic-TTS through coqui-tts, AFTER parler-tts above.
+# Install WITHOUT dependencies: a normal install upgrades transformers to 5.x and huggingface_hub to 2.x, which breaks
+# IndicTrans2 and Parler. FastPitch + HiFi-GAN need none of that; the rest is already present via parler-tts.
+#   pip install --no-deps coqui-tts==0.28.0 coqui-tts-trainer==0.4.0 coqpit-config==0.2.5 torchcodec==0.17.0 monotonic-alignment-search==0.2.1 anyascii==0.3.3 pysbd==0.3.4 inflect num2words typeguard more-itertools jaraco.functools docopt
+# (torchcodec is never used for audio here, but coqui-tts refuses to import without it on torch >= 2.9.)

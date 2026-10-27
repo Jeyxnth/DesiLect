@@ -84,8 +84,33 @@ def test_transliteration_longest_term_wins_and_handles_calls():
 
 
 def test_tamil_transliteration_and_english_untouched():
-    assert prepare_tts_text("இது loop ஆகும்", "ta") == "இது லூப் ஆகும்"
+    assert prepare_tts_text("இது loop ஆகும்", "ta") == "இது லூப், ஆகும்"
     assert prepare_tts_text("A loop repeats `print(i)`.", "en") == "A loop repeats print i ."
+
+
+def test_tamil_pauses_after_english_terms_not_before_punctuation():
+    assert prepare_tts_text("Python-ல loop எப்படி", "ta") == "பைதான்-ல, லூப், எப்படி"
+    assert prepare_tts_text("இது ஒரு for loop.", "ta") == "இது ஒரு ஃபார் லூப்."  # already a pause
+    assert prepare_tts_text("code-ஐ, பல", "ta") == "கோட்-ஐ, பல"
+    assert prepare_tts_text("Python में loop", "hi") == "पाइथन में लूप"  # Hindi is unchanged
+
+
+@pytest.mark.parametrize("digits, words", [
+    ("0", "பூஜ்ஜியம்"), ("3", "மூணு"), ("16", "பதினாறு"), ("20", "இருபது"), ("25", "இருபத்தி அஞ்சு"),
+    ("100", "நூறு"), ("105", "நூத்தி அஞ்சு"), ("250", "இருநூத்தி அம்பது"), ("2026", "ரெண்டு பூஜ்ஜியம் ரெண்டு ஆறு"),
+])
+def test_tamil_number_words(digits, words):
+    from app.tts.prep import _numbers, number_words
+
+    assert number_words(digits, _numbers("ta")) == words
+
+
+def test_tamil_numbers_in_sentences():
+    assert prepare_tts_text("range(3) நமக்கு 0, 1, 2-ன்னு", "ta") == "ரேஞ்ச், மூணு நமக்கு பூஜ்ஜியம், ஒண்ணு, ரெண்டு-ன்னு"
+    assert prepare_tts_text("9 கூட்டல் 16, 25 ஆகுது", "ta") == "ஒம்போது கூட்டல் பதினாறு, இருபத்தி அஞ்சு ஆகுது"
+    assert prepare_tts_text("3.5 ஆகும்", "ta") == "மூணு புள்ளி அஞ்சு ஆகும்"
+    assert prepare_tts_text("CO2 உள்ளே", "ta") == "சி ஓ டூ, உள்ளே"  # CO2 is a term, not a number
+    assert prepare_tts_text("range(3) हमें 0 देता है", "hi") == "रेंज 3 हमें 0 देता है"  # Hindi digits untouched
 
 
 def test_transliteration_switch(monkeypatch):
@@ -125,10 +150,29 @@ def test_list_voices():
         registry.list_voices("xx")
 
 
-def test_plan_b_name_is_refused_until_built(monkeypatch):
-    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="indic-tts"))
-    with pytest.raises(NotImplementedError, match="Plan B"):
+def test_unknown_tamil_engine_is_refused(monkeypatch):
+    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="espeak"))
+    with pytest.raises(NotImplementedError, match="TAMIL_TTS='espeak'"):
         registry.get_engine("ta")
+
+
+def test_plan_b_engine_is_selected_by_config(monkeypatch):
+    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="indic-tts"))
+    engine, voice = registry.get_engine("ta")
+    assert (engine.name, voice) == ("indic-tts", "female")
+    assert [v["id"] for v in registry.list_voices("ta")] == ["female", "male"]
+    assert registry.list_voices("ta")[0]["engine"] == "indic-tts"
+    registry.release_all()
+
+
+def test_indic_tts_voices_and_missing_model(tmp_path, monkeypatch):
+    from app.tts.indic_tts_engine import IndicTTSEngine
+
+    monkeypatch.setattr("app.tts.indic_tts_engine.get_settings", lambda: SimpleNamespace(models_dir=tmp_path))
+    engine = IndicTTSEngine()
+    assert engine.resolve_voice("male") == "male" and engine.resolve_voice("jaya") == "female"
+    with pytest.raises(FileNotFoundError, match="indic-tts-ta"):
+        engine.synth("வணக்கம்", "ta", "female")
 
 
 def test_parler_description_is_fixed_per_voice_and_speed():
