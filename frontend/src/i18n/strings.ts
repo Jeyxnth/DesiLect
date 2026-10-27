@@ -19,6 +19,17 @@ const STRINGS = {
   saveToRevise: { en: "Save to revise", hi: "दोहराने के लिए सहेजें", ta: "திருப்பிப் படிக்க சேமிங்க" },
   revise: { en: "Revise", hi: "दोहराएँ", ta: "திருப்பிப் படிக்க" },
   remove: { en: "Remove", hi: "हटाएँ", ta: "நீக்குங்க" },
+  // bonus B3: one-page summary
+  summary: { en: "Summary", hi: "सारांश", ta: "சுருக்கம்" },
+  summaryPdf: { en: "Summary PDF", hi: "सारांश PDF", ta: "சுருக்கம் PDF" },
+  keyPoints: { en: "Key points", hi: "मुख्य बातें", ta: "முக்கியக் கருத்துகள்" },
+  code: { en: "Code", hi: "कोड", ta: "Code" },
+  answer: { en: "Answers", hi: "उत्तर", ta: "விடைகள்" },
+  printPdf: { en: "Print / Save as PDF", hi: "प्रिंट / PDF सहेजें", ta: "Print / PDF-ஆ சேமிங்க" },
+  madeOffline: { en: "Made offline with Blu Visual Teacher", hi: "Blu Visual Teacher से ऑफ़लाइन बनाया गया", ta: "Blu Visual Teacher-ல offline-ஆ உருவாக்கப்பட்டது" },
+  beginner: { en: "Beginner", hi: "शुरुआती", ta: "தொடக்க நிலை" },
+  intermediate: { en: "Intermediate", hi: "मध्यम", ta: "இடைநிலை" },
+  back: { en: "Back to the lesson", hi: "पाठ पर वापस", ta: "பாடத்துக்குத் திரும்ப" },
 } satisfies Record<string, Record<Language, string>>;
 
 export type StringKey = keyof typeof STRINGS;

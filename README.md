@@ -421,6 +421,45 @@ No account and no server state: everything personal stays in this browser.
 - **Known rough edge.** The Hindi and Tamil labels are IndicTrans2 output and can be clumsy: "Python for loop" came out as
   "लूप के लिए पायथन". The request itself stays English, so the next lesson is still right.
 
+### One-page lesson summary (bonus B3)
+
+`/summary/:id` is a one-page A4 summary built only from the lesson's own JSON (`lesson.json`). There is no second model call: the
+page and the PDF route never touch Ollama. The page shows:
+- the title and level;
+- one block per scene, in two columns: the heading, and the first sentence of the narration as the key point (the whole narration if
+  it is one sentence; a short opener such as "Welcome!" is skipped);
+- each `code_walkthrough` in a mono box (12 lines at most, then "...");
+- each diagram as a small SVG, drawn by the player's own `DiagramScene` at its final state;
+- the quiz as a worksheet, with the answer key at the bottom;
+- the two next topics;
+- a footer reading "Made offline with Blu Visual Teacher" and the date.
+
+All text is rendered as React text nodes. Labels are in `strings.ts` (en/hi/ta), with the stage's Indic fonts and line height.
+
+- **One page, always.** The sheet is exactly the A4 printable area (`@page { size: A4; margin: 12mm }`) and is measured on screen
+  after the fonts load. If it overflows, it shrinks in this order: drop the diagrams, cut key points to 140 characters at a word,
+  cut code to 6 lines, then use smaller type. Anything still over is clipped by the sheet, so it can never spill onto a second page.
+- **Print.** "Print / Save as PDF" on the page calls `window.print()`, with no backend involved. "Summary" appears on the player's end
+  card and next to the MP4 download, with "Summary PDF" beside it.
+- **Server PDF.** `GET /api/lessons/{id}/summary.pdf` opens `/summary/:id?print=1` in the capture browser, waits until the sheet has
+  fitted itself (after `document.fonts.ready`), and prints it as A4 with backgrounds to `outputs/lessons/<id>/summary.<lang>.pdf`.
+  The file is cached and made again only when `lesson.json` or the app build is newer. It took about 1.6 s here; a cached copy came
+  back in 4 ms.
+- **Checked.** The three B1 topics (vaccines, gravity, hash tables) in en, hi and ta all fit one A4 page both as the server PDF and
+  as the browser print. Each title was in the right script and nothing overflowed. The longest, the Tamil hash-table summary, took
+  the first shrink step (diagrams dropped).
+- **Tests** (`backend/tests/test_summary.py`, real Chromium, real PDFs, pages counted in the file):
+  - the fallback lesson in en, hi and ta gives one page;
+  - a 6-scene lesson with code, diagrams, a quiz and next topics gives one page;
+  - a lesson with no quiz and no next topics renders cleanly;
+  - an overfull Hindi lesson shrinks in order without clipping;
+  - the headings and title come from the lesson;
+  - the cache is reused and invalidated correctly;
+  - the PDF route works with outbound network blocked.
+
+  `frontend/src/summary/text.test.ts` covers the key-point, cutting and shrink rules.
+- **Not done here:** adding a summary PDF per language to the Step 12 drill matrix, and a summary PDF beside the submission MP4s.
+
 ### Offline testing and hardening (step 12)
 
 ```
@@ -477,5 +516,6 @@ frees it), translation about 1.7 GB, Tamil voice about 2.1 GB, export up to 2.2 
 | `GET /api/lessons/{id}/events` | the same status as Server-Sent Events, until the job is done or failed |
 | `POST /api/lessons/{id}/export` | retry the MP4 export (the lesson keeps playing if export fails) |
 | `GET /api/lessons/{id}/lesson` | the lesson plan, with `meta.fallback`, `meta.source`, `meta.reason` |
+| `GET /api/lessons/{id}/summary.pdf` | one-page A4 summary PDF (bonus B3), cached as `summary.<lang>.pdf` |
 
 Results (`timeline.json`, `lesson.wav`, `lesson.mp4`, `captions.srt`) are served under `/media/lessons/{id}/`.

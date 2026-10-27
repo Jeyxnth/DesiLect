@@ -16,7 +16,7 @@ export function StreakBadge({ count, lang }: { count: number; lang: Language }) 
  * Shown on the quiz end card, or under the player when the lesson has no quiz. Habit parts are omitted when
  * browser storage is unavailable (streak null).
  */
-export default function LessonEnd({ lang, nextTopics, nextLabels, onTryNext, streak, saved, onToggleSave }: {
+export default function LessonEnd({ lang, nextTopics, nextLabels, onTryNext, streak, saved, onToggleSave, onSummary }: {
   lang: Language;
   nextTopics?: string[];
   nextLabels?: string[];
@@ -24,9 +24,10 @@ export default function LessonEnd({ lang, nextTopics, nextLabels, onTryNext, str
   streak: number | null;
   saved: boolean | null;
   onToggleSave: () => void;
+  onSummary?: () => void; // bonus B3: open the one-page summary
 }) {
   const topics = nextTopics?.length === 2 ? nextTopics : [];
-  if (topics.length === 0 && streak === null) return null;
+  if (topics.length === 0 && streak === null && !onSummary) return null;
   return (
     <div className="lesson-end" lang={lang}>
       {topics.length > 0 && (
@@ -39,10 +40,11 @@ export default function LessonEnd({ lang, nextTopics, nextLabels, onTryNext, str
           ))}
         </div>
       )}
-      {streak !== null && (
+      {(streak !== null || onSummary) && (
         <div className="lesson-end-row">
-          <StreakBadge count={streak} lang={lang} />
-          {saved !== null && (
+          {streak !== null && <StreakBadge count={streak} lang={lang} />}
+          {onSummary && <button type="button" className="revise-toggle" onClick={onSummary}>{ui(lang, "summary")}</button>}
+          {streak !== null && saved !== null && (
             <button type="button" className="revise-toggle" aria-pressed={saved} onClick={onToggleSave}>
               {saved ? "✓ " : ""}{ui(lang, "saveToRevise")}
             </button>

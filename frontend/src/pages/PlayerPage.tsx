@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getLesson, retryExport, revoiceLesson, watchStatus, type Job } from "../api/jobs";
 import { downloadName } from "../api/slug";
+import { ui } from "../i18n/strings";
 import FallbackNotice from "../components/FallbackNotice";
 import SpeedPanel from "../components/SpeedPanel";
 import LessonEnd from "../habit/LessonEnd";
@@ -121,7 +122,8 @@ export default function PlayerPage({ id }: { id: string }) {
         <Player key={timeline.lesson_id} timeline={timeline} autoplay={autoplay} onComplete={onComplete}
           endExtra={
             <LessonEnd lang={timeline.language} nextTopics={timeline.next_topics} nextLabels={timeline.next_topic_labels} onTryNext={tryNext}
-              streak={habit ? currentStreak(habit, localDay()) : null} saved={saved} onToggleSave={toggleSave} />
+              streak={habit ? currentStreak(habit, localDay()) : null} saved={saved} onToggleSave={toggleSave}
+              onSummary={() => navigate(`/summary/${encodeURIComponent(id)}`)} />
           } />
       ) : !error && <p>Loading...</p>}
       {timeline && (
@@ -140,6 +142,12 @@ export default function PlayerPage({ id }: { id: string }) {
             <button type="button" className="button" onClick={retry}>Retry export</button>
           )}
           <a href={`${media}/captions.srt`} download={downloadName(topic, lang, "srt")}>Download captions (.srt)</a>
+          <a href={`/summary/${encodeURIComponent(id)}`} onClick={(e) => { e.preventDefault(); navigate(`/summary/${encodeURIComponent(id)}`); }}>
+            {ui(lang, "summary")}
+          </a>
+          <a href={`/api/lessons/${encodeURIComponent(id)}/summary.pdf`} download={downloadName(topic, lang, "pdf").replace(/\.pdf$/, "_summary.pdf")}>
+            {ui(lang, "summaryPdf")}
+          </a>
         </div>
       )}
       {job?.export_error && <p className="error" role="alert">MP4 export failed: {job.export_error}. The lesson still plays here.</p>}

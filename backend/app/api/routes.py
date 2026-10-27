@@ -9,14 +9,15 @@ from importlib import metadata
 from pathlib import Path
 from typing import Any, AsyncIterator, Literal
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 
 from .. import __version__
 from ..cache.store import find_cached_lesson, lesson_dir, read_json
 from ..config import LANGUAGES, SAMPLES_DIR, get_settings
 from ..export.ffmpeg import find_ffmpeg
+from ..export.summary import is_stale, render_summary_pdf, summary_pdf_path
 from ..pipeline.jobs import JOBS, QUEUE, ConceptRequest, Job
 from ..pipeline.orchestrator import export_job, request_cache_key, run_job, run_pipeline
 from ..planner.ollama_client import OllamaClient, OllamaError
@@ -218,6 +219,24 @@ def get_timeline(lesson_id: str) -> Any:
 @router.get("/lessons/{lesson_id}/timings")
 def get_timings(lesson_id: str) -> Any:
     return _lesson_file(lesson_id, "timings.json")
+
+
+@router.get("/lessons/{lesson_id}/summary.pdf")
+def get_summary_pdf(lesson_id: str, request: Request) -> FileResponse:
+    """One-page A4 summary of the lesson (bonus B3), printed by the capture browser from /summary/<id>.
+    Cached as summary.<lang>.pdf and made again only when lesson.json is newer. No model is called."""
+    out = _dir(lesson_id)
+    lesson_json = out / "lesson.json"
+    if not lesson_json.is_file():
+        raise HTTPException(404, "lesson.json not available yet")
+    language = read_json(lesson_json).get("language", "en")
+    pdf = summary_pdf_path(out, language)
+    if is_stale(pdf, lesson_json, get_settings().frontend_dist / "index.html"):  # a new app build re-makes old PDFs
+        try:
+            render_summary_pdf(lesson_id, str(request.base_url), pdf)
+        except Exception as exc:  # noqa: BLE001 - the page and browser print still work
+            raise HTTPException(503, f"summary PDF could not be made ({exc}); use Print / Save as PDF on the summary page") from exc
+    return FileResponse(pdf, media_type="application/pdf", filename=f"{lesson_id}_{language}_summary.pdf")
 
 
 class RevoiceRequest(BaseModel):
