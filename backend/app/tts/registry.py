@@ -18,7 +18,8 @@ _ENGINE_CLASSES: dict[str, type] = {"kokoro": KokoroEngine, "parler": ParlerEngi
 VOICES: dict[str, list[tuple[str, str, str]]] = {
     "en": [("hf_alpha", "Alpha", "female"), ("hm_omega", "Omega", "male")],
     "hi": [("hf_alpha", "Alpha", "female"), ("hm_omega", "Omega", "male")],
-    "ta": [("jaya", "Jaya", "female"), ("kavitha", "Kavitha", "female")],  # Indic Parler-TTS has no male Tamil speaker
+    # Indic Parler-TTS's other Tamil speaker, Kavitha, drags words and cut a short sentence; it has no male one
+    "ta": [("jaya", "Jaya", "female")],
 }
 
 _active: dict[str, TTSEngine] = {}

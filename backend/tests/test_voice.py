@@ -119,7 +119,7 @@ def test_registry_engines_and_one_loaded_at_a_time():
 
 def test_list_voices():
     assert [v["id"] for v in registry.list_voices("hi")] == ["hf_alpha", "hm_omega"]
-    assert [v["id"] for v in registry.list_voices("ta")] == ["jaya", "kavitha"]
+    assert [v["id"] for v in registry.list_voices("ta")] == ["jaya"]
     assert registry.list_voices("ta")[0]["engine"] == "parler"
     with pytest.raises(ValueError):
         registry.list_voices("xx")
@@ -135,7 +135,6 @@ def test_parler_description_is_fixed_per_voice_and_speed():
     engine = ParlerEngine()
     assert engine.description("jaya") == engine.description("jaya", 1.0)
     assert "Jaya" in engine.description("unknown-voice")  # falls back to the default voice
-    assert "Kavitha" in engine.description("kavitha")
     assert engine.description("jaya", 0.8) != engine.description("jaya", 1.0)
     assert pace_phrase(1.0) == "at a moderate pace"
 

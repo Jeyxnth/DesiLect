@@ -67,7 +67,7 @@ Full list: `LICENSES.md`.
 |---|---|---|---|
 | en | Kokoro (kokoro-onnx) | `hf_alpha` (female), `hm_omega` (male) | Indian-accented English: these Hindi voices speak en-us phonemes |
 | hi | Kokoro | `hf_alpha` (female), `hm_omega` (male) | Hindi phonemes; Latin words switch to English phonemes |
-| ta | Indic Parler-TTS | `jaya` (female, default), `kavitha` (female); the model has no named male Tamil speaker. Kavitha produced 0.66 s for the 20-character greeting "வணக்கம், இது ஒரு சோதனை." (Jaya: 1.81 s), probably cut short; long sentences were normal. Listen before offering her in the UI | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed |
+| ta | Indic Parler-TTS | `jaya` (female). The model's only other Tamil speaker, Kavitha, was dropped after a listening check (drags words; 0.66 s for a greeting Jaya says in 1.81 s); it has no male Tamil speaker | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed |
 
 The registry (`backend/app/tts/registry.py`) keeps one engine loaded and `release_all()` unloads it after the voice stage. `list_voices(lang)`
 and the `voice` / `speed` arguments of `build_timeline` are what step 11 uses. Parler has no speed control, so speed changes its description

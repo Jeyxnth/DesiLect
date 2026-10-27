@@ -34,8 +34,8 @@ logging.getLogger("parler_tts.modeling_parler_tts").addFilter(_DropExpectedNotic
 SEED = 0  # reset before every sentence, so a sentence sounds the same whatever was spoken before it
 DEFAULT_VOICE = "jaya"
 # voice id -> speaker name known to Indic Parler-TTS. The model card lists two Tamil speakers, Jaya (recommended)
-# and Kavitha, both female; there is no named male Tamil speaker.
-SPEAKERS = {"jaya": "Jaya", "kavitha": "Kavitha"}
+# and Kavitha, both female. Kavitha was tried in step 9 and dropped: she drags words and cut a short sentence.
+SPEAKERS = {"jaya": "Jaya"}
 _DESCRIPTION = (
     "{speaker}'s voice is clear, warm and expressive, speaking {pace} with very clear audio, "
     "a very close recording and no background noise."
