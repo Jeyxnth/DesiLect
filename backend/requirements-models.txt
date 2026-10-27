@@ -1,0 +1,6 @@
+# Model runtimes, installed in later steps (CPU-only builds, H3).
+# TODO(step 2): kokoro, soundfile
+# TODO(step 8): transformers, torch (CPU), IndicTransToolkit
+# TODO(step 9): parler-tts
+# TODO(step 4): playwright
+# Network is only for installing/downloading; never at runtime (H2).

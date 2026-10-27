@@ -1,0 +1,38 @@
+{
+  "title": "How a Python loop works",
+  "level": "beginner",
+  "language": "en",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "How a Python loop works",
+      "subheading": "Repeat work without repeating code",
+      "narration": "Welcome! Today we will learn how a Python loop works. A loop lets your program repeat a task again and again, without writing the same code many times."
+    },
+    {
+      "type": "code_walkthrough",
+      "heading": "The for loop",
+      "code": "for i in range(3):\n    print(i)",
+      "language_hint": "python",
+      "highlight_lines": [1, 2],
+      "narration": "Here is a simple for loop. The range(3) call gives us the numbers 0, 1 and 2. For each number, the variable i takes that value, and print shows it on the screen."
+    },
+    {
+      "type": "diagram",
+      "heading": "How the loop runs",
+      "layout": "row",
+      "items": ["i = 0", "i = 1", "i = 2"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "next" },
+        { "from": 1, "to": 2, "label": "next" }
+      ],
+      "narration": "Watch how the loop runs. First, i is 0, and print shows 0. Then i becomes 1, then 2, and after that the loop stops."
+    },
+    {
+      "type": "title_card",
+      "heading": "Recap",
+      "subheading": "A loop repeats code for every value",
+      "narration": "To recap, a loop repeats the same code for every value. Use range to say how many times, and print to see each result. Now try changing the number inside range yourself!"
+    }
+  ]
+}

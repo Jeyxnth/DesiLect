@@ -1,0 +1,38 @@
+{
+  "title": "Python loop कैसे काम करता है",
+  "level": "beginner",
+  "language": "hi",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "Python loop कैसे काम करता है",
+      "subheading": "कोड दोहराए बिना काम को बार-बार करें",
+      "narration": "नमस्ते! आज हम सीखेंगे कि Python में loop कैसे काम करता है। Loop की मदद से प्रोग्राम एक ही काम को बार-बार करता है, और हमें वही कोड बार-बार नहीं लिखना पड़ता।"
+    },
+    {
+      "type": "code_walkthrough",
+      "heading": "for loop",
+      "code": "for i in range(3):\n    print(i)",
+      "language_hint": "python",
+      "highlight_lines": [1, 2],
+      "narration": "यह एक सरल for loop है। range(3) हमें 0, 1 और 2 नंबर देता है। हर नंबर के लिए variable i वही मान ले लेता है, और print उसे स्क्रीन पर दिखाता है।"
+    },
+    {
+      "type": "diagram",
+      "heading": "Loop कैसे चलता है",
+      "layout": "row",
+      "items": ["i = 0", "i = 1", "i = 2"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "next" },
+        { "from": 1, "to": 2, "label": "next" }
+      ],
+      "narration": "देखिए loop कैसे चलता है। पहले i का मान 0 है, और print 0 दिखाता है। फिर i बनता है 1, फिर 2, और उसके बाद loop रुक जाता है।"
+    },
+    {
+      "type": "title_card",
+      "heading": "सारांश",
+      "subheading": "Loop हर मान के लिए कोड दोहराता है",
+      "narration": "संक्षेप में, loop हर मान के लिए एक ही कोड दोहराता है। कितनी बार चलाना है, यह range से तय होता है, और print से हर नतीजा दिखता है। अब range के अंदर की संख्या बदलकर खुद आज़माइए!"
+    }
+  ]
+}

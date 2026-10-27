@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Lesson",
+  "description": "Planner output. Contains no duration fields: audio sets scene length (G4).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["title", "level", "language", "scenes"],
+  "properties": {
+    "title": { "type": "string", "minLength": 1, "maxLength": 80 },
+    "level": { "enum": ["beginner", "intermediate"] },
+    "language": { "enum": ["en", "hi", "ta"] },
+    "scenes": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 6,
+      "items": { "$ref": "#/$defs/scene" }
+    }
+  },
+  "$defs": {
+    "narration": { "type": "string", "minLength": 1, "maxLength": 600 },
+    "scene": {
+      "oneOf": [
+        { "$ref": "#/$defs/title_card" },
+        { "$ref": "#/$defs/diagram" },
+        { "$ref": "#/$defs/code_walkthrough" }
+      ]
+    },
+    "title_card": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "heading", "narration"],
+      "properties": {
+        "type": { "const": "title_card" },
+        "heading": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "subheading": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "narration": { "$ref": "#/$defs/narration" }
+      }
+    },
+    "diagram": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "heading", "layout", "items", "narration"],
+      "properties": {
+        "type": { "const": "diagram" },
+        "heading": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "layout": { "enum": ["row", "cycle", "stack"] },
+        "items": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 6,
+          "items": { "type": "string", "minLength": 1, "maxLength": 24 }
+        },
+        "arrows": {
+          "type": "array",
+          "maxItems": 12,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to"],
+            "properties": {
+              "from": { "type": "integer", "minimum": 0, "maximum": 5 },
+              "to": { "type": "integer", "minimum": 0, "maximum": 5 },
+              "label": { "type": "string", "minLength": 1, "maxLength": 16 }
+            }
+          }
+        },
+        "narration": { "$ref": "#/$defs/narration" }
+      }
+    },
+    "code_walkthrough": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "heading", "code", "highlight_lines", "narration"],
+      "properties": {
+        "type": { "const": "code_walkthrough" },
+        "heading": { "type": "string", "minLength": 1, "maxLength": 60 },
+        "code": {
+          "description": "Plain text, max 12 lines of max 50 columns. Displayed as text only (H4).",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 611,
+          "pattern": "^[^\\n]{0,50}(\\n[^\\n]{0,50}){0,11}$"
+        },
+        "language_hint": { "type": "string", "minLength": 1, "maxLength": 20 },
+        "highlight_lines": {
+          "description": "1-based line numbers, in the order they are explained.",
+          "type": "array",
+          "maxItems": 12,
+          "uniqueItems": true,
+          "items": { "type": "integer", "minimum": 1, "maximum": 12 }
+        },
+        "narration": { "$ref": "#/$defs/narration" }
+      }
+    }
+  }
+}

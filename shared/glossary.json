@@ -1,0 +1,17 @@
+{
+  "_comment": "Terms kept in English inside translated narration (G5). Used by backend/app/translate/protect.py.",
+  "keep_english": [
+    "Python", "loop", "for", "while", "range", "print", "variable", "function",
+    "list", "string", "int", "float", "if", "else", "return", "code", "class",
+    "True", "False", "None", "input", "len", "append"
+  ],
+  "keep_patterns": [
+    "`[^`]+`",
+    "\\b\\w+\\([^)]*\\)",
+    "\\b\\d+(?:\\.\\d+)?\\b"
+  ],
+  "preferred": {
+    "hi": { "program": "प्रोग्राम", "screen": "स्क्रीन" },
+    "ta": { "program": "program", "screen": "திரை" }
+  }
+}
