@@ -26,7 +26,8 @@
       "properties": {
         "fallback": { "type": "boolean" },
         "source": { "type": "string", "maxLength": 80 },
-        "topic": { "type": "string", "maxLength": 200 }
+        "topic": { "type": "string", "maxLength": 200 },
+        "reason": { "type": "string", "maxLength": 200, "description": "Why the fallback was used, shown to the user." }
       }
     },
     "narration": { "type": "string", "minLength": 1, "maxLength": 600 },

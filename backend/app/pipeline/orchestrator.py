@@ -24,6 +24,22 @@ log = logging.getLogger("blu.pipeline")
 STAGES = (("plan", 0.0), ("translate", 0.3), ("narrate", 0.35), ("export", 0.6))
 MAX_ATTEMPTS = 2
 
+# Planner failure -> the sentence the user sees in the fallback notice
+FRIENDLY_REASONS = {
+    "OllamaNotRunning": "The local planner (Ollama) is not running.",
+    "OllamaModelMissing": "The planner model is not installed.",
+    "OllamaTimeout": "The planner took too long to answer.",
+}
+
+
+def friendly_reason(reason: str | None) -> str:
+    """Turn plan_lesson's technical reason into a short sentence for the UI."""
+    if not reason:
+        return "The planner did not return a lesson."
+    if reason.startswith("invalid plan"):
+        return "The planner's lesson failed validation twice."
+    return FRIENDLY_REASONS.get(reason.split(":", 1)[0], "The local planner returned an error.")
+
 
 def plan_lesson(
     topic: str,
@@ -90,7 +106,7 @@ def plan_lesson(
         "planner_seconds": round(sum(attempt_seconds), 2),
     }
     if lesson is None:
-        return fallback_lesson(topic, level, "en"), meta
+        return fallback_lesson(topic, level, "en", reason=friendly_reason(reason)), meta
     lesson["level"], lesson["language"] = level, "en"  # the plan is always English; level is the request's
     lesson["meta"] = {"fallback": False, "source": f"ollama:{client.model}", "topic": topic[:200]}
     return lesson, meta
@@ -115,40 +131,52 @@ def run_pipeline(
 
     def status(stage: str, progress: float) -> None:
         JOBS.update(job_id, stage=stage, progress=progress)
-        write_json(out_dir / "status.json", {"stage": stage, "progress": progress, "fallback_used": JOBS.get(job_id).fallback_used})  # type: ignore[union-attr]
+        write_json(out_dir / "status.json", JOBS.get(job_id).public()["status"])  # type: ignore[union-attr]
+
+    def note_fallback(lesson: dict[str, Any]) -> None:
+        meta = lesson.get("meta", {})
+        if meta.get("fallback"):
+            JOBS.update(job_id, fallback_used=True, fallback_reason=meta.get("reason"))
 
     JOBS.update(job_id, state="running")
     try:
         status("plan", 0.0)
         with timed_stage(job_id, "plan"):
             lesson, plan_meta = plan_lesson(req.topic, req.level, req.target_seconds, job_id, client)
-        JOBS.update(job_id, fallback_used=plan_meta["fallback"])
+        note_fallback(lesson)
         write_json(out_dir / "plan_meta.json", plan_meta)
 
         if req.language != "en":
             status("translate", 0.3)
             with timed_stage(job_id, "translate"):
                 lesson = translate_lesson(lesson, req.language)  # falls back to the pre-translated sample (G2)
-            JOBS.update(job_id, fallback_used=True)
+            note_fallback(lesson)
         write_json(out_dir / "lesson.json", lesson)
 
         status("narrate", 0.35)
         with timed_stage(job_id, "narrate"):
             build_timeline(lesson, req.language, out_dir)
+        JOBS.update(job_id, timeline_ready=True)  # the player can open the lesson now
+    except Exception as exc:  # noqa: BLE001 - report on the job instead of crashing the worker
+        log.exception("pipeline failed")
+        JOBS.update(job_id, state="failed", error=str(exc))
+        return
 
-        if export:
-            status("export", 0.6)
+    if export:
+        status("export", 0.6)
+        try:  # the lesson already plays in the browser, so a failed MP4 is not a failed job
             ensure_frontend_built()
             if base_url:
                 export_lesson(job_id, base_url)
             else:
                 with local_server() as url:
                     export_lesson(job_id, url)
-        status("done", 1.0)
-        JOBS.update(job_id, state="done")
-    except Exception as exc:  # noqa: BLE001 - report on the job instead of crashing the worker
-        log.exception("pipeline failed")
-        JOBS.update(job_id, state="failed", error=str(exc))
+            JOBS.update(job_id, mp4_ready=True)
+        except Exception as exc:  # noqa: BLE001
+            log.exception("export failed")
+            JOBS.update(job_id, export_error=str(exc))
+    status("done", 1.0)
+    JOBS.update(job_id, state="done")
 
 
 def main(argv: list[str] | None = None) -> int:

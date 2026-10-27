@@ -20,7 +20,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-CURRENT_STEP = 5  # bump this each step so newly needed dependencies become hard requirements
+CURRENT_STEP = 6  # bump this each step so newly needed dependencies become hard requirements
 
 REPO = Path(__file__).resolve().parents[1]
 VENV_PY = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")

@@ -19,6 +19,15 @@ make sample    # narrates the sample lesson and writes outputs/lessons/sample-en
 make dev       # backend :8000, frontend :5173; play at /lesson/sample-en
 ```
 
+Other bundled samples render to their own folder, e.g.
+`python scripts/render_sample.py --sample photosynthesis --lang hi` writes `outputs/lessons/sample-photosynthesis-hi/`.
+
+Built-in samples (the G2 fallback when the planner fails): `python_loop` (programming), `photosynthesis` (science),
+`pythagorean_theorem` (maths), each in en/hi/ta. The closest one to the requested topic is used, and the UI says so.
+
+The planner takes about 35 s per plan on a CPU-only laptop (about 65 s when the first plan is rejected and retried);
+with a GPU Ollama is about 4x faster. Set `OLLAMA_NUM_GPU=0` in `.env` to measure the CPU-only time on a GPU laptop.
+
 ## Models and licences
 
 | Model / library | Used for | Licence |
@@ -30,7 +39,7 @@ make dev       # backend :8000, frontend :5173; play at /lesson/sample-en
 
 Full list: `LICENSES.md`.
 
-> Translation review status: `shared/samples/python_loop.hi.json` and `python_loop.ta.json` are machine-assisted translations that **need a native speaker check** (`_review`).
+> Translation review status: the Hindi and Tamil samples (`shared/samples/*.hi.json`, `*.ta.json`) are machine-assisted translations that **need a native speaker check**.
 
 ## Tested laptops
 

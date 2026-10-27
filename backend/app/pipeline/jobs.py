@@ -33,7 +33,11 @@ class Job:
     stage: str = "queued"
     progress: float = 0.0  # 0..1
     fallback_used: bool = False
+    fallback_reason: str | None = None  # shown in the UI notice
+    timeline_ready: bool = False  # narration done: the lesson can play
+    mp4_ready: bool = False
     error: str | None = None
+    export_error: str | None = None  # MP4 failed; the lesson still plays
     created_at: float = field(default_factory=time.time)
 
     def public(self) -> dict:
@@ -42,8 +46,16 @@ class Job:
             "lesson_id": self.id,
             "state": self.state,
             "stage": self.stage,
-            "status": {"stage": self.stage, "progress": round(self.progress, 3), "fallback_used": self.fallback_used},
+            "status": {
+                "stage": self.stage,
+                "progress": round(self.progress, 3),
+                "fallback_used": self.fallback_used,
+                "fallback_reason": self.fallback_reason,
+                "timeline_ready": self.timeline_ready,
+                "mp4_ready": self.mp4_ready,
+            },
             "error": self.error,
+            "export_error": self.export_error,
             "request": self.request.model_dump(),
         }
 

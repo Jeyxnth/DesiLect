@@ -28,7 +28,11 @@ def translate_lesson(lesson: dict[str, Any], target_lang: str) -> dict[str, Any]
     try:
         raise NotImplementedError("TODO(step 8)")
     except Exception:
-        return fallback_lesson(language=target_lang, level=lesson.get("level", "beginner"))
+        meta = lesson.get("meta", {})
+        reason = "Translation to this language is not available yet."
+        if meta.get("fallback") and meta.get("reason"):  # the planner already failed: that is the real cause
+            reason = meta["reason"]
+        return fallback_lesson(meta.get("topic", ""), lesson.get("level", "beginner"), target_lang, reason=reason)
 
 
 def unload() -> None:

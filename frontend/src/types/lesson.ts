@@ -42,6 +42,7 @@ export interface LessonMeta {
   fallback: boolean; // true when the built-in sample was used instead of a generated plan
   source?: string; // e.g. "ollama:llama3.2:3b" or "sample:python_loop"
   topic?: string;
+  reason?: string; // why the fallback was used, shown to the user
 }
 
 export interface Lesson {

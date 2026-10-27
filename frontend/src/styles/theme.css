@@ -92,3 +92,26 @@ body {
 .form { display: grid; gap: 12px; }
 .form label { display: grid; gap: 4px; color: var(--muted); }
 .form input, .form select { background: var(--panel); color: var(--text); border: 1px solid var(--muted); border-radius: 8px; padding: 8px; font: inherit; }
+.form button:disabled { opacity: 0.5; cursor: default; }
+
+/* Input page and player chrome (not render mode) */
+.input-page { max-width: 640px; }
+.muted { color: var(--muted); }
+.error { color: #fca5a5; border-left: 4px solid #f87171; padding: 8px 12px; background: #3f1d1d; border-radius: 6px; }
+.shortcuts { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; color: var(--muted); }
+.shortcuts button { padding: 4px 10px; font-size: 0.9em; }
+.job { margin-top: 20px; display: grid; gap: 10px; }
+.stages { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.stage-mark { display: inline-block; width: 1.5em; }
+.stage-todo { color: var(--muted); }
+.stage-active { color: var(--accent); font-weight: 700; }
+.stage-hint { color: var(--muted); font-weight: 400; }
+.job-bar { height: 8px; background: var(--panel); border-radius: 4px; overflow: hidden; }
+.job-bar-fill { height: 100%; background: var(--accent); }
+.fallback-notice { border: 2px solid var(--accent-2); background: #3a2e0b; color: var(--text); border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+.fallback-notice strong { color: var(--accent-2); }
+.fallback-notice p { margin: 6px 0 0; }
+.player-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.player-header h1 { font-size: 1.4em; margin: 8px 0; }
+.player-header a, .downloads a { color: var(--accent); }
+.downloads { display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; }
