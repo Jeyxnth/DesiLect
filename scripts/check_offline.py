@@ -9,7 +9,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SCAN = [REPO_ROOT / "frontend" / "src", REPO_ROOT / "frontend" / "index.html", REPO_ROOT / "backend" / "app"]
 EXTENSIONS = {".py", ".ts", ".tsx", ".js", ".jsx", ".css", ".html", ".json"}
 URL_RE = re.compile(r"https?://[^\s\"'`)>]+")
-LOCAL_RE = re.compile(r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?(/|$)")
+LOCAL_RE = re.compile(r"^https?://(localhost|127\.0\.0\.1|0\.0\.0\.0)(:[\w{}]+)?(/|$)")
 BAD_WORDS = re.compile(r"fonts\.googleapis|fonts\.gstatic|cdn\.|unpkg|jsdelivr|googletagmanager|sentry|analytics", re.I)
 
 

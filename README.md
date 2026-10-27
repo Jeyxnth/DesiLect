@@ -14,6 +14,11 @@ current step is absent. Do not start testing until it reports 0 failed.
 
 ## Run offline
 
+```
+make sample    # narrates the sample lesson and writes outputs/lessons/sample-en/lesson.mp4 (+ captions.srt)
+make dev       # backend :8000, frontend :5173; play at /lesson/sample-en
+```
+
 ## Models and licences
 
 | Model / library | Used for | Licence |

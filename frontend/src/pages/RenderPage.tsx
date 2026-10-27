@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { ManualClock, useClock } from "../player/clock";
 import { loadTimeline } from "../player/loadTimeline";
 import { Stage } from "../player/Player";
-import { FADE_S, keyframes } from "../scenes/anim";
+import { SETTLE_S, keyframes } from "../scenes/anim";
 import type { Timeline } from "../types/lesson";
 
 declare global {
@@ -11,9 +11,9 @@ declare global {
     __seek?: (t: number) => Promise<void>;
     /** True once the timeline is loaded, fonts are ready and the first frame is painted. */
     __ready?: boolean;
-    /** Every time (seconds) at which the picture changes, ascending. */
+    /** Every time (seconds) at which the picture changes (incl. 1 s progress ticks), ascending. */
     __keyframes?: () => number[];
-    /** Seconds the scenes need to finish fading in after a keyframe (capture at keyframe + this for a settled frame). */
+    /** Seconds scene animations need to finish after a keyframe (capture at keyframe + this, before the next keyframe). */
     __settle?: number;
   }
 }
@@ -47,7 +47,7 @@ export default function RenderPage({ id }: { id: string }) {
     };
     window.__seek = seek;
     window.__keyframes = () => keyframes(timeline);
-    window.__settle = FADE_S;
+    window.__settle = SETTLE_S;
     const start = Number(new URLSearchParams(window.location.search).get("t") ?? 0);
     void seek(Number.isFinite(start) ? start : 0).then(() => { window.__ready = true; });
     return () => {
@@ -62,7 +62,7 @@ export default function RenderPage({ id }: { id: string }) {
   return (
     <div className="render-root">
       {error && <p className="notice">{error}</p>}
-      {timeline && <Stage timeline={timeline} t={t} showProgress={false} />}
+      {timeline && <Stage timeline={timeline} t={t} />}
     </div>
   );
 }

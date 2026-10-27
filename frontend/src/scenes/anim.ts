@@ -1,8 +1,11 @@
 // Pure helpers: every visual state is a function of (timeline, t) (G3). No timers, no transitions.
 import type { Beat, Cue, Scene, Timeline, TimelineScene } from "../types/lesson";
 
-/** Fade/slide length used by the scenes. Exporters can capture at keyframe + FADE_S for a settled picture. */
+/** Fade/slide length used by the scenes. Exporters capture at keyframe + SETTLE_S for a settled picture. */
 export const FADE_S = 0.5;
+
+/** Longest time any scene animation needs to finish after a keyframe (title subheading: 0.5 + 0.6 s). */
+export const SETTLE_S = 1.2;
 
 export const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 
@@ -51,9 +54,13 @@ export function sceneAt(scenes: TimelineScene[], t: number): TimelineScene | nul
   return scenes.find((s) => t >= s.start && t < s.end) ?? scenes[0] ?? null;
 }
 
-/** Every time the picture changes: scene starts, beats, cue starts and cue ends (caption goes blank). */
-export function keyframes(timeline: Timeline): number[] {
+/**
+ * Every time the picture changes: scene starts, beats, cue starts and cue ends (caption goes blank),
+ * plus a progress-bar tick every `tick` seconds so the bar never lags more than that in keyframe export.
+ */
+export function keyframes(timeline: Timeline, tick = 1): number[] {
   const times = new Set<number>([0]);
+  for (let t = tick; t < timeline.total_seconds; t += tick) times.add(t);
   for (const s of timeline.scenes) {
     times.add(s.start);
     s.beats.forEach((b) => times.add(b.t));
