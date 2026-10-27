@@ -1,6 +1,16 @@
-# Model runtimes, installed in later steps (CPU-only builds, H3).
+# Model runtimes (CPU-only builds, H3). Network is only for installing/downloading; never at runtime (H2).
 # step 2: kokoro-onnx, onnxruntime, soundfile are in requirements.txt
-# TODO(step 8): transformers, torch (CPU), IndicTransToolkit
+# step 4: playwright (pip install playwright)
+#
+# step 8: IndicTrans2 translation. Install torch from the CPU index first so no CUDA build is pulled in:
+#   pip install torch --index-url https://download.pytorch.org/whl/cpu
+#   pip install -r backend/requirements-models.txt
+transformers==4.46.3   # IndicTrans2's model code uses legacy KV-cache tuples; newer versions break generate() with use_cache
+sentencepiece>=0.2
+sacremoses>=0.1
+huggingface_hub>=0.23
+# IndicTransToolkit's processor is vendored as pure Python (backend/app/translate/indic_processor.py):
+# the PyPI package must be compiled with a C compiler on Windows. These are its runtime dependencies.
+indic-nlp-library-itt>=0.1
+regex>=2024.0
 # TODO(step 9): parler-tts
-# TODO(step 4): playwright
-# Network is only for installing/downloading; never at runtime (H2).

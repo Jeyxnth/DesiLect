@@ -27,7 +27,7 @@ SSE_INTERVAL_S = 0.5
 # Directory (under models/) that must exist and be non-empty for a model to count as present.
 MODEL_DIRS = {
     "kokoro": "kokoro",
-    "indictrans2": "indictrans2-en-indic-dist-200M",
+    "indictrans2": "indictrans2",
     "indic_parler_tts": "indic-parler-tts",
 }
 

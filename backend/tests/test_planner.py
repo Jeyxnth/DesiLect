@@ -268,3 +268,32 @@ def test_fallback_retitles_only_on_a_real_match():
 def test_every_fallback_is_valid_in_every_language(topic, lang):
     lesson = fallback_lesson(topic, "intermediate", lang)
     assert validate_lesson(lesson) == [] and lesson["language"] == lang and lesson["level"] == "intermediate"
+
+
+def test_english_diagram_text_keeps_the_short_limits():
+    lesson = json.loads((SAMPLES_DIR / "photosynthesis.en.json").read_text(encoding="utf-8"))
+    diagram = next(s for s in lesson["scenes"] if s["type"] == "diagram")
+    diagram["items"][0] = "A very long diagram label here"  # 30 > 24
+    assert any("items/0: is too long (at most 24" in e for e in validate_lesson(lesson))
+    lesson["language"] = "hi"  # translated text may be longer
+    assert not validate_lesson(lesson)
+
+
+def test_sanitize_shortens_long_english_diagram_text():
+    from app.planner.validate import sanitize
+
+    lesson = json.loads((SAMPLES_DIR / "photosynthesis.en.json").read_text(encoding="utf-8"))
+    diagram = next(s for s in lesson["scenes"] if s["type"] == "diagram")
+    diagram["items"][0] = "Engine turns the clutch plate"
+    out = sanitize(lesson)
+    item = next(s for s in out["scenes"] if s["type"] == "diagram")["items"][0]
+    assert item == "Engine turns the clutch" and not validate_lesson(out)
+
+
+def test_last_planner_attempt_accepts_a_lesson_that_is_somewhat_short():
+    lesson = json.loads((SAMPLES_DIR / "python_loop.en.json").read_text(encoding="utf-8"))
+    raw = json.dumps(lesson)
+    words = sum(len(s["narration"].split()) for s in lesson["scenes"])
+    seconds = round(words / 2.3 * 1.4)  # the lesson is about 30% shorter than asked for
+    assert parse_and_validate(raw, seconds)[0] is None
+    assert parse_and_validate(raw, seconds, tolerance=0.5)[0] is not None

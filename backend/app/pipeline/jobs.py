@@ -42,6 +42,7 @@ class Job:
     timeline_ready: bool = False  # narration done: the lesson can play
     mp4_ready: bool = False
     error: str | None = None
+    failed_stage: str | None = None  # the stage that raised, when state is "failed"
     export_error: str | None = None  # MP4 failed; the lesson still plays
     timings: dict[str, float] = field(default_factory=dict)  # finished stages, seconds
     stage_started: float = field(default_factory=time.time)
@@ -65,6 +66,7 @@ class Job:
                 "timeline_ready": self.timeline_ready,
                 "mp4_ready": self.mp4_ready,
                 "timings": timings,
+                "failed_stage": self.failed_stage,
                 "queue_ahead": ahead,  # jobs before this one in the queue (0 = next), None when not queued
             },
             "error": self.error,

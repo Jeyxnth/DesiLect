@@ -20,7 +20,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-CURRENT_STEP = 6  # bump this each step so newly needed dependencies become hard requirements
+CURRENT_STEP = 8  # bump this each step so newly needed dependencies become hard requirements
 
 REPO = Path(__file__).resolve().parents[1]
 VENV_PY = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
@@ -94,7 +94,8 @@ def check_python() -> None:
     if not has_venv:
         return
     mods = {"fastapi": 1, "pydantic": 1, "jsonschema": 1, "uvicorn": 1, "numpy": 2, "soundfile": 2,
-            "onnxruntime": 2, "kokoro_onnx": 2, "espeakng_loader": 2, "httpx": 1, "pytest": 1, "playwright": 4}
+            "onnxruntime": 2, "kokoro_onnx": 2, "espeakng_loader": 2, "httpx": 1, "pytest": 1, "playwright": 4,
+            "torch": 8, "transformers": 8, "sentencepiece": 8, "sacremoses": 8, "indicnlp": 8, "regex": 8}
     for mod, since in mods.items():
         code, out = venv_run(f"import {mod}")
         report(f"Python package: {mod}", code == 0, "" if code == 0 else out.splitlines()[-1][:80] if out else "",
@@ -149,7 +150,7 @@ def check_models() -> None:
                              "print(int('hf_alpha' in f or 'hm_omega' in f))")
         report("Voices hf_alpha / hm_omega present", code == 0 and out.strip().endswith("1"), "",
                "Re-download: delete models/kokoro/voices-v1.0.bin and run scripts/download_models.py kokoro")
-    for label, d, since in (("IndicTrans2 model", "indictrans2-en-indic-dist-200M", 8),
+    for label, d, since in (("IndicTrans2 model", "indictrans2", 8),
                             ("Indic Parler-TTS model", "indic-parler-tts", 9)):
         p = REPO / "models" / d
         report(label, p.is_dir() and any(p.iterdir()), "" if p.is_dir() else "missing",

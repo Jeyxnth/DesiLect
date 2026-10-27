@@ -21,7 +21,7 @@ const LEVELS: { value: Level; label: string }[] = [
   { value: "intermediate", label: "Intermediate" },
 ];
 
-type StageState = "done" | "active" | "todo" | "skipped";
+type StageState = "done" | "active" | "todo" | "skipped" | "failed";
 
 /** Stage 1: concept input, then live job progress until the lesson can play. */
 export default function InputPage() {
@@ -62,9 +62,11 @@ export default function InputPage() {
   };
 
   const language = job?.request?.language ?? req.language;
-  const currentIndex = STAGES.findIndex((s) => s.id === job?.status.stage);
+  const failedAt = job?.state === "failed" ? job.status.failed_stage : null;
+  const currentIndex = STAGES.findIndex((s) => s.id === (failedAt ?? job?.status.stage));
   const stageState = (id: string, i: number): StageState => {
     if (id === "translate" && language === "en") return "skipped";
+    if (failedAt) return i < currentIndex ? "done" : i === currentIndex ? "failed" : "todo";
     if (job?.status.stage === "done") return "done";
     return i < currentIndex ? "done" : i === currentIndex ? "active" : "todo";
   };
@@ -132,7 +134,7 @@ export default function InputPage() {
               const seconds = job.status.timings[s.id];
               return (
                 <li key={s.id} className={`stage-${state}`}>
-                  <span className="stage-mark" aria-hidden="true">{{ done: "✓", active: "▶", todo: "·", skipped: "–" }[state]}</span>
+                  <span className="stage-mark" aria-hidden="true">{{ done: "✓", active: "▶", todo: "·", skipped: "–", failed: "✗" }[state]}</span>
                   <span className="stage-label">{s.label}</span>
                   <span className="stage-time">
                     {state === "skipped" ? "not needed" : seconds !== undefined ? `${seconds.toFixed(1)} s` : ""}

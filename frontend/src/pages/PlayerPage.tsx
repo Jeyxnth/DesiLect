@@ -43,6 +43,12 @@ export default function PlayerPage({ id }: { id: string }) {
         <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>New lesson</a>
       </header>
       {fallback && <FallbackNotice reason={fallback.reason} source={fallback.source} topic={fallback.topic} />}
+      {lesson?.meta?.translation_fallback && (
+        <div className="fallback-notice" role="status">
+          <strong>⚠ Translation unavailable</strong>
+          <p>The lesson could not be translated on this machine, so it is shown and narrated in English.</p>
+        </div>
+      )}
       {error && <p className="error" role="alert">{error}</p>}
       {timeline ? <Player key={timeline.lesson_id} timeline={timeline} autoplay={autoplay} /> : !error && <p>Loading...</p>}
       {timeline && (

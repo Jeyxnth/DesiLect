@@ -13,7 +13,7 @@ from ..export.capture import ensure_frontend_built, export_lesson, local_server
 from ..planner.fallback import fallback_lesson
 from ..planner.ollama_client import OllamaClient, OllamaError, lesson_format_schema
 from ..planner.prompts import build_retry_prompt, build_system_prompt, build_user_prompt
-from ..planner.validate import parse_and_validate
+from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, parse_and_validate
 from ..timing.timeline import build_timeline
 from ..translate.indictrans import translate_lesson
 from .jobs import JOBS, ConceptRequest
@@ -86,7 +86,8 @@ def plan_lesson(
             break
         seconds = time.perf_counter() - start
         attempt_seconds.append(round(seconds, 2))
-        lesson, errors = parse_and_validate(raw, target_seconds)
+        tolerance = LAST_TRY_WORD_TOLERANCE if attempt == MAX_ATTEMPTS else WORD_BUDGET_TOLERANCE
+        lesson, errors = parse_and_validate(raw, target_seconds, tolerance)
         log_raw(attempt, seconds, raw + ("\n--- rejected: " + "; ".join(errors) if errors else "\n--- accepted"))
         if lesson is not None:
             break
@@ -141,19 +142,24 @@ def run_pipeline(
             lesson, plan_meta = plan_lesson(req.topic, req.level, req.target_seconds, job_id, client)
         note_fallback(lesson)
         write_json(out_dir / "plan_meta.json", plan_meta)
+        write_json(out_dir / "lesson.en.json", lesson)  # the English plan; re-voicing reuses it (step 11)
 
         if req.language != "en":
             _status(job_id, "translate")
             with timed_stage(job_id, "translate"):
-                lesson = translate_lesson(lesson, req.language)  # falls back to the pre-translated sample (G2)
+                # unloads the model before TTS (H3); on failure: pre-translated sample or English (G2)
+                lesson = translate_lesson(lesson, req.language)
             note_fallback(lesson)
+            write_json(out_dir / f"lesson.{req.language}.json", lesson)
         write_json(out_dir / "lesson.json", lesson)
 
         with timed_stage(job_id, "narrate"):
-            build_timeline(lesson, req.language, out_dir, on_stage=lambda stage: _status(job_id, stage))
+            # the lesson's own language: a failed translation stays English and is voiced in English
+            build_timeline(lesson, lesson["language"], out_dir, on_stage=lambda stage: _status(job_id, stage))
         JOBS.update(job_id, timeline_ready=True)  # the player can open the lesson now
     except Exception as exc:  # noqa: BLE001 - report on the job instead of crashing the worker
         log.exception("pipeline failed")
+        JOBS.update(job_id, failed_stage=JOBS.get(job_id).stage)  # type: ignore[union-attr]
         _status(job_id, "done")
         JOBS.update(job_id, state="failed", error=str(exc))
         return

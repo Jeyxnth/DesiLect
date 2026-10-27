@@ -4,9 +4,18 @@
 
 ```
 make setup
-.venv/Scripts/python scripts/download_models.py kokoro ollama   # one-time, needs network (H2 exception)
+.venv/Scripts/python -m pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU-only build
+.venv/Scripts/python -m pip install -r backend/requirements-models.txt
+.venv/Scripts/hf auth login            # once: IndicTrans2 is gated (accept its terms on huggingface.co first)
+.venv/Scripts/python scripts/download_models.py kokoro ollama indictrans2   # one-time, needs network (H2 exception)
 python scripts/doctor.py --smoke                         # preflight: checks every dependency, prints the fix for each gap
 ```
+
+Translation (step 8): `python -m app.translate.indictrans --sample photosynthesis --lang hi ta` (from `backend/`)
+translates an English lesson offline. Code, numbers and `shared/glossary.json` terms stay in English.
+A full lesson takes about 8-13 s per language on this laptop. `transformers` is pinned to 4.46.3: IndicTrans2's model code
+crashes in newer versions. The model is loaded with `local_files_only`, so after the one-time download no account or network is needed;
+another laptop can simply copy the `models/` folder.
 
 On a fresh or test laptop run `python scripts/doctor.py` first. It needs only Python, reports what is missing
 (Python 3.11, Node 20, FFmpeg, browser, models, Ollama, fonts) and exits non-zero if anything required for the
@@ -39,11 +48,15 @@ with a GPU Ollama is about 4x faster. Set `OLLAMA_NUM_GPU=0` in `.env` to measur
 | Llama 3.2 3B Instruct via Ollama (`llama3.2:3b`) | lesson planner. **Built with Llama.** | Llama 3.2 Community License |
 | eSpeak NG (via espeakng-loader) | phonemes | GPL-3.0-or-later |
 | ONNX Runtime, NumPy, soundfile | CPU inference, audio | MIT / BSD-3-Clause |
+| IndicTrans2 en-indic dist-200M + IndicTransToolkit (PyTorch CPU) | English -> Hindi / Tamil translation | MIT |
 | Noto Sans, Noto Sans Mono (bundled in `frontend/public/fonts`) | UI, captions, code | SIL Open Font License 1.1 |
 
 Full list: `LICENSES.md`.
 
-> Translation review status: the Hindi and Tamil samples (`shared/samples/*.hi.json`, `*.ta.json`) are machine-assisted translations that **need a native speaker check**.
+> Translation review status: the Hindi and Tamil samples are machine translations that **need a native speaker check**.
+> Made by the IndicTrans2 pipeline (step 8): `shared/samples/photosynthesis.{hi,ta}.json`, `shared/samples/binary_search.{hi,ta}.json`.
+> Earlier machine-assisted drafts: `shared/samples/python_loop.{hi,ta}.json`, `shared/samples/pythagorean_theorem.{hi,ta}.json`.
+> Things to look at: word order around English terms kept by the glossary (e.g. "oxygen", "sorted list"), and diagram labels.
 
 ## Tested laptops
 

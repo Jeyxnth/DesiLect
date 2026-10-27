@@ -1,13 +1,17 @@
 {
-  "_comment": "Terms kept in English inside translated narration (G5). Used by backend/app/translate/protect.py.",
+  "_comment": "Terms kept in English inside translated narration (G5). Used by backend/app/translate/protect.py. Matching is whole-word and case-insensitive; longer terms win.",
   "keep_english": [
-    "Python", "loop", "for", "while", "range", "print", "variable", "function",
-    "list", "string", "int", "float", "if", "else", "return", "code", "class",
-    "True", "False", "None", "input", "len", "append"
+    "Python", "JavaScript", "loop", "loops", "for loop", "while loop", "if statement", "range", "print",
+    "variable", "variables", "function", "list", "lists", "string", "code", "True", "False", "None", "len",
+    "append", "array", "item", "items", "index", "target", "mid", "sorted", "binary search", "algorithm",
+    "photosynthesis", "chlorophyll", "glucose", "oxygen", "carbon dioxide", "CO2",
+    "Pythagorean theorem", "hypotenuse"
   ],
   "keep_patterns": [
     "`[^`]+`",
-    "\\b\\w+\\([^)]*\\)",
+    "\\b[A-Za-z_]\\w*\\([^()]*\\)",
+    "\\b[A-Za-z_]\\w*\\s*[-+*/]?=\\s*[A-Za-z0-9_.]+",
+    "\\b[A-Za-z]+_[A-Za-z0-9_]+\\b",
     "\\b\\d+(?:\\.\\d+)?\\b"
   ],
   "preferred": {

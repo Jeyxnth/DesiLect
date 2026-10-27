@@ -77,6 +77,27 @@ def tts_cache_path(engine: str, voice: str, lang: str, speed: float, text: str) 
     return root / f"{key}.wav"
 
 
+def translate_cache_path(model: str, lang: str, text: str) -> Path:
+    """Cache file for one translated string: outputs/cache/translate/<sha1(model, lang, text)>.json."""
+    key = hashlib.sha1("\x1f".join([model, lang, text]).encode("utf-8")).hexdigest()
+    root = get_settings().outputs_dir / "cache" / "translate"
+    root.mkdir(parents=True, exist_ok=True)
+    return root / f"{key}.json"
+
+
+def load_cached_text(path: Path) -> str | None:
+    try:
+        return str(read_json(path)["text"]) if path.is_file() else None
+    except (ValueError, KeyError, OSError):  # a corrupt cache entry is just a miss
+        return None
+
+
+def save_cached_text(path: Path, source: str, text: str) -> None:
+    tmp = path.with_suffix(".tmp")
+    write_json(tmp, {"source": source, "text": text})
+    tmp.replace(path)
+
+
 def load_cached_audio(path: Path) -> tuple[Any, int] | None:
     """Return (float32 samples, sample_rate) if the cache file exists and reads cleanly."""
     if not path.is_file():

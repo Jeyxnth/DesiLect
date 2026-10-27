@@ -14,14 +14,14 @@ export interface TitleCardScene {
 export interface Arrow {
   from: number;
   to: number;
-  label?: string; // <= 16
+  label?: string; // <= 32 (English plans: 16; the slack is for Indic scripts)
 }
 
 export interface DiagramScene {
   type: "diagram";
   heading: string;
   layout: "row" | "cycle" | "stack";
-  items: string[]; // 2..6, each <= 24
+  items: string[]; // 2..6, each <= 48 (English plans: 24; the slack is for Indic scripts)
   arrows?: Arrow[];
   narration: string;
 }
@@ -43,6 +43,7 @@ export interface LessonMeta {
   source?: string; // e.g. "ollama:llama3.2:3b" or "sample:python_loop"
   topic?: string;
   reason?: string; // why the fallback was used, shown to the user
+  translation_fallback?: boolean; // translation failed, so the narration stayed in English
 }
 
 export interface Lesson {

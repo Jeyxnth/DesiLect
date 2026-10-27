@@ -86,6 +86,7 @@ def test_pipeline_runs_with_ollama_down_and_reports_status(monkeypatch):
         "fallback_reason": "The local planner (Ollama) is not running.",
         "timeline_ready": True,
         "mp4_ready": True,
+        "failed_stage": None,
         "queue_ahead": None,
     }
     assert set(timings) == {"plan", "voice", "timing", "export"}  # English skips translate
@@ -140,7 +141,11 @@ def test_topic_longer_than_120_chars_is_rejected():
     assert client.post("/api/lessons", json={"topic": "x" * 121}).status_code == 422
 
 
-def test_translated_fallback_keeps_the_closest_sample(monkeypatch):
+def test_translated_fallback_keeps_the_closest_sample(monkeypatch, tmp_path):
+    from app.translate import indictrans
+
+    monkeypatch.setattr(indictrans, "model_dir", lambda: tmp_path / "no-model")  # translation unavailable
+    monkeypatch.setattr(indictrans, "translate_cache_path", lambda m, l, t: tmp_path / "empty-cache.json")
     job = run_job_with_ollama_down(monkeypatch, {"topic": "Photosynthesis", "language": "hi"})
     assert "translate" in job["status"]["timings"]
     lesson = client.get(f"/api/lessons/{job['id']}/lesson").json()
@@ -150,14 +155,19 @@ def test_translated_fallback_keeps_the_closest_sample(monkeypatch):
     assert job["status"]["fallback_used"] is True
 
 
-def test_translation_fallback_reason_when_the_plan_was_fine():
-    from app.translate.indictrans import translate_lesson
+def test_failed_job_reports_the_stage_that_failed(monkeypatch):
+    from app.pipeline import orchestrator as orch
 
-    plan = {"title": "Leaves", "level": "beginner", "language": "en", "scenes": [],
-            "meta": {"fallback": False, "source": "ollama:llama3.2:3b", "topic": "How do plants make food?"}}
-    lesson = translate_lesson(plan, "ta")
-    assert lesson["language"] == "ta" and lesson["meta"]["source"] == "sample:photosynthesis"
-    assert lesson["meta"]["reason"] == "Translation to this language is not available yet."
+    stub_pipeline(monkeypatch)
+
+    def no_voice(lesson, lang, out, on_stage=None):
+        on_stage("voice")
+        raise NotImplementedError("TODO(step 9): Tamil TTS")
+
+    monkeypatch.setattr(orch, "build_timeline", no_voice)
+    job = wait_until_finished(client.post("/api/lessons", json={"topic": "loops", "language": "en"}).json()["job_id"])
+    assert job["state"] == "failed" and job["status"]["failed_stage"] == "voice"
+    assert "voice" in job["status"]["timings"] and "export" not in job["status"]["timings"]
 
 
 def test_failed_export_still_leaves_a_playable_lesson(monkeypatch):

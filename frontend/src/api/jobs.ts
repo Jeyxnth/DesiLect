@@ -9,6 +9,7 @@ export interface JobStatus {
   timeline_ready: boolean; // the lesson can play
   mp4_ready: boolean;
   timings: Record<string, number>; // seconds per stage; the running stage counts up live
+  failed_stage: string | null; // the stage that raised, when the job failed
   queue_ahead: number | null; // jobs before this one (0 = running or next), null when not queued
 }
 

@@ -16,6 +16,8 @@ from jsonschema import Draft202012Validator
 from ..config import SCHEMA_DIR
 
 WORD_BUDGET_TOLERANCE = 0.25
+LAST_TRY_WORD_TOLERANCE = 0.5  # the last planner attempt: the timeline fits any length, so only reject a big miss
+EN_ITEM_MAX, EN_LABEL_MAX = 24, 16  # English diagram text; the schema allows 48 / 32 for Indic scripts
 SCENE_TYPES = ("title_card", "diagram", "code_walkthrough")  # order of the oneOf branches in the schema
 
 
@@ -74,7 +76,7 @@ def _words(lesson: dict[str, Any]) -> int:
     return sum(len(str(s.get("narration", "")).split()) for s in scenes if isinstance(s, dict)) if isinstance(scenes, list) else 0
 
 
-def _semantic_errors(lesson: dict[str, Any], target_words: int | None = None) -> list[str]:
+def _semantic_errors(lesson: dict[str, Any], target_words: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE) -> list[str]:
     """Checks JSON Schema cannot express."""
     errors: list[str] = []
     scenes = [s for s in lesson.get("scenes", []) if isinstance(s, dict)] if isinstance(lesson.get("scenes"), list) else []
@@ -83,12 +85,19 @@ def _semantic_errors(lesson: dict[str, Any], target_words: int | None = None) ->
     for i, scene in enumerate(scenes):
         if scene.get("type") == "diagram":
             n = len(scene["items"]) if isinstance(scene.get("items"), list) else 0
+            if lesson.get("language") == "en":  # the schema leaves room for Indic scripts; English stays short
+                for j, item in enumerate(scene["items"] if n else []):
+                    if isinstance(item, str) and len(item) > EN_ITEM_MAX:
+                        errors.append(f"scenes/{i}/items/{j}: is too long (at most {EN_ITEM_MAX} characters)")
             for j, arrow in enumerate(scene["arrows"] if isinstance(scene.get("arrows"), list) else []):
                 if not isinstance(arrow, dict):
                     continue
                 for end in ("from", "to"):
                     if isinstance(arrow.get(end), int) and arrow[end] >= n:
                         errors.append(f"scenes/{i}/arrows/{j}/{end}: index out of range for {n} items")
+                label = arrow.get("label")
+                if lesson.get("language") == "en" and isinstance(label, str) and len(label) > EN_LABEL_MAX:
+                    errors.append(f"scenes/{i}/arrows/{j}/label: is too long (at most {EN_LABEL_MAX} characters)")
         elif scene.get("type") == "code_walkthrough":
             code = scene["code"] if isinstance(scene.get("code"), str) else ""
             lines = code.split("\n")
@@ -102,7 +111,7 @@ def _semantic_errors(lesson: dict[str, Any], target_words: int | None = None) ->
                     errors.append(f"scenes/{i}/highlight_lines: line {line_no} but code has {len(lines)} lines")
     if target_words:
         words = _words(lesson)
-        lo, hi = round(target_words * (1 - WORD_BUDGET_TOLERANCE)), round(target_words * (1 + WORD_BUDGET_TOLERANCE))
+        lo, hi = round(target_words * (1 - tolerance)), round(target_words * (1 + tolerance))
         if not lo <= words <= hi:
             errors.append(f"narration has {words} words in total; it must be between {lo} and {hi} (about {target_words})")
     return errors
@@ -205,10 +214,10 @@ def sanitize(lesson: Any) -> Any:
             elif isinstance(text, str):
                 scene[key] = cut_at_word(_clean(text), limits[key]) if key in limits else _clean(text)
         if isinstance(scene.get("items"), list):
-            scene["items"] = [_clean(x) if isinstance(x, str) else x for x in scene["items"]]
+            scene["items"] = [cut_at_word(_clean(x), EN_ITEM_MAX) if isinstance(x, str) else x for x in scene["items"]]
         for arrow in scene.get("arrows", []) if isinstance(scene.get("arrows"), list) else []:
             if isinstance(arrow, dict) and isinstance(arrow.get("label"), str):
-                arrow["label"] = _clean(arrow["label"])
+                arrow["label"] = cut_at_word(_clean(arrow["label"]), EN_LABEL_MAX)
     return out
 
 
@@ -230,7 +239,7 @@ def extract_json_text(raw: str) -> str:
     return text
 
 
-def validate_lesson(data: Any, target_words: int | None = None) -> list[str]:
+def validate_lesson(data: Any, target_words: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE) -> list[str]:
     """Return a list of human-readable errors (empty means valid)."""
     errors = _schema_errors("lesson.schema.json", data)
     if not isinstance(data, dict):
@@ -240,16 +249,18 @@ def validate_lesson(data: Any, target_words: int | None = None) -> list[str]:
         if not 3 <= n <= 6:  # friendlier than the schema's message
             errors = [e for e in errors if not e.startswith("scenes:")]
             errors.append(f"scenes: found {n} scenes; a lesson needs 3 to 6")
-    semantic = _semantic_errors(data, target_words)
+    semantic = _semantic_errors(data, target_words, tolerance)
     if any("/code:" in e for e in semantic):  # the semantic message is clearer than the code pattern's
         errors = [e for e in errors if not (e.split(":")[0].endswith("/code") and "wrong shape" in e)]
     return sorted(set(errors + semantic))
 
 
-def parse_and_validate(raw: str, target_seconds: int | None = None) -> tuple[dict[str, Any] | None, list[str]]:
+def parse_and_validate(
+    raw: str, target_seconds: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE
+) -> tuple[dict[str, Any] | None, list[str]]:
     """Parse model output, sanitise, screen, validate. Returns (lesson | None, errors).
 
-    target_seconds enables the word-budget check (about 2.3 words per second, +/-25 percent).
+    target_seconds enables the word-budget check (about 2.3 words per second, +/- tolerance).
     """
     try:
         data = json.loads(extract_json_text(raw))
@@ -262,7 +273,7 @@ def parse_and_validate(raw: str, target_seconds: int | None = None) -> tuple[dic
     if errors:
         return None, errors
     target_words = round(target_seconds * 2.3) if target_seconds else None
-    errors = validate_lesson(lesson, target_words)
+    errors = validate_lesson(lesson, target_words, tolerance)
     return (None, errors) if errors else (lesson, [])
 
 

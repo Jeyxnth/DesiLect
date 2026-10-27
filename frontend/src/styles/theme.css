@@ -145,6 +145,7 @@ body {
 .stage-hint { grid-column: 2 / 4; color: var(--muted); font-weight: 400; font-size: 0.9em; }
 .stage-todo, .stage-skipped { color: var(--muted); }
 .stage-active { color: var(--accent); font-weight: 700; }
+.stage-failed { color: var(--warn); font-weight: 700; }
 .job-bar { height: 8px; background: var(--panel); border-radius: 4px; overflow: hidden; }
 .job-bar-fill { height: 100%; background: var(--accent); }
 .fallback-notice { border: 2px solid var(--warn); background: #3a2e0b; color: var(--text); border-radius: 8px; padding: 10px 14px; margin: 12px 0; }

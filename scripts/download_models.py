@@ -14,7 +14,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 # name -> (huggingface repo id, target dir under models/, licence)
 MODELS = {
     "kokoro": ("hexgrad/Kokoro-82M", "kokoro", "Apache-2.0"),  # fetched as ONNX files, see KOKORO_FILES
-    "indictrans2": ("ai4bharat/indictrans2-en-indic-dist-200M", "indictrans2-en-indic-dist-200M", "MIT"),
+    "indictrans2": ("ai4bharat/indictrans2-en-indic-dist-200M", "indictrans2", "MIT"),
     "indic-parler-tts": ("ai4bharat/indic-parler-tts", "indic-parler-tts", "Apache-2.0"),
     "ollama": ("llama3.2:3b", "(ollama store)", "Llama 3.2 Community License"),  # planner LLM, `ollama pull`
 }
@@ -75,10 +75,23 @@ def main() -> int:
             continue
         try:
             from huggingface_hub import snapshot_download
+            from huggingface_hub.errors import GatedRepoError
         except ImportError:
             print("huggingface_hub is required: pip install huggingface_hub", file=sys.stderr)
             return 1
-        snapshot_download(repo_id=repo, local_dir=target)
+        try:
+            snapshot_download(repo_id=repo, local_dir=target)
+        except GatedRepoError:
+            print(
+                f"\n{repo} is gated on Hugging Face. Once per machine:\n"
+                f"  1. Sign in at huggingface.co and open https://huggingface.co/{repo}\n"
+                "     and accept the access conditions (approval is automatic).\n"
+                "  2. Create a read token: https://huggingface.co/settings/tokens\n"
+                "  3. Run: .venv/Scripts/hf auth login   (paste the token; it is stored in your user profile, not in this repo)\n"
+                f"  4. Run this script again: python scripts/download_models.py {name}",
+                file=sys.stderr,
+            )
+            return 1
     return 0
 
 
