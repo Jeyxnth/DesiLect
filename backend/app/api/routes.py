@@ -137,7 +137,7 @@ def _status(lesson_id: str) -> dict[str, Any]:
     except ValueError:
         request = None
     # No MP4 on disk: say why, so the player offers Retry export instead of a button that never enables
-    export_error = None if mp4_ready else export.get("error") or "The MP4 export did not finish (the app was restarted)."
+    export_error = None if mp4_ready else export.get("error") or "The MP4 export did not finish (the app was restarted)"
     return Job(
         id=lesson_id,
         request=request,
@@ -150,7 +150,7 @@ def _status(lesson_id: str) -> dict[str, Any]:
         mp4_ready=mp4_ready,
         export_mode=export.get("mode") if mp4_ready else None,
         export_error=export_error,
-        timings={k: round(v, 1) for k, v in timings.items() if isinstance(v, (int, float))},
+        timings={k: round(v, 1) for k, v in timings.items() if isinstance(v, (int, float)) and not isinstance(v, bool)},
     ).public()
 
 

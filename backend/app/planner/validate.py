@@ -306,6 +306,7 @@ def parse_and_validate(
         return None, [f"invalid JSON: {exc}"]
     if not isinstance(data, dict):
         return None, ["the top level must be a JSON object"]
+    data.pop("quiz", None)  # judged on its own by parse_quiz: a bad quiz never rejects the lesson
     lesson = sanitize(data, cut_labels)
     errors = unsafe_strings(lesson) or foreign_script_strings(lesson)
     if errors:
@@ -315,11 +316,110 @@ def parse_and_validate(
     return (None, errors) if errors else (lesson, [])
 
 
+# --- quiz (bonus B1): validated apart from the lesson; bad questions are dropped, never retried --------------
+
+QUIZ_LIMITS_EN = {"question": 160, "option": 80, "explanation": 200}
+QUIZ_LIMITS_INDIC = {"question": 320, "option": 160, "explanation": 400}  # translated text; the schema maxima
+MIN_QUIZ_QUESTIONS = 2
+_ALL_OF_THE_ABOVE = re.compile(r"\b(all|none|both) of the above\b", re.I)
+
+
+def question_problems(q: Any, limits: dict[str, int], english: bool) -> list[str]:
+    """Why one quiz question is unusable (empty list = keep it)."""
+    if not isinstance(q, dict):
+        return ["is not an object"]
+    problems = []
+    question, options, answer, explanation = q.get("question"), q.get("options"), q.get("answer_index"), q.get("explanation")
+    if not isinstance(question, str) or not 1 <= len(question) <= limits["question"]:
+        problems.append(f"question must be 1-{limits['question']} characters")
+    if not isinstance(options, list) or len(options) != 4 or not all(isinstance(o, str) for o in options):
+        problems.append("needs exactly 4 text options")
+    else:
+        if any(not 1 <= len(o) <= limits["option"] for o in options):
+            problems.append(f"each option must be 1-{limits['option']} characters")
+        if len({" ".join(o.casefold().split()) for o in options}) != 4:
+            problems.append("options repeat")
+        if any(_ALL_OF_THE_ABOVE.search(o) for o in options):
+            problems.append('uses "all/none of the above"')
+    if not isinstance(answer, int) or isinstance(answer, bool) or not 0 <= answer <= 3:
+        problems.append("answer_index must be 0-3")
+    if not isinstance(explanation, str) or not 1 <= len(explanation) <= limits["explanation"]:
+        problems.append(f"explanation must be 1-{limits['explanation']} characters")
+    problems += [e.split(": ", 1)[-1] for e in unsafe_strings(q)]
+    if english:
+        problems += [e.split(": ", 1)[-1] for e in foreign_script_strings(q)]
+    return problems
+
+
+def _clean_question(q: Any) -> Any:
+    """Known keys only, text trimmed with spaces collapsed (anything malformed is left for the checks to reject)."""
+    if not isinstance(q, dict):
+        return q
+    out = {k: q[k] for k in ("question", "options", "answer_index", "explanation") if k in q}
+    for key in ("question", "explanation"):
+        if isinstance(out.get(key), str):
+            out[key] = _clean(out[key])
+    if isinstance(out.get("options"), list):
+        out["options"] = [_clean(o) if isinstance(o, str) else o for o in out["options"]]
+    return out
+
+
+def clean_quiz(raw: Any, max_questions: int = 3, language: str = "en") -> tuple[list[dict[str, Any]] | None, list[str]]:
+    """(quiz or None, warnings). Each invalid question is dropped; fewer than 2 good ones drops the whole quiz.
+
+    Text is trimmed and spaces collapsed first. English is held to 160 / 80 / 200 characters (question / option /
+    explanation), translated text to the schema's roomier limits. Same markup screen as every other string (H4).
+    """
+    if raw is None:
+        return None, ["no quiz in the plan"]
+    if not isinstance(raw, list):
+        return None, [f"quiz is a {type(raw).__name__}, not a list; dropped"]
+    limits = QUIZ_LIMITS_EN if language == "en" else QUIZ_LIMITS_INDIC
+    kept: list[dict[str, Any]] = []
+    warnings: list[str] = []
+    for i, q in enumerate(raw):
+        q = _clean_question(q)
+        problems = question_problems(q, limits, english=language == "en")
+        if problems:
+            warnings.append(f"quiz/{i} dropped: " + "; ".join(problems))
+        elif len(kept) < max_questions:
+            kept.append(q)
+    if len(kept) < MIN_QUIZ_QUESTIONS:
+        warnings.append(f"quiz dropped: {len(kept)} usable question(s), at least {MIN_QUIZ_QUESTIONS} needed")
+        return None, warnings
+    return kept, warnings
+
+
+def shuffle_quiz(quiz: list[dict[str, Any]], seed: str) -> list[dict[str, Any]]:
+    """Shuffle each question's options (seeded by the lesson id, so a lesson always shows the same order) and move
+    answer_index with its option: a 3B model tends to put the right answer first."""
+    import random
+
+    out = []
+    for i, q in enumerate(quiz):
+        order = list(range(4))
+        random.Random(f"{seed}:quiz:{i}").shuffle(order)
+        out.append({**q, "options": [q["options"][k] for k in order], "answer_index": order.index(q["answer_index"])})
+    return out
+
+
+def parse_quiz(raw: str, max_questions: int = 3) -> tuple[list[dict[str, Any]] | None, list[str]]:
+    """The quiz part of a planner reply (the lesson part is judged by parse_and_validate)."""
+    try:
+        data = json.loads(extract_json_text(raw))
+    except json.JSONDecodeError:
+        return None, ["quiz dropped: the reply is not JSON"]
+    return clean_quiz(data.get("quiz") if isinstance(data, dict) else None, max_questions)
+
+
 def validate_timeline(data: Any) -> list[str]:
-    """Validate a timeline, including each scene's embedded 'data' object."""
+    """Validate a timeline, including each scene's embedded 'data' object and the optional quiz."""
     errors = _schema_errors("timeline.schema.json", data)
     if errors or not isinstance(data, dict):
         return errors
+    if "quiz" in data:
+        quiz_validator = Draft202012Validator({"$ref": "#/$defs/quiz", "$defs": _schema("lesson.schema.json")["$defs"]})
+        errors += [f"quiz: {_format_error(e)}" for e in quiz_validator.iter_errors(data["quiz"])]
     scene_validator = Draft202012Validator(
         {"$ref": "#/$defs/scene", "$defs": _schema("lesson.schema.json")["$defs"]}
     )

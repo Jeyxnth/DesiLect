@@ -23,7 +23,7 @@ from ..cache.store import load_cached_text, save_cached_text, translate_cache_pa
 from ..config import LANGUAGES as SAMPLE_LANGUAGES  # languages the built-in samples come in
 from ..config import SAMPLES_DIR, get_settings
 from ..planner.fallback import fallback_lesson
-from ..planner.validate import validate_lesson
+from ..planner.validate import QUIZ_LIMITS_INDIC, question_problems, validate_lesson
 from ..timing.sentences import split_sentences
 from .protect import missing_placeholders, protect, restore
 
@@ -237,6 +237,40 @@ def _translate_lesson(lesson: dict[str, Any], lang: str, stats: dict[str, int]) 
     return out
 
 
+def translate_quiz(quiz: list[dict[str, Any]], lang: str, stats: dict[str, int]) -> list[dict[str, Any]]:
+    """Translate each question, its options and explanation (protected like scene text). Never raises.
+
+    A question is either translated whole or kept whole in English: when two options become the same, a text comes
+    out too long or with markup, or translation fails. Code-like options (range(3), i = 0) stay as written.
+    """
+    try:
+        texts: list[str] = []
+        for q in quiz:
+            texts += [q["question"], *q["options"], q["explanation"]]
+        # questions and explanations always (protect() keeps their code spans); options only when not code
+        translatable = [i for i, t in enumerate(texts) if i % 6 in (0, 5) or not is_code_item(t)]
+        done = translate_texts([texts[i] for i in translatable], lang, stats)
+        out_texts = list(texts)
+        for i, value in zip(translatable, done):
+            if not texts[i].rstrip().endswith((".", "!", "?")):  # an option without a full stop stays without one
+                value = value.rstrip().rstrip("।.").rstrip()
+            out_texts[i] = value
+    except Exception as exc:  # noqa: BLE001 - the quiz must never cost the lesson its translation
+        log.warning("quiz translation to %s failed, keeping English: %s", lang, exc)
+        return quiz
+    out = []
+    for n, q in enumerate(quiz):
+        chunk = out_texts[n * 6 : n * 6 + 6]
+        tr = {"question": chunk[0], "options": chunk[1:5], "answer_index": q["answer_index"], "explanation": chunk[5]}
+        problems = question_problems(tr, QUIZ_LIMITS_INDIC, english=False)
+        if problems:
+            log.warning("quiz question %d kept in English (%s): %r", n, "; ".join(problems), q["question"])
+            stats["quiz_english"] = stats.get("quiz_english", 0) + 1
+            tr = q
+        out.append(tr)
+    return out
+
+
 def translate_lesson(lesson: dict[str, Any], target_lang: str, keep_loaded: bool = False) -> dict[str, Any]:
     """Translate heading, subheading, narration, title, non-code items and longer arrow labels.
 
@@ -252,7 +286,10 @@ def translate_lesson(lesson: dict[str, Any], target_lang: str, keep_loaded: bool
     stats: dict[str, int] = {}
     start = time.perf_counter()
     try:
-        out = _translate_lesson(lesson, target_lang, stats)
+        # the quiz is translated apart from the lesson, so it can never fail the lesson's translation (bonus B1)
+        out = _translate_lesson({k: v for k, v in lesson.items() if k != "quiz"}, target_lang, stats)
+        if lesson.get("quiz"):
+            out["quiz"] = translate_quiz(lesson["quiz"], target_lang, stats)
         log.info("translated lesson to %s in %.1fs %s", target_lang, time.perf_counter() - start, stats)
         return out
     except Exception as exc:  # noqa: BLE001 - any failure falls back (G2)

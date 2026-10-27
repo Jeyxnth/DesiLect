@@ -126,7 +126,8 @@ internet. `make dev` also starts the Vite dev server on :5173, which is only nee
 Open **http://localhost:8000**, type a concept, pick level, language, voice and speed, and press Generate. The stages tick off;
 the player opens and starts as soon as the narration is ready (about 1 to 3 minutes), and **Download MP4** enables when the export
 finishes. "Same lesson in" re-voices the lesson in another language without planning again. Keys: Space play/pause, Left/Right
-previous/next scene, R replay. `.venv/Scripts/python scripts/render_sample.py` (`make sample`) renders a bundled sample with no planner at all.
+previous/next scene, R replay. When the lesson ends, a short quiz checks what it taught (keys 1-4 to answer, Enter for the next
+question). `.venv/Scripts/python scripts/render_sample.py` (`make sample`) renders a bundled sample with no planner at all.
 
 ## How fallback works
 
@@ -139,6 +140,7 @@ The demo never breaks: each stage has a fallback, and the screen always says whe
 | Voice: model missing, out of memory, engine error | the closest sample, voiced from its bundled audio (no model has to load) | "Fallback lesson used", reason "Voice generation failed" |
 | Smooth MP4 export: browser error, over its time budget, or a bad file | the keyframe export (one frame per change) | the MP4 still downloads |
 | Both exports | nothing to download, but the lesson plays in the browser | "MP4 export failed" with a **Retry export** button |
+| Quiz: a bad question, or a broken quiz | that question is dropped; with fewer than 2 good questions, no quiz (never a retry or a fallback) | nothing: the lesson ends as it would without a quiz |
 
 The planner's JSON is checked against `shared/schema/lesson.schema.json` plus content rules (scene count, word budget for the
 length, short distinct diagram labels, code at most 12 x 50, no markup, English only). A rejected first plan is retried once with
@@ -178,8 +180,11 @@ still to do.
 - **A 3B planner writes simple lessons.** Facts are not verified. Plans can run short of the target length (for example, a 44 s
   English lesson when 60 s was asked for), and a plan sometimes needs its retry. Hindi and Tamil lessons run 10-40% longer
   than the English plan.
-- **Speed.** A lesson takes about 2 to 3 minutes on the dev laptop with the planner on its CPU. With a GPU, Ollama plans in about
-  10 s. The opt-in Parler Tamil voice is 5 to 9 times slower than real time.
+- **Quiz questions come from the same 3B model.** They are checked for shape and markup, not for truth: one hash-table question
+  in testing had a wrong "right" answer. The quiz also makes each planner call about 20 s longer on a CPU (see B1 below).
+- **Speed.** A lesson takes about 2 to 3 minutes on the dev laptop with the planner on its CPU (measured before the quiz; add about
+  20 s per planner call for it). With a GPU, Ollama plans in about 10 to 25 s. The opt-in Parler Tamil voice is 5 to 9 times
+  slower than real time.
 - **One lesson at a time.** Requests queue behind each other. Repeating an identical request returns the earlier lesson instantly.
 - **Not yet done:** the benchmark on the 8 GB laptop, the Wi-Fi-off matrix run, and a check on a real phone (an emulated phone at 4x
   and 6x CPU slowdown plays smoothly).
@@ -336,6 +341,54 @@ engine writes a corrected copy at load time.
 Measured through the app on this laptop: English lesson (male voice) planned in 10 s, voiced in 47 s, smooth MP4 in 30 s; re-voiced into
 Hindi in 113 s total (plan reused in 0.002 s, translate 23 s, voice 48 s, export 43 s), peak 1.85 GB during export. Kokoro ran at
 0.85-1.14x real time in these runs against 0.25x when measured alone earlier (re-measured in step 12, below).
+
+### Mini quiz (bonus B1)
+
+After the last scene, the player shows a multiple-choice quiz over the stage, one question at a time. Picking an option gives
+instant feedback (a green tick on the right answer, a red cross on a wrong pick), then the explanation and Next. The end card shows
+the score ("2 / 3") and Replay lesson. Keys are 1-4 to pick and Enter for Next, buttons are at least 44 px, and on phones the quiz
+takes the stage's place. The UI words (`frontend/src/i18n/strings.ts`) follow the lesson language and use the stage's Indic fonts.
+A lesson without a quiz ends exactly as before.
+
+- **One planner call.** The quiz is part of the same Ollama reply as the lesson. The forced output format requires it, and the
+  prompt asks for 3 questions about the lesson's own scenes, with 4 short options each, one correct, and a one-sentence
+  explanation. The few-shot Python-loop example carries a quiz. Quiz words do not count toward the narration budget.
+- **Never costs the lesson.** The quiz is taken out of the reply before the lesson is validated and is checked on its own
+  (`clean_quiz` in `backend/app/planner/validate.py`): question up to 160 characters, 4 unique options of 1-80, `answer_index` 0-3,
+  explanation up to 200, the usual markup screen, English only, and no "all/none of the above". A bad question is dropped, and fewer
+  than 2 good ones drops the quiz. Warnings go to `planner_raw.txt`, and `quiz_dropped` goes to `timings.json`. A bad quiz never
+  triggers a retry or a fallback. Drill: `BLU_DRILL=quiz-garbage` (`scripts/drill.py --only quiz-garbage`).
+- **Answers shuffled.** Options are shuffled with a seed from the lesson id and `answer_index` follows. In testing the model put
+  the answer in the same place every time, for example "[2, 2, 2]".
+- **Translated like scene text.** Questions, options and explanations go through `protect.py`. Code-like options such as
+  `range(3)` stay as written. A question whose translated options collide or come out too long stays whole in English, and a
+  failed quiz translation leaves the English quiz. The lesson's own translation is never affected.
+- **Not narrated, not in the MP4.** The quiz is copied into `timeline.json` (optional `quiz`, checked against the lesson schema)
+  for the player only. Exporting the same lesson with and without its quiz gave 1302 / 1302 identical frames, 43.41 s each, and
+  byte-identical audio.
+- **Fallback.** `shared/samples/python_loop.{en,hi,ta}.json` carry a hand-written 3-question quiz. The Hindi and Tamil need a
+  native speaker's check before the demo, as do the UI words.
+- **Switch.** `QUIZ_QUESTIONS` in `.env`: 3 (default), 2, or 0 to turn the quiz off. `PIPELINE_VERSION` is 14, so cached lessons
+  made without a quiz are not reused.
+
+**Planner time with the quiz** (dev laptop, CPU only with `OLLAMA_NUM_GPU=0`, 45 s lessons, seconds per planner call):
+
+| Topic | no quiz | 3 questions | 2 questions |
+|---|---|---|---|
+| How do vaccines work? | 30.8, 30.7 | 51.8, 53.2 | 56.6, 46.6 |
+| What is gravity? | 30.0 | 50.1, 49.1 | 46.5, 42.9 |
+| How does a hash table work? | 32.0, 29.6 | 58.6 | 51.3, 54.3 |
+| **Mean per call** | **30.6** | **52.6 (+22.0)** | **49.7 (+19.1)** |
+
+Two values in a cell mean the first plan was rejected and retried (for over-long diagram labels, the step-13 rule), so the plan
+took both calls. The quiz adds about 22 s per call on this CPU, more than the 8-12 s estimate, and puts a call at about 50 s.
+Two questions save only about 3 s, because most of the cost is the quiz itself and the longer example in the prompt. So the
+default stays at 3 questions. On a CPU-only laptop where the 5-minute budget is tight, `QUIZ_QUESTIONS=0` saves about 22 s per call.
+With the GPU, as in normal use on this laptop, plans took 14-24 s with the quiz.
+
+Three new topics (vaccines, gravity, hash tables) were planned in English and re-voiced into Hindi and Tamil. All nine lessons
+showed their quiz: 3 questions each, except vaccines, where an "all of the above" question was dropped and 2 remained. Feedback
+was checked in the player in English (desktop), Hindi (desktop) and Tamil (phone width).
 
 ### Offline testing and hardening (step 12)
 

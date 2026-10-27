@@ -15,9 +15,33 @@
       "maxItems": 6,
       "items": { "$ref": "#/$defs/scene" }
     },
+    "quiz": { "$ref": "#/$defs/quiz" },
     "meta": { "$ref": "#/$defs/meta" }
   },
   "$defs": {
+    "quiz": {
+      "description": "Optional end-of-lesson quiz (bonus B1). Validated on its own (validate.py clean_quiz): a bad quiz is dropped, never a reason to reject the lesson. Not narrated, so it never changes the timeline. Lengths leave room for Indic scripts; English is held to 160 / 80 / 200.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 3,
+      "items": { "$ref": "#/$defs/quiz_question" }
+    },
+    "quiz_question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["question", "options", "answer_index", "explanation"],
+      "properties": {
+        "question": { "type": "string", "minLength": 1, "maxLength": 320 },
+        "options": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "type": "string", "minLength": 1, "maxLength": 160 }
+        },
+        "answer_index": { "type": "integer", "minimum": 0, "maximum": 3 },
+        "explanation": { "type": "string", "minLength": 1, "maxLength": 400 }
+      }
+    },
     "meta": {
       "description": "Set by the backend, never by the planner model: where the lesson came from.",
       "type": "object",

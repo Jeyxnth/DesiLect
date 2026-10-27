@@ -10,6 +10,10 @@
     "language": { "enum": ["en", "hi", "ta"] },
     "total_seconds": { "type": "number", "exclusiveMinimum": 0 },
     "audio_url": { "type": "string", "minLength": 1 },
+    "quiz": {
+      "description": "Optional, copied unchanged from the lesson (lesson.schema.json #/$defs/quiz); validate.py checks it against that definition. The player shows it after the last scene; the render page and the MP4 ignore it.",
+      "type": "array"
+    },
     "scenes": {
       "type": "array",
       "minItems": 1,

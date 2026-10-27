@@ -78,7 +78,9 @@ def test_translate_lesson_keeps_code_numbers_and_sentence_counts(fake_model):
     en = sample("python_loop")
     hi = indictrans.translate_lesson(en, "hi")
     assert hi["language"] == "hi" and validate_lesson(hi) == []
-    assert len(fake_model) == 1  # every string of the lesson in one batched call
+    # every string of the lesson in one batched call, then the quiz in its own (it must never fail the lesson)
+    assert len(fake_model) == 2 and not any("range(3) give" in t for t in fake_model[0])
+    assert len(hi["quiz"]) == 3 and hi["quiz"][0]["answer_index"] == en["quiz"][0]["answer_index"]
     for a, b in zip(en["scenes"], hi["scenes"]):
         assert len(split_sentences(b["narration"], "hi")) == len(split_sentences(a["narration"], "en"))
         assert a.get("code") == b.get("code") and a.get("highlight_lines") == b.get("highlight_lines")

@@ -42,3 +42,13 @@ Appended by `python scripts/drill.py`; newest run last.
 | stack/hi/intermediate | pass | ollama:llama3.2:3b | hi (kokoro) | 54.0 | 104 | 2718 | smooth | - |
 | stack/ta/beginner | pass | ollama:llama3.2:3b | ta (indic-tts) | 57.8 | 78 | 2340 | smooth | - |
 | stack/ta/intermediate | pass | ollama:llama3.2:3b | ta (indic-tts) | 57.6 | 108 | 2512 | smooth | - |
+
+## 2026-10-28 04:24: LOQ
+
+- Machine: 13th Gen Intel(R) Core(TM) i7-13650HX, 14 cores / 20 threads, 23.7 GB RAM (8.4 GB free at start), Windows 11
+- Network: outbound sockets blocked in the test process; Wi-Fi not confirmed off (pass `--wifi-off` when it is). Blocked attempts: none.
+- Planner llama3.2:3b, Tamil voice engine indic-tts. Passed 1/1.
+
+| case | result | plan | voiced | audio s | wall s | peak MB | MP4 | badge shown |
+|---|---|---|---|---:|---:|---:|---|---|
+| quiz-garbage | pass | ollama:llama3.2:3b | en (kokoro) | 25.5 | 53 | 908 | smooth | - |

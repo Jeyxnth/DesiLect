@@ -34,5 +34,40 @@
       "subheading": "A loop repeats code for every value",
       "narration": "To recap, a loop repeats the same code for every value. Use range to say how many times, and print to see each result. Now try changing the number inside range yourself!"
     }
+  ],
+  "quiz": [
+    {
+      "question": "What numbers does range(3) give the loop?",
+      "options": [
+        "1, 2 and 3",
+        "0, 1 and 2",
+        "Only the number 3",
+        "0, 1, 2 and 3"
+      ],
+      "answer_index": 1,
+      "explanation": "range(3) starts at 0 and stops before 3, so it gives 0, 1 and 2."
+    },
+    {
+      "question": "What does print(i) do inside the loop?",
+      "options": [
+        "Shows the value of i on the screen",
+        "Stops the loop",
+        "Adds 1 to i",
+        "Saves i to a file"
+      ],
+      "answer_index": 0,
+      "explanation": "Each time the loop runs, print shows the current value of i on the screen."
+    },
+    {
+      "question": "Why do we use a loop?",
+      "options": [
+        "To make the computer run faster",
+        "To write the same code many times",
+        "To repeat a task without writing the same code again",
+        "To sort a list of numbers"
+      ],
+      "answer_index": 2,
+      "explanation": "A loop repeats the same code for every value, so you only write it once."
+    }
   ]
 }

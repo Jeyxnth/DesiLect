@@ -30,12 +30,21 @@ class OllamaTimeout(OllamaError):
     """The model did not answer within the timeout."""
 
 
-def lesson_format_schema() -> dict[str, Any]:
-    """lesson.schema.json as the structured-output `format`, minus `meta` (the backend sets that, not the model)."""
+def lesson_format_schema(quiz_questions: int = 3) -> dict[str, Any]:
+    """lesson.schema.json as the structured-output `format`, minus `meta` (the backend sets that, not the model).
+
+    With quiz_questions > 0 the quiz becomes required with exactly that many questions, so the model always writes
+    one; with 0 it is left out of the format entirely. The stored lesson schema keeps the quiz optional.
+    """
     schema = json.loads((SCHEMA_DIR / "lesson.schema.json").read_text(encoding="utf-8"))
     schema = copy.deepcopy(schema)
     schema["properties"].pop("meta", None)
     schema["$defs"].pop("meta", None)
+    if quiz_questions > 0:
+        schema["required"] = [*schema["required"], "quiz"]
+        schema["$defs"]["quiz"].update(minItems=quiz_questions, maxItems=quiz_questions)
+    else:
+        schema["properties"].pop("quiz", None)
     return schema
 
 

@@ -9,7 +9,7 @@ Each case runs the real pipeline (plan, translate, voice, time, MP4 export) in t
 sockets blocked (scripts/check_offline.py), checks that it ended with a playable lesson (timeline + audio)
 and that the UI shows the right badge, and appends a results table to docs/offline-test.md.
 Drills: Ollama unreachable, planner returning junk (BLU_DRILL), a model folder renamed (restored afterwards,
-also on the next run if this one was killed), the capture browser failing (BLU_DRILL).
+also on the next run if this one was killed), the capture browser failing, a broken quiz (both BLU_DRILL).
 """
 from __future__ import annotations
 
@@ -56,7 +56,7 @@ class Case:
     language: str = "en"
     env: dict[str, str] = field(default_factory=dict)
     rename: str | None = None  # models/<rename> is moved away for this case
-    expect: str = "ok"  # ok | plan-fallback | translation-fallback | voice-fallback | export-error
+    expect: str = "ok"  # ok | plan-fallback | translation-fallback | voice-fallback | export-error | quiz-dropped
     seconds: int = 45
 
 
@@ -68,6 +68,8 @@ DRILLS = [
     Case("parler-missing", "What is a stack data structure?", language="ta", env={"TAMIL_TTS": "parler"},
          rename="indic-parler-tts", expect="voice-fallback"),
     Case("export-fail", "How does a Python loop work?", env={"BLU_DRILL": "export-fail"}, expect="export-error"),
+    # bonus B1: the model's quiz is broken; the lesson and its MP4 must be made as usual, just with no quiz
+    Case("quiz-garbage", "What is gravity?", env={"BLU_DRILL": "quiz-garbage"}, expect="quiz-dropped"),
 ]
 
 
@@ -164,6 +166,11 @@ def run_case(case: Case) -> dict[str, Any]:
     if case.expect != "export-error" and not job.mp4_ready:
         problems.append(f"no MP4: {job.export_error}")
     timings = read_json(out / "timings.json") if (out / "timings.json").is_file() else {}
+    if case.expect == "quiz-dropped":
+        if meta.get("fallback"):
+            problems.append("the lesson fell back; the drill needs a planned lesson")
+        if "quiz" in timeline or timings.get("quiz_dropped") is not True:
+            problems.append(f"expected no quiz and quiz_dropped: true (timeline quiz: {'quiz' in timeline})")
     rss = timings.get("rss_mb", {})
     return {
         "case": case.name,

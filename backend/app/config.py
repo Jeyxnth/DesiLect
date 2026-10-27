@@ -16,7 +16,7 @@ MAX_TARGET_SECONDS = 90
 MIN_SPEED = 0.7  # narration speed accepted by the API (1.0 = the voice's normal pace)
 MAX_SPEED = 1.3
 # Part of the reuse-cache key for finished lessons: bump it when a change makes earlier lessons stale.
-PIPELINE_VERSION = "13"
+PIPELINE_VERSION = "14"  # 14: lessons carry a quiz (bonus B1)
 LANGUAGES = ("en", "hi", "ta")
 LEVELS = ("beginner", "intermediate")
 
@@ -63,10 +63,11 @@ class Settings:
     port: int
     tamil_tts: str = "indic-tts"  # "indic-tts" (AI4Bharat Indic-TTS, default) or "parler" (Indic Parler-TTS, slow)
     tts_translit: bool = True  # speak English terms via shared/glossary.json "tts_translit" (hi, ta)
+    quiz_questions: int = 3  # end-of-lesson quiz asked from the planner (bonus B1): 3, 2 if planning gets too slow, 0 = off
 
 
 def drill(name: str) -> bool:
-    """Failure drills (step 12, scripts/drill.py): BLU_DRILL=planner-garbage,export-fail makes that stage fail
+    """Failure drills (step 12, scripts/drill.py): BLU_DRILL=planner-garbage,export-fail,quiz-garbage makes that stage fail
     on purpose so its fallback can be tested. Read on every call, so a test can switch it per lesson."""
     return name in {d.strip() for d in os.environ.get("BLU_DRILL", "").split(",")}
 
@@ -91,4 +92,5 @@ def get_settings() -> Settings:
         port=int(os.environ.get("PORT", "8000")),
         tamil_tts=os.environ.get("TAMIL_TTS", "indic-tts").strip().lower(),
         tts_translit=_flag("TTS_TRANSLIT", True),
+        quiz_questions=max(0, min(3, int(os.environ.get("QUIZ_QUESTIONS", "3") or 0))),
     )

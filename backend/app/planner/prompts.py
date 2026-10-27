@@ -13,10 +13,27 @@ def word_budget(target_seconds: int) -> int:
     return round(target_seconds * WORDS_PER_SECOND)
 
 
-def _example() -> str:
-    """The Python-loop sample, as compact JSON (one complete few-shot example)."""
+def _example(quiz_questions: int = 3) -> str:
+    """The Python-loop sample, as compact JSON (one complete few-shot example), with its quiz cut to quiz_questions."""
     sample = json.loads((SAMPLES_DIR / "python_loop.en.json").read_text(encoding="utf-8"))
+    if quiz_questions > 0 and sample.get("quiz"):
+        sample["quiz"] = sample["quiz"][:quiz_questions]
+    else:
+        sample.pop("quiz", None)
     return json.dumps(sample, ensure_ascii=False, indent=1)
+
+
+def quiz_rule(quiz_questions: int) -> str:
+    """The prompt line asking for the end-of-lesson quiz (bonus B1); empty when the quiz is off."""
+    if quiz_questions <= 0:
+        return ""
+    return (
+        f'\n- After "scenes", add "quiz": exactly {quiz_questions} multiple-choice questions that check what THIS lesson\'s scenes taught. '
+        'Each has "question" (max 160 characters), "options" (exactly 4 short answers, max 80 characters each, all different, '
+        'exactly one correct), "answer_index" (0 to 3, the position of the correct option) and "explanation" (one sentence, '
+        'max 200 characters, saying why that answer is right). No trick questions, no "all of the above" or "none of the above". '
+        "The quiz is not spoken and does not count toward the narration words."
+    )
 
 
 def scene_plan(target_seconds: int) -> tuple[int, int]:
@@ -26,8 +43,8 @@ def scene_plan(target_seconds: int) -> tuple[int, int]:
     return scenes, round(words / scenes)
 
 
-def build_system_prompt(level: str, target_seconds: int) -> str:
-    """System prompt: teacher persona, output rules, scene types, word budget and one example."""
+def build_system_prompt(level: str, target_seconds: int, quiz_questions: int = 3) -> str:
+    """System prompt: teacher persona, output rules, scene types, word budget, the quiz and one example."""
     words = word_budget(target_seconds)
     scenes, per_scene = scene_plan(target_seconds)
     return f"""You are a patient, friendly teacher who explains one concept as a short visual lesson.
@@ -46,10 +63,10 @@ Rules:
 - Every scene must teach something specific about the topic. Do not repeat sentences between scenes.
 - Narration is spoken aloud: simple English for a {level} learner, 2 to 3 short sentences per scene, no lists, no symbols that are hard to read aloud.
 - Aim for {scenes} scenes, each with 2 to 3 full sentences, about {per_scene} words of narration per scene. Total narration across all scenes: about {words} words (too short or too long is rejected).
-- "language" must be "en" and "level" must be "{level}". Do not add any other fields (no durations, no meta).
+- "language" must be "en" and "level" must be "{level}". Do not add any other fields (no durations, no meta).{quiz_rule(quiz_questions)}
 
 Example (topic "How a Python loop works", beginner, 45 seconds):
-{_example()}"""
+{_example(quiz_questions)}"""
 
 
 def build_user_prompt(topic: str, level: str, target_seconds: int) -> str:

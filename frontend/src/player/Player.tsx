@@ -9,6 +9,7 @@ import CaptionBar, { warmCaptions } from "./CaptionBar";
 import { AudioClock, ManualClock, useClock, type Clock } from "./clock";
 import Controls from "./Controls";
 import ProgressBar from "./ProgressBar";
+import Quiz from "./Quiz";
 
 export { STAGE_H, STAGE_W };
 
@@ -94,6 +95,16 @@ export default function Player({ timeline, autoplay = false }: { timeline: Timel
   const scale = useWidth(fitRef) / STAGE_W;
 
   const total = timeline.total_seconds;
+  // End-of-lesson quiz (bonus B1): shown once playback has ended; any playback hides it and a new round starts fresh.
+  const ended = !playing && t >= total - 0.05;
+  const [quizRound, setQuizRound] = useState(0);
+  const [quizSkipped, setQuizSkipped] = useState(false);
+  useEffect(() => {
+    if (!playing) return;
+    setQuizSkipped(false);
+    setQuizRound((n) => n + 1);
+  }, [playing]);
+  const showQuiz = ended && !quizSkipped && (timeline.quiz?.length ?? 0) > 0;
   const scene = sceneAt(timeline.scenes, t);
   const goToScene = (i: number) => clock.seek(timeline.scenes[Math.max(0, Math.min(timeline.scenes.length - 1, i))]?.start ?? 0);
 
@@ -123,10 +134,13 @@ export default function Player({ timeline, autoplay = false }: { timeline: Timel
 
   return (
     <div className="player">
-      <div className="stage-fit" ref={fitRef}>
+      <div className={`stage-fit${showQuiz ? " quiz-open" : ""}`} ref={fitRef}>
         <div className="stage-scaler" style={{ transform: `scale(${scale})` }}>
           <Stage timeline={timeline} t={t} onSeek={(x) => clock.seek(x)} poster={!playing && t < 0.001} />
         </div>
+        {showQuiz && timeline.quiz && (
+          <Quiz key={quizRound} quiz={timeline.quiz} lang={timeline.language} onReplay={replay} onSkip={() => setQuizSkipped(true)} />
+        )}
       </div>
       {fontsReady && warmed !== timeline && (
         <div hidden aria-hidden="true">

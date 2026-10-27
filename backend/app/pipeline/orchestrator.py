@@ -7,13 +7,14 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from ..cache.store import lesson_cache_key, lesson_dir, read_json, record_timing, remember_lesson, timed_stage, write_json
-from ..config import get_settings
+from ..cache.store import (lesson_cache_key, lesson_dir, read_json, record_timing, record_value, remember_lesson, timed_stage,
+                           write_json)
+from ..config import drill, get_settings
 from ..export.capture import ensure_frontend_built, export_lesson, local_server
 from ..planner.fallback import fallback_lesson
 from ..planner.ollama_client import OllamaClient, OllamaError, lesson_format_schema
 from ..planner.prompts import build_retry_prompt, build_system_prompt, build_user_prompt
-from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, parse_and_validate
+from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, clean_quiz, parse_and_validate, parse_quiz, shuffle_quiz
 from ..timing.timeline import build_timeline
 from ..translate.indictrans import translate_lesson
 from ..tts.registry import bundled_engine, voice_for
@@ -57,9 +58,10 @@ def plan_lesson(
     Returns (lesson, meta) where meta describes how the plan was made.
     """
     client = client or OllamaClient()
-    system = build_system_prompt(level, target_seconds)
+    quiz_questions = get_settings().quiz_questions  # asked in the same call as the lesson (bonus B1)
+    system = build_system_prompt(level, target_seconds, quiz_questions)
     user = build_user_prompt(topic, level, target_seconds)
-    schema = lesson_format_schema()
+    schema = lesson_format_schema(quiz_questions)
     raw_path = lesson_dir(lesson_id) / "planner_raw.txt" if lesson_id else None
     if raw_path:
         raw_path.write_text("", encoding="utf-8")
@@ -73,6 +75,7 @@ def plan_lesson(
     errors: list[str] = []
     reason: str | None = None
     lesson: dict[str, Any] | None = None
+    accepted_raw = ""
     for attempt in range(1, MAX_ATTEMPTS + 1):
         prompt = user if attempt == 1 else user + build_retry_prompt(errors)
         start = time.perf_counter()
@@ -92,6 +95,7 @@ def plan_lesson(
         lesson, errors = parse_and_validate(raw, target_seconds, tolerance, cut_labels=last)
         log_raw(attempt, seconds, raw + ("\n--- rejected: " + "; ".join(errors) if errors else "\n--- accepted"))
         if lesson is not None:
+            accepted_raw = raw
             break
         reason = "invalid plan: " + "; ".join(errors[:3])
         log.warning("planner attempt %d rejected: %s", attempt, reason)
@@ -111,8 +115,29 @@ def plan_lesson(
     if lesson is None:
         return fallback_lesson(topic, level, "en", reason=friendly_reason(reason)), meta
     lesson["level"], lesson["language"] = level, "en"  # the plan is always English; level is the request's
+    if quiz_questions > 0:
+        attach_quiz(lesson, accepted_raw, quiz_questions, lesson_id or topic, meta, raw_path)
     lesson["meta"] = {"fallback": False, "source": f"ollama:{client.model}", "topic": topic[:200]}
     return lesson, meta
+
+
+def attach_quiz(lesson: dict[str, Any], raw: str, quiz_questions: int, seed: str, meta: dict[str, Any],
+                raw_path: Path | None) -> None:
+    """Add the reply's quiz to an accepted lesson, options shuffled. A bad quiz is dropped with warnings in
+    planner_raw.txt and quiz_dropped in timings.json: never a reason to retry or fall back (bonus B1)."""
+    if drill("quiz-garbage"):  # failure drill: the model wrote a broken quiz
+        quiz, warnings = clean_quiz("garbage", quiz_questions)
+    else:
+        quiz, warnings = parse_quiz(raw, quiz_questions)
+    if quiz:
+        lesson["quiz"] = shuffle_quiz(quiz, seed)
+    meta.update(quiz_questions=len(quiz or []), quiz_dropped=quiz is None, quiz_warnings=warnings)
+    if raw_path:
+        with raw_path.open("a", encoding="utf-8") as f:
+            f.write(f"=== quiz: kept {len(quiz or [])} question(s)" + "".join(f"\n--- warning: {w}" for w in warnings) + "\n\n")
+        record_value(raw_path.parent.name, "quiz_dropped", quiz is None)
+    for w in warnings:
+        log.warning("planner quiz: %s", w)
 
 
 def narrate(

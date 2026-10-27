@@ -46,11 +46,20 @@ export interface LessonMeta {
   translation_fallback?: boolean; // translation failed, so the narration stayed in English
 }
 
+/** One end-of-lesson question (bonus B1). Text arrives already in the lesson language. */
+export interface QuizQuestion {
+  question: string; // <= 320 (English plans: 160)
+  options: [string, string, string, string]; // each <= 160 (English: 80), all different
+  answer_index: number; // 0..3
+  explanation: string; // <= 400 (English: 200)
+}
+
 export interface Lesson {
   title: string;
   level: Level;
   language: Language;
   scenes: Scene[]; // 3..6
+  quiz?: QuizQuestion[]; // 2..3, optional: a bad quiz is dropped, never the lesson
   meta?: LessonMeta;
 }
 
@@ -83,6 +92,7 @@ export interface Timeline {
   total_seconds: number;
   audio_url: string;
   scenes: TimelineScene[];
+  quiz?: QuizQuestion[]; // copied from the lesson; the player shows it after the last scene, the MP4 never does
 }
 
 export interface ConceptRequest {

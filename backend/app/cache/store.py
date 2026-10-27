@@ -53,6 +53,14 @@ def record_timing(lesson_id: str, stage: str, seconds: float) -> None:
     write_json(path, timings)
 
 
+def record_value(lesson_id: str, key: str, value: Any) -> None:
+    """Merge a non-timing fact into timings.json, e.g. quiz_dropped: true (bonus B1)."""
+    path = lesson_dir(lesson_id) / "timings.json"
+    timings = read_json(path) if path.is_file() else {}
+    timings[key] = value
+    write_json(path, timings)
+
+
 def record_rss(lesson_id: str, stage: str, megabytes: float) -> None:
     """Merge one stage's peak memory (MB) into timings.json under "rss_mb"."""
     path = lesson_dir(lesson_id) / "timings.json"
