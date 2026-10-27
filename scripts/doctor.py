@@ -23,6 +23,19 @@ from pathlib import Path
 CURRENT_STEP = 12  # bump this each step so newly needed dependencies become hard requirements
 
 REPO = Path(__file__).resolve().parents[1]
+
+
+def models_root() -> Path:
+    """MODELS_DIR from the environment or .env, like the app (backend/app/config.py); default <repo>/models."""
+    value = os.environ.get("MODELS_DIR")
+    env = REPO / ".env"
+    if value is None and env.is_file():
+        for line in env.read_text(encoding="utf-8").splitlines():
+            key, sep, val = line.strip().partition("=")
+            if sep and key.strip() == "MODELS_DIR":
+                value = val.strip()
+    p = Path(value or "models")
+    return p if p.is_absolute() else REPO / p
 VENV_PY = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
 
 OK, WARN, FAIL = "OK  ", "WARN", "FAIL"
@@ -147,7 +160,7 @@ def check_browser() -> None:
 
 
 def check_models() -> None:
-    k = REPO / "models" / "kokoro"
+    k = models_root() / "kokoro"
     onnx, voices = k / "kokoro-v1.0.onnx", k / "voices-v1.0.bin"
     fix = "Run once while online: python scripts/download_models.py kokoro"
     report("Kokoro model file", onnx.is_file() and onnx.stat().st_size > 300_000_000,
@@ -164,7 +177,7 @@ def check_models() -> None:
                             ("Indic-TTS Tamil model (default Tamil voice)", "indic-tts-ta", 9),
                             # opt-in voice (TAMIL_TTS=parler): only a warning unless it is switched on
                             ("Indic Parler-TTS model (TAMIL_TTS=parler)", "indic-parler-tts", 9 if parler else 99)):
-        p = REPO / "models" / d
+        p = models_root() / d
         report(label, p.is_dir() and any(p.iterdir()), "" if p.is_dir() else "missing",
                "Run once while online: python scripts/download_models.py " + d, since)
 

@@ -2,9 +2,9 @@
 from __future__ import annotations
 
 import asyncio
+import importlib.util
 import json
 import platform
-import shutil
 from importlib import metadata
 from pathlib import Path
 from typing import Any, AsyncIterator, Literal
@@ -72,7 +72,8 @@ def health() -> dict[str, Any]:
         "models": {name: _model_present(d) for name, d in MODEL_DIRS.items()},
         "ollama": {"model": ollama.model, "running": pulled is not None, "model_present": pulled is not None and wanted in pulled},
         "ffmpeg": find_ffmpeg() is not None,
-        "playwright": shutil.which("playwright") is not None,
+        # importable, not on PATH: the venv's Scripts folder is usually not on PATH (clean-clone check, step 13)
+        "playwright": importlib.util.find_spec("playwright") is not None,
     }
 
 

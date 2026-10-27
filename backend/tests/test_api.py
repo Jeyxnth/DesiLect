@@ -17,6 +17,7 @@ def test_health():
     assert body["status"] == "ok"
     assert set(body["models"]) == {"kokoro", "indictrans2", "indic_parler_tts", "indic_tts_ta"}
     assert "python" in body["versions"]
+    assert body["playwright"] is True  # step 13: was false whenever the venv Scripts folder was not on PATH
 
 
 def test_unknown_api_is_404():

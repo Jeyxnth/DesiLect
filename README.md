@@ -64,7 +64,14 @@ writes is executed or rendered as HTML, and code is shown as text.
 
 Needs about 7 GB of disk for models (IndicTrans2 2.1 GB, Indic-TTS 1.6 GB, Kokoro 0.3 GB, llama3.2:3b 2 GB; Indic Parler-TTS
 3.6 GB more if you want the opt-in Tamil voice) plus about 3 GB for Python packages. Windows commands shown; on Linux/macOS use
-`.venv/bin/python`. If the other laptop already has everything, copying `models/` across is enough for step 4.
+`.venv/bin/python`. If the other laptop already has everything, copying `models/` across is enough for step 4 (or put
+`MODELS_DIR=<path to that folder>` in `.env`).
+
+**Checked from a clean clone (step 13).** On the dev laptop, a fresh clone in a new folder ran every command below in 16 minutes,
+using the existing models through `MODELS_DIR`. It ended with doctor at 0 failed, the offline check OK, 260 tests passing (including
+a full sample MP4 export), and the app serving on :8000. That check found and fixed three problems: doctor ignored `MODELS_DIR`,
+`/api/health` reported Playwright missing, and Playwright was missing from `backend/requirements.txt`. The 8 GB laptop has not been
+set up from the README yet.
 
 **Install first:** Python 3.11 or newer (tested on 3.13.3), Node.js 20 or newer (tested on 22.20.0), Git, FFmpeg with libx264
 (`winget install Gyan.FFmpeg`, then reopen the terminal), and Ollama (ollama.com). `make` is optional: Windows has none by default,

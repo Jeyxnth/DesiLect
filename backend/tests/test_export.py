@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 from app.cache.store import read_json
-from app.config import REPO_ROOT
+from app.config import REPO_ROOT, get_settings
 from app.export.capture import capture_times, fresh_frames
 from app.export.ffmpeg import ffprobe_summary, write_ffconcat
 
@@ -128,7 +128,7 @@ def test_ffconcat_has_exact_durations_and_repeats_last_file(tmp_path):
 
 
 def _missing_prereq():
-    k = REPO_ROOT / "models" / "kokoro"
+    k = get_settings().models_dir / "kokoro"  # MODELS_DIR, as the app reads it (a copied models/ folder may live elsewhere)
     if not (k / "kokoro-v1.0.onnx").is_file() or not (k / "voices-v1.0.bin").is_file():
         return "Kokoro models not downloaded"
     for tool in ("ffmpeg", "ffprobe", "npm"):

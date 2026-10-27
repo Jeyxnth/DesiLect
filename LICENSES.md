@@ -38,7 +38,7 @@ own sample text; `submissions/*.mp4` are rendered by this app (planner Llama 3.2
 | Ollama | 0.40.2 | local model server for the planner (127.0.0.1 only) | MIT | ollama.com |
 | FFmpeg with libx264 | 8.1 (gyan.dev `full_build`, `--enable-gpl --enable-version3`) | MP4 encode (H.264 + AAC), ffprobe checks | FFmpeg: **GPL-3.0-or-later** for this build; libx264: GPL-2.0-or-later. Used as a separate program, not linked or shipped | `winget install Gyan.FFmpeg` |
 | Playwright for Python | 1.64.1 | drives a headless browser to capture the render page | Apache-2.0 | PyPI `playwright` |
-| Chromium (Playwright build), or the installed Chrome / Edge | Playwright's bundled build; this laptop fell back to Chrome 155 | headless capture | Chromium: BSD-3-Clause (plus its third-party notices); Chrome / Edge: their vendors' terms, used as installed and not shipped | `python -m playwright install chromium` |
+| Chromium (Playwright build), or the installed Chrome / Edge | Playwright's bundled Chromium 156.0.8078.4 (clean clone); without it the dev laptop uses Chrome 155 | headless capture | Chromium: BSD-3-Clause (plus its third-party notices); Chrome / Edge: their vendors' terms, used as installed and not shipped | `python -m playwright install chromium` |
 | eSpeak NG (inside `espeakng-loader`: `espeak-ng.dll` + `espeak-ng-data`) | as bundled by espeakng-loader 0.2.4 | phonemes for Kokoro | eSpeak NG: GPL-3.0-or-later; espeakng-loader: MIT License | PyPI `espeakng-loader` (github.com/thewh1teagle/espeakng-loader) |
 | Node.js | 20 required (dev laptop: 22.20.0) | frontend build | MIT | nodejs.org |
 
