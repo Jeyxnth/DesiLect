@@ -13,10 +13,29 @@ from .base import SAMPLE_RATE
 
 log = logging.getLogger("blu.tts.parler")
 
+# parler-tts warns on every load (each sub-model's whole config) and on the first generate. All three are expected
+# here: no flash-attention on CPU, the shared configs are how the checkpoint is built, and with one unpadded sentence
+# per call the decoder mask it creates (all ones) is the right one. Other parler-tts warnings still show.
+_EXPECTED_NOTICES = (
+    "is overwritten by shared",
+    "Flash attention 2 is not installed",
+    "`prompt_attention_mask` is specified but `attention_mask` is not",
+)
+
+
+class _DropExpectedNotices(logging.Filter):
+    def filter(self, record: logging.LogRecord) -> bool:
+        message = record.getMessage()
+        return not any(notice in message for notice in _EXPECTED_NOTICES)
+
+
+logging.getLogger("parler_tts.modeling_parler_tts").addFilter(_DropExpectedNotices())
+
 SEED = 0  # reset before every sentence, so a sentence sounds the same whatever was spoken before it
 DEFAULT_VOICE = "jaya"
-# voice id -> speaker name known to Indic Parler-TTS (see the model card for the Tamil speaker list).
-SPEAKERS = {"jaya": "Jaya"}
+# voice id -> speaker name known to Indic Parler-TTS. The model card lists two Tamil speakers, Jaya (recommended)
+# and Kavitha, both female; there is no named male Tamil speaker.
+SPEAKERS = {"jaya": "Jaya", "kavitha": "Kavitha"}
 _DESCRIPTION = (
     "{speaker}'s voice is clear, warm and expressive, speaking {pace} with very clear audio, "
     "a very close recording and no background noise."
@@ -79,13 +98,18 @@ class ParlerEngine:
             return
         if not (self.model_dir / "config.json").is_file():
             raise FileNotFoundError(f"{self.model_dir} missing; run scripts/download_models.py indic-parler-tts")
-        import torch
-        from transformers import AutoTokenizer
+        import warnings
 
-        try:
-            from parler_tts import ParlerTTSForConditionalGeneration
-        except ImportError as exc:
-            raise ImportError("parler-tts is not installed; see backend/requirements-models.txt") from exc
+        import torch
+
+        with warnings.catch_warnings():  # deprecation notices from its dependencies, not actionable here
+            warnings.simplefilter("ignore", FutureWarning)
+            from transformers import AutoTokenizer
+
+            try:
+                from parler_tts import ParlerTTSForConditionalGeneration
+            except ImportError as exc:
+                raise ImportError("parler-tts is not installed; see backend/requirements-models.txt") from exc
 
         torch.set_num_threads(physical_cores())
         model = ParlerTTSForConditionalGeneration.from_pretrained(

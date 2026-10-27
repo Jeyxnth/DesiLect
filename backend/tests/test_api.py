@@ -162,12 +162,40 @@ def test_failed_job_reports_the_stage_that_failed(monkeypatch):
 
     def no_voice(lesson, lang, out, on_stage=None):
         on_stage("voice")
-        raise NotImplementedError("TODO(step 9): Tamil TTS")
+        raise FileNotFoundError("models/kokoro missing")
 
     monkeypatch.setattr(orch, "build_timeline", no_voice)
+    # Ollama is down, so the lesson is already a sample: its cached voice failing too fails the job
     job = wait_until_finished(client.post("/api/lessons", json={"topic": "loops", "language": "en"}).json()["job_id"])
     assert job["state"] == "failed" and job["status"]["failed_stage"] == "voice"
     assert "voice" in job["status"]["timings"] and "export" not in job["status"]["timings"]
+
+
+def test_failed_voice_falls_back_to_the_cached_sample(monkeypatch):
+    """A planned (non-sample) lesson whose TTS fails is replaced by the closest sample, voiced from cache (G2)."""
+    from app.pipeline import orchestrator as orch
+
+    stub_pipeline(monkeypatch)
+    planned = orch.fallback_lesson("Photosynthesis", "beginner", "en")
+    planned["meta"] = {"fallback": False, "source": "ollama:test", "topic": "Photosynthesis"}
+    monkeypatch.setattr(orch, "plan_lesson", lambda *a, **k: (planned, {"fallback": False}))
+    voiced = []
+
+    def voice_fails_for_new_lessons(lesson, lang, out, on_stage=None):
+        on_stage("voice")
+        if not lesson["meta"]["fallback"]:
+            raise MemoryError("parler ran out of RAM")
+        voiced.append(lesson["meta"]["source"])
+        on_stage("timing")
+        (out / "timeline.json").write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(orch, "build_timeline", voice_fails_for_new_lessons)
+    job = wait_until_finished(client.post("/api/lessons", json={"topic": "Photosynthesis", "language": "en"}).json()["job_id"])
+    assert job["state"] == "done", job
+    assert voiced == ["sample:photosynthesis"]
+    assert job["status"]["fallback_used"] is True and "Voice generation failed" in job["status"]["fallback_reason"]
+    lesson = client.get(f"/api/lessons/{job['id']}/lesson").json()
+    assert lesson["meta"]["source"] == "sample:photosynthesis"
 
 
 def test_failed_export_still_leaves_a_playable_lesson(monkeypatch):

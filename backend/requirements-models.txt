@@ -14,7 +14,10 @@ huggingface_hub>=0.23
 indic-nlp-library-itt>=0.1
 regex>=2024.0
 
-# step 9: Indic Parler-TTS (Tamil). parler-tts is not on PyPI; install it from source (Apache-2.0), after torch/transformers above:
+# step 9: Indic Parler-TTS (Tamil). parler-tts is not on PyPI; install it from source (Apache-2.0), AFTER this file,
+# then put the transformers pin back (parler-tts 0.2.2 pins transformers==4.46.1 and downgrades it):
 #   pip install git+https://github.com/huggingface/parler-tts.git
-# It must not replace transformers==4.46.3 or pull a CUDA torch (check `pip list` afterwards).
+#   pip install transformers==4.46.3
+# Both IndicTrans2 and Indic Parler-TTS are tested with 4.46.3. Afterwards `pip check` reports
+# "parler-tts 0.2.2 has requirement transformers==4.46.1": expected, harmless. `python scripts/doctor.py` checks the version.
 psutil>=5.9   # physical core count for torch.set_num_threads

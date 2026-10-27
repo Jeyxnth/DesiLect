@@ -6,6 +6,8 @@
 make setup
 .venv/Scripts/python -m pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU-only build
 .venv/Scripts/python -m pip install -r backend/requirements-models.txt
+.venv/Scripts/python -m pip install git+https://github.com/huggingface/parler-tts.git   # Tamil TTS (step 9)
+.venv/Scripts/python -m pip install transformers==4.46.3   # parler-tts downgrades it; put the tested pin back
 .venv/Scripts/hf auth login            # once: IndicTrans2 and Indic Parler-TTS are gated (accept their terms on huggingface.co first)
 .venv/Scripts/python scripts/download_models.py kokoro ollama indictrans2 indic-parler-tts   # one-time, needs network (H2 exception)
 python scripts/doctor.py --smoke                         # preflight: checks every dependency, prints the fix for each gap
@@ -65,7 +67,7 @@ Full list: `LICENSES.md`.
 |---|---|---|---|
 | en | Kokoro (kokoro-onnx) | `hf_alpha` (female), `hm_omega` (male) | Indian-accented English: these Hindi voices speak en-us phonemes |
 | hi | Kokoro | `hf_alpha` (female), `hm_omega` (male) | Hindi phonemes; Latin words switch to English phonemes |
-| ta | Indic Parler-TTS | `jaya` (female) | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed |
+| ta | Indic Parler-TTS | `jaya` (female, default), `kavitha` (female); the model has no named male Tamil speaker. Kavitha produced 0.66 s for the 20-character greeting "வணக்கம், இது ஒரு சோதனை." (Jaya: 1.81 s), probably cut short; long sentences were normal. Listen before offering her in the UI | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed |
 
 The registry (`backend/app/tts/registry.py`) keeps one engine loaded and `release_all()` unloads it after the voice stage. `list_voices(lang)`
 and the `voice` / `speed` arguments of `build_timeline` are what step 11 uses. Parler has no speed control, so speed changes its description
@@ -80,6 +82,9 @@ A/B clips from step 9 and keep whichever sounds better to a Hindi speaker.
 **Per sentence audio.** Each sentence is synthesised alone, peak-normalised to -1 dBFS, trimmed of leading/trailing silence (30 ms kept, 4 ms fades) and
 cached in `outputs/cache/tts/` before it is timed, so cue starts are sentence starts and a scene ends at its last sentence's end plus the 0.6 s pause
 (`backend/tests/test_voice.py` checks this for every sample in en, hi and ta).
+
+**If voicing fails** (model missing, out of memory, engine error), the pipeline voices the closest built-in sample in the
+same language instead, from the bundled audio below, and the UI shows the fallback notice (`narrate` in `backend/app/pipeline/orchestrator.py`).
 
 **Fallback audio.** `python scripts/pregen_audio.py` writes the narration of the four bundled samples into `shared/tts_cache/` (16-bit FLAC, committed;
 manifest in `shared/tts_cache/manifest/<lang>.json`). Lookup order is `outputs/cache/tts`, then `shared/tts_cache`, then the engine, so a sample lesson

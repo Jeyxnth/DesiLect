@@ -20,7 +20,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-CURRENT_STEP = 8  # bump this each step so newly needed dependencies become hard requirements
+CURRENT_STEP = 9  # bump this each step so newly needed dependencies become hard requirements
 
 REPO = Path(__file__).resolve().parents[1]
 VENV_PY = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
@@ -95,12 +95,21 @@ def check_python() -> None:
         return
     mods = {"fastapi": 1, "pydantic": 1, "jsonschema": 1, "uvicorn": 1, "numpy": 2, "soundfile": 2,
             "onnxruntime": 2, "kokoro_onnx": 2, "espeakng_loader": 2, "httpx": 1, "pytest": 1, "playwright": 4,
-            "torch": 8, "transformers": 8, "sentencepiece": 8, "sacremoses": 8, "indicnlp": 8, "regex": 8}
+            "torch": 8, "transformers": 8, "sentencepiece": 8, "sacremoses": 8, "indicnlp": 8, "regex": 8,
+            "parler_tts": 9, "psutil": 9}
     for mod, since in mods.items():
         code, out = venv_run(f"import {mod}")
-        report(f"Python package: {mod}", code == 0, "" if code == 0 else out.splitlines()[-1][:80] if out else "",
-               "Run: .venv/Scripts/python -m pip install -r backend/requirements.txt" + (
-                   "  and  pip install playwright" if mod == "playwright" else ""), since)
+        fix = "Run: .venv/Scripts/python -m pip install -r backend/requirements.txt" + (
+            "  and  pip install playwright" if mod == "playwright" else "")
+        if since >= 8:
+            fix = "Install the model runtimes: see backend/requirements-models.txt"
+        report(f"Python package: {mod}", code == 0, "" if code == 0 else out.splitlines()[-1][:80] if out else "", fix, since)
+    # parler-tts downgrades transformers to 4.46.1 when installed; the project is tested with 4.46.3
+    code, out = venv_run("import transformers; print('VERSION=' + transformers.__version__)")
+    found = next((line[len("VERSION="):].strip() for line in out.splitlines() if line.startswith("VERSION=")),
+                 "not installed")  # the import also prints deprecation warnings
+    report("transformers == 4.46.3", found == "4.46.3", found,
+           "Run: .venv/Scripts/python -m pip install transformers==4.46.3   (after installing parler-tts)", 8)
 
 
 def check_node() -> None:
