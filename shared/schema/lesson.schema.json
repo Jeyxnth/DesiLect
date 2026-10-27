@@ -14,9 +14,21 @@
       "minItems": 3,
       "maxItems": 6,
       "items": { "$ref": "#/$defs/scene" }
-    }
+    },
+    "meta": { "$ref": "#/$defs/meta" }
   },
   "$defs": {
+    "meta": {
+      "description": "Set by the backend, never by the planner model: where the lesson came from.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fallback"],
+      "properties": {
+        "fallback": { "type": "boolean" },
+        "source": { "type": "string", "maxLength": 80 },
+        "topic": { "type": "string", "maxLength": 200 }
+      }
+    },
     "narration": { "type": "string", "minLength": 1, "maxLength": 600 },
     "scene": {
       "oneOf": [

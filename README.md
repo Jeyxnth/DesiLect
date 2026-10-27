@@ -4,7 +4,7 @@
 
 ```
 make setup
-.venv/Scripts/python scripts/download_models.py kokoro   # one-time, needs network (H2 exception)
+.venv/Scripts/python scripts/download_models.py kokoro ollama   # one-time, needs network (H2 exception)
 python scripts/doctor.py --smoke                         # preflight: checks every dependency, prints the fix for each gap
 ```
 
@@ -24,6 +24,7 @@ make dev       # backend :8000, frontend :5173; play at /lesson/sample-en
 | Model / library | Used for | Licence |
 |---|---|---|
 | Kokoro-82M via kokoro-onnx (voices `hf_alpha`, `hm_omega`) | English (Indian accent) and Hindi TTS | Apache-2.0 (kokoro-onnx: MIT) |
+| Llama 3.2 3B Instruct via Ollama (`llama3.2:3b`) | lesson planner. **Built with Llama.** | Llama 3.2 Community License |
 | eSpeak NG (via espeakng-loader) | phonemes | GPL-3.0-or-later |
 | ONNX Runtime, NumPy, soundfile | CPU inference, audio | MIT / BSD-3-Clause |
 

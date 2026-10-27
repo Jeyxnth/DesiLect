@@ -7,8 +7,6 @@ from __future__ import annotations
 
 import argparse
 import logging
-import shutil
-import subprocess
 import sys
 import time
 from pathlib import Path
@@ -18,36 +16,11 @@ sys.path.insert(0, str(REPO_ROOT / "backend"))
 
 from app.cache.store import read_json  # noqa: E402
 from app.config import SAMPLES_DIR, get_settings  # noqa: E402
-from app.export.capture import export_lesson, local_server  # noqa: E402
+from app.export.capture import ensure_frontend_built, export_lesson, local_server  # noqa: E402
 from app.export.ffmpeg import ffprobe_summary  # noqa: E402
 from app.timing.timeline import build_timeline  # noqa: E402
 
-FRONTEND = REPO_ROOT / "frontend"
 TOLERANCE_S = 0.2
-
-
-def _newest(paths: list[Path]) -> float:
-    latest = 0.0
-    for base in paths:
-        files = [base] if base.is_file() else [p for p in base.rglob("*") if p.is_file()] if base.is_dir() else []
-        latest = max([latest, *(f.stat().st_mtime for f in files)])
-    return latest
-
-
-def ensure_frontend_built(force: bool = False) -> None:
-    """Run `npm run build` when frontend/dist is missing or older than the sources."""
-    index = FRONTEND / "dist" / "index.html"
-    sources = [FRONTEND / "src", FRONTEND / "public", FRONTEND / "index.html", FRONTEND / "package.json"]
-    if not force and index.is_file() and index.stat().st_mtime >= _newest(sources):
-        print("frontend: dist is up to date")
-        return
-    npm = shutil.which("npm")
-    if npm is None:
-        raise SystemExit("npm not found; install Node 20 (python scripts/doctor.py)")
-    if not (FRONTEND / "node_modules").is_dir():
-        subprocess.run([npm, "install"], cwd=FRONTEND, check=True)
-    print("frontend: building ...")
-    subprocess.run([npm, "run", "build"], cwd=FRONTEND, check=True)
 
 
 def main() -> int:
@@ -65,7 +38,7 @@ def main() -> int:
     print(f"timing: {args.sample}.{args.lang} -> {out_dir}")
     lesson = read_json(SAMPLES_DIR / f"{args.sample}.{args.lang}.json")
     timeline = build_timeline(lesson, args.lang, out_dir)  # TTS is cached per sentence
-    ensure_frontend_built(args.rebuild)
+    print("frontend: built" if ensure_frontend_built(args.rebuild) else "frontend: dist is up to date")
 
     with local_server() as url:
         mp4 = export_lesson(lesson_id, url)

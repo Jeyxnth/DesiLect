@@ -65,8 +65,8 @@ def get_settings() -> Settings:
     _load_dotenv(REPO_ROOT / ".env")
     apply_offline_env()
     return Settings(
-        ollama_url=os.environ.get("OLLAMA_URL", "http://localhost:11434"),
-        ollama_model=os.environ.get("OLLAMA_MODEL", "qwen2.5:3b"),
+        ollama_url=os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434"),
+        ollama_model=os.environ.get("OLLAMA_MODEL", "llama3.2:3b"),
         models_dir=_path_from_env("MODELS_DIR", "models"),
         outputs_dir=_path_from_env("OUTPUTS_DIR", "outputs"),
         frontend_dist=REPO_ROOT / "frontend" / "dist",

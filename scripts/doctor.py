@@ -20,7 +20,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-CURRENT_STEP = 4  # bump this each step so newly needed dependencies become hard requirements
+CURRENT_STEP = 5  # bump this each step so newly needed dependencies become hard requirements
 
 REPO = Path(__file__).resolve().parents[1]
 VENV_PY = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
@@ -158,7 +158,7 @@ def check_models() -> None:
 
 def check_ollama() -> None:
     url = os.environ.get("OLLAMA_URL", "http://localhost:11434")
-    model = os.environ.get("OLLAMA_MODEL", "qwen2.5:3b")
+    model = os.environ.get("OLLAMA_MODEL", "llama3.2:3b")
     try:
         with urllib.request.urlopen(f"{url}/api/tags", timeout=1.5) as r:
             body = r.read().decode("utf-8", "replace")

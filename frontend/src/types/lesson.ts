@@ -37,11 +37,19 @@ export interface CodeWalkthroughScene {
 
 export type Scene = TitleCardScene | DiagramScene | CodeWalkthroughScene;
 
+/** Set by the backend, never by the planner model. */
+export interface LessonMeta {
+  fallback: boolean; // true when the built-in sample was used instead of a generated plan
+  source?: string; // e.g. "ollama:llama3.2:3b" or "sample:python_loop"
+  topic?: string;
+}
+
 export interface Lesson {
   title: string;
   level: Level;
   language: Language;
   scenes: Scene[]; // 3..6
+  meta?: LessonMeta;
 }
 
 export interface Cue {

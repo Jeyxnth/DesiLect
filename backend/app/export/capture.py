@@ -1,6 +1,7 @@
 """Playwright capture of the render page into PNG frames (CPU, headless) and the MP4 export driver."""
 from __future__ import annotations
 
+import shutil
 import socket
 import subprocess
 import sys
@@ -87,6 +88,34 @@ def capture_frames(lesson_id: str, out_dir: Path, fps: int = 15, base_url: str =
     raise NotImplementedError("TODO(step 10): smooth 15 fps capture")
 
 
+FRONTEND = REPO_ROOT / "frontend"
+
+
+def _newest(paths: list[Path]) -> float:
+    latest = 0.0
+    for base in paths:
+        files = [base] if base.is_file() else [p for p in base.rglob("*") if p.is_file()] if base.is_dir() else []
+        latest = max([latest, *(f.stat().st_mtime for f in files)])
+    return latest
+
+
+def ensure_frontend_built(force: bool = False) -> bool:
+    """Run `npm run build` when frontend/dist is missing or older than the sources. Returns True if it built."""
+    index = FRONTEND / "dist" / "index.html"
+    sources = [FRONTEND / "src", FRONTEND / "public", FRONTEND / "index.html", FRONTEND / "package.json"]
+    if not force and index.is_file() and index.stat().st_mtime >= _newest(sources):
+        return False
+    npm = shutil.which("npm")
+    if npm is None:
+        if index.is_file():
+            return False  # stale but usable
+        raise RuntimeError("frontend is not built and npm is not installed; run `python scripts/doctor.py`")
+    if not (FRONTEND / "node_modules").is_dir():
+        subprocess.run([npm, "install"], cwd=FRONTEND, check=True)
+    subprocess.run([npm, "run", "build"], cwd=FRONTEND, check=True, capture_output=True)
+    return True
+
+
 def _free_port() -> int:
     with socket.socket() as s:
         s.bind(("127.0.0.1", 0))
@@ -107,7 +136,7 @@ def local_server(timeout: float = 30.0) -> Iterator[str]:
         deadline = time.time() + timeout
         while True:
             try:
-                with urllib.request.urlopen(f"{url}/api/health", timeout=1):
+                with urllib.request.urlopen(f"{url}/api/ping", timeout=2):
                     break
             except (urllib.error.URLError, OSError):
                 if proc.poll() is not None or time.time() > deadline:

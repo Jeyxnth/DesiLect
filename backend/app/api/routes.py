@@ -14,7 +14,7 @@ from ..config import LANGUAGES, SAMPLES_DIR, get_settings
 from ..export.ffmpeg import find_ffmpeg
 from ..pipeline.jobs import JOBS, ConceptRequest
 from ..pipeline.orchestrator import run_pipeline
-from ..planner.ollama_client import OllamaClient
+from ..planner.ollama_client import OllamaClient, OllamaError
 
 router = APIRouter(prefix="/api")
 
@@ -38,10 +38,21 @@ def _model_present(dirname: str) -> bool:
     return path.is_dir() and any(path.iterdir())
 
 
+@router.get("/ping")
+def ping() -> dict[str, bool]:
+    """Instant readiness probe (does not touch Ollama or the disk)."""
+    return {"ok": True}
+
+
 @router.get("/health")
 def health() -> dict[str, Any]:
-    """Versions and which models are on disk."""
+    """Versions and which models are on disk. Probes Ollama once, briefly."""
     ollama = OllamaClient()
+    try:
+        pulled = ollama.list_models(timeout=0.5)
+    except OllamaError:
+        pulled = None
+    wanted = ollama.model if ":" in ollama.model else f"{ollama.model}:latest"
     return {
         "status": "ok",
         "versions": {
@@ -51,7 +62,7 @@ def health() -> dict[str, Any]:
             "pydantic": _version("pydantic"),
         },
         "models": {name: _model_present(d) for name, d in MODEL_DIRS.items()},
-        "ollama": {"model": ollama.model, "running": ollama.is_available()},
+        "ollama": {"model": ollama.model, "running": pulled is not None, "model_present": pulled is not None and wanted in pulled},
         "ffmpeg": find_ffmpeg() is not None,
         "playwright": shutil.which("playwright") is not None,
     }

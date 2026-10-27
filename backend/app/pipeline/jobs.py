@@ -31,6 +31,8 @@ class Job:
     request: ConceptRequest
     state: JobState = "queued"
     stage: str = "queued"
+    progress: float = 0.0  # 0..1
+    fallback_used: bool = False
     error: str | None = None
     created_at: float = field(default_factory=time.time)
 
@@ -40,6 +42,7 @@ class Job:
             "lesson_id": self.id,
             "state": self.state,
             "stage": self.stage,
+            "status": {"stage": self.stage, "progress": round(self.progress, 3), "fallback_used": self.fallback_used},
             "error": self.error,
             "request": self.request.model_dump(),
         }
