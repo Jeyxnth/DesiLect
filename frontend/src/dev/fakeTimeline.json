@@ -1,0 +1,181 @@
+{
+  "lesson_id": "sample-en",
+  "language": "en",
+  "total_seconds": 44.4107,
+  "audio_url": "/media/lessons/sample-en/lesson.wav",
+  "scenes": [
+    {
+      "index": 0,
+      "type": "title_card",
+      "start": 0.0,
+      "end": 11.012,
+      "heading": "How a Python loop works",
+      "data": {
+        "type": "title_card",
+        "heading": "How a Python loop works",
+        "subheading": "Repeat work without repeating code",
+        "narration": "Welcome! Today we will learn how a Python loop works. A loop lets your program repeat a task again and again, without writing the same code many times."
+      },
+      "cues": [
+        {
+          "start": 0.0,
+          "end": 0.8747,
+          "text": "Welcome!"
+        },
+        {
+          "start": 1.0247,
+          "end": 3.734,
+          "text": "Today we will learn how a Python loop works."
+        },
+        {
+          "start": 3.884,
+          "end": 10.412,
+          "text": "A loop lets your program repeat a task again and again, without writing the same code many times."
+        }
+      ],
+      "beats": []
+    },
+    {
+      "index": 1,
+      "type": "code_walkthrough",
+      "start": 11.012,
+      "end": 22.5787,
+      "heading": "The for loop",
+      "data": {
+        "type": "code_walkthrough",
+        "heading": "The for loop",
+        "code": "for i in range(3):\n    print(i)",
+        "language_hint": "python",
+        "highlight_lines": [
+          1,
+          2
+        ],
+        "narration": "Here is a simple for loop. The range(3) call gives us the numbers 0, 1 and 2. For each number, the variable i takes that value, and print shows it on the screen."
+      },
+      "cues": [
+        {
+          "start": 11.012,
+          "end": 12.8253,
+          "text": "Here is a simple for loop."
+        },
+        {
+          "start": 12.9753,
+          "end": 16.8367,
+          "text": "The range(3) call gives us the numbers 0, 1 and 2."
+        },
+        {
+          "start": 16.9867,
+          "end": 21.9787,
+          "text": "For each number, the variable i takes that value, and print shows it on the screen."
+        }
+      ],
+      "beats": [
+        {
+          "t": 11.012,
+          "action": "highlight",
+          "value": 1
+        },
+        {
+          "t": 12.9753,
+          "action": "highlight",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "type": "diagram",
+      "start": 22.5787,
+      "end": 32.1827,
+      "heading": "How the loop runs",
+      "data": {
+        "type": "diagram",
+        "heading": "How the loop runs",
+        "layout": "row",
+        "items": [
+          "i = 0",
+          "i = 1",
+          "i = 2"
+        ],
+        "arrows": [
+          {
+            "from": 0,
+            "to": 1,
+            "label": "next"
+          },
+          {
+            "from": 1,
+            "to": 2,
+            "label": "next"
+          }
+        ],
+        "narration": "Watch how the loop runs. First, i is 0, and print shows 0. Then i becomes 1, then 2, and after that the loop stops."
+      },
+      "cues": [
+        {
+          "start": 22.5787,
+          "end": 24.2427,
+          "text": "Watch how the loop runs."
+        },
+        {
+          "start": 24.3927,
+          "end": 27.3153,
+          "text": "First, i is 0, and print shows 0."
+        },
+        {
+          "start": 27.4653,
+          "end": 31.5827,
+          "text": "Then i becomes 1, then 2, and after that the loop stops."
+        }
+      ],
+      "beats": [
+        {
+          "t": 22.5787,
+          "action": "reveal",
+          "value": 0
+        },
+        {
+          "t": 24.3927,
+          "action": "reveal",
+          "value": 1
+        },
+        {
+          "t": 27.4653,
+          "action": "reveal",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "index": 3,
+      "type": "title_card",
+      "start": 32.1827,
+      "end": 44.4107,
+      "heading": "Recap",
+      "data": {
+        "type": "title_card",
+        "heading": "Recap",
+        "subheading": "A loop repeats code for every value",
+        "narration": "To recap, a loop repeats the same code for every value. Use range to say how many times, and print to see each result. Now try changing the number inside range yourself!"
+      },
+      "cues": [
+        {
+          "start": 32.1827,
+          "end": 35.8947,
+          "text": "To recap, a loop repeats the same code for every value."
+        },
+        {
+          "start": 36.0447,
+          "end": 40.226,
+          "text": "Use range to say how many times, and print to see each result."
+        },
+        {
+          "start": 40.376,
+          "end": 43.8107,
+          "text": "Now try changing the number inside range yourself!"
+        }
+      ],
+      "beats": []
+    }
+  ]
+}

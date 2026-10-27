@@ -1,62 +1,56 @@
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
+import { flushSync } from "react-dom";
 
-/** Source of lesson time t (seconds). The player and the render page share this interface. */
+/** Source of lesson time (seconds). Scenes never read it: they get localT from the Player. */
 export interface Clock {
   now(): number;
-  set(t: number): void;
   play(): void;
   pause(): void;
+  seek(t: number): void;
   isPlaying(): boolean;
-  subscribe(listener: () => void): () => void;
 }
 
-/** Time only moves when set() is called. Used by the render page (G3: no timers). */
+/** Time is whatever the caller last set. Used by the render page (G3: no timers, no playback). */
 export class ManualClock implements Clock {
-  protected t = 0;
-  protected listeners = new Set<() => void>();
+  private t = 0;
   now(): number { return this.t; }
-  set(t: number): void { this.t = Math.max(0, t); this.emit(); }
   play(): void {}
   pause(): void {}
+  seek(t: number): void { this.t = Math.max(0, t); }
   isPlaying(): boolean { return false; }
-  subscribe(listener: () => void): () => void {
-    this.listeners.add(listener);
-    return () => { this.listeners.delete(listener); };
-  }
-  protected emit(): void { this.listeners.forEach((l) => l()); }
 }
 
-/** Interactive clock driven by requestAnimationFrame. TODO(step 3): drive from the audio element. */
-export class PlaybackClock extends ManualClock {
-  private playing = false;
-  private last = 0;
-  private raf = 0;
-  constructor(private readonly duration: number) { super(); }
-  override play(): void {
-    if (this.playing) return;
-    if (this.t >= this.duration) this.t = 0;
-    this.playing = true;
-    this.last = performance.now();
-    const tick = (now: number) => {
-      if (!this.playing) return;
-      this.t = Math.min(this.duration, this.t + (now - this.last) / 1000);
-      this.last = now;
-      if (this.t >= this.duration) this.playing = false;
-      this.emit();
-      if (this.playing) this.raf = requestAnimationFrame(tick);
-    };
-    this.raf = requestAnimationFrame(tick);
-    this.emit();
-  }
-  override pause(): void {
-    this.playing = false;
-    cancelAnimationFrame(this.raf);
-    this.emit();
-  }
-  override isPlaying(): boolean { return this.playing; }
+/** Time comes from the audio element playing lesson.wav, so picture and voice cannot drift apart. */
+export class AudioClock implements Clock {
+  constructor(private readonly audio: HTMLAudioElement) {}
+  now(): number { return this.audio.currentTime; }
+  play(): void { void this.audio.play().catch(() => {}); }
+  pause(): void { this.audio.pause(); }
+  seek(t: number): void { this.audio.currentTime = Math.max(0, t); }
+  isPlaying(): boolean { return !this.audio.paused && !this.audio.ended; }
 }
 
-/** React hook: re-render whenever the clock changes; returns current t. */
-export function useClockTime(clock: Clock): number {
-  return useSyncExternalStore(clock.subscribe.bind(clock), clock.now.bind(clock));
+export interface ClockState {
+  t: number;
+  playing: boolean;
+  /** Synchronously re-read the clock and commit the render (used by the render page). */
+  refresh: () => void;
+}
+
+/** A requestAnimationFrame loop reads clock.now() and re-renders when it changed. */
+export function useClock(clock: Clock): ClockState {
+  const [state, setState] = useState(() => ({ t: clock.now(), playing: clock.isPlaying() }));
+  const read = () => setState((s) => {
+    const next = { t: clock.now(), playing: clock.isPlaying() };
+    return s.t === next.t && s.playing === next.playing ? s : next;
+  });
+  useEffect(() => {
+    let raf = 0;
+    const loop = () => { read(); raf = requestAnimationFrame(loop); };
+    read();
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [clock]);
+  return { ...state, refresh: () => flushSync(read) };
 }

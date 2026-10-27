@@ -122,3 +122,10 @@ def test_timeline_schema():
     assert validate_timeline(timeline) == []
     timeline["scenes"][0]["data"]["extra"] = 1
     assert validate_timeline(timeline)
+
+
+def test_frontend_fake_timeline_matches_schema():
+    from app.config import REPO_ROOT
+
+    fake = json.loads((REPO_ROOT / "frontend" / "src" / "dev" / "fakeTimeline.json").read_text(encoding="utf-8"))
+    assert validate_timeline(fake) == []
