@@ -135,7 +135,8 @@ body {
 .toggle { display: flex; }
 .form .toggle button { flex: 1; border-radius: 0; }
 .form .toggle button:first-child { border-radius: 8px 0 0 8px; }
-.form .toggle button:last-child { border-radius: 0 8px 8px 0; border-left: none; }
+.form .toggle button:last-child { border-radius: 0 8px 8px 0; }
+.form .toggle button + button { border-left: none; }
 .form .toggle button[aria-pressed="true"] { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; }
 .form .primary { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 700; padding: 10px; }
 .job { margin-top: 20px; display: grid; gap: 10px; }

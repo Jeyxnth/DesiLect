@@ -95,6 +95,17 @@ same language instead, from the bundled audio below, and the UI shows the fallba
 manifest in `shared/tts_cache/manifest/<lang>.json`). Lookup order is `outputs/cache/tts`, then `shared/tts_cache`, then the engine, so a sample lesson
 needs no TTS at demo time. Re-run it after editing a sample, the transliteration table or `backend/app/tts/audio.py` (bump `POSTPROCESS_VERSION`).
 
+**Voice speed.** The input page offers Slow / Normal / Fast (0.85x / 1.0x / 1.15x; the API accepts `speed` 0.7-1.3). Kokoro and Indic-TTS
+apply it directly; Parler only approximates it through its description. Bundled sample audio is at 1.0x, so a sample voiced at another speed
+needs the engine; if that fails, the 1.0x bundled audio is used.
+
+**MP4 export.** `export_lesson` defaults to **smooth** mode: the render page is photographed 15 times a second while anything animates and one
+frame is held through still stretches (`smooth_shots` in `backend/app/export/capture.py`), then encoded as 1280x720 H.264 `yuv420p` + AAC.
+If smooth capture fails for any reason the keyframe export (one frame per change) runs instead (G2). `outputs/lessons/<id>/export.json` records
+the mode used. Captions are drawn by the browser, so Hindi and Tamil use the bundled Noto Sans Devanagari / Tamil fonts on every laptop.
+`python scripts/render_sample.py --lang ta [--mode keyframe]` renders a sample. Measured: the 58 s Tamil sample in 54 s wall; a generated
+75 s Tamil lesson (1,059 frames) in 72 s.
+
 ### Speed on this laptop (14 cores, 20 threads; not the weakest laptop)
 
 | Stage | Real-time factor (synthesis time / audio time) | Whole sample (4 scenes) |

@@ -114,21 +114,26 @@ def plan_lesson(
 
 
 def narrate(
-    lesson: dict[str, Any], topic: str, level: str, out_dir: Path, on_stage: Callable[[str], None]
+    lesson: dict[str, Any],
+    topic: str,
+    level: str,
+    out_dir: Path,
+    on_stage: Callable[[str], None],
+    speed: float = 1.0,
 ) -> dict[str, Any]:
-    """Voice and time the lesson; never leaves the job without audio if a sample can stand in (G2).
+    """Voice and time the lesson at the requested speed; never leaves the job without audio if a sample can stand in (G2).
 
     If TTS fails (model missing, out of memory, engine error) the closest built-in sample in the same language
-    is voiced instead. Its narration is pre-generated in shared/tts_cache, so no engine has to load.
-    Returns the lesson that was actually voiced. A sample that fails too is re-raised.
+    is voiced instead, at normal speed: that is the narration pre-generated in shared/tts_cache, so no engine
+    has to load. Returns the lesson that was actually voiced. A sample that fails too is re-raised.
     """
     lang = lesson["language"]
     try:
-        build_timeline(lesson, lang, out_dir, on_stage=on_stage)
+        build_timeline(lesson, lang, out_dir, on_stage=on_stage, speed=speed)
         return lesson
     except Exception as exc:  # noqa: BLE001 - any TTS failure falls back to the cached sample
-        if lesson.get("meta", {}).get("fallback"):
-            raise  # already a sample: there is nothing more cached to fall back to
+        if lesson.get("meta", {}).get("fallback") and speed == 1.0:
+            raise  # already a sample at the cached speed: there is nothing more cached to fall back to
         log.exception("voice stage failed; using the closest sample's cached narration")
         sample = fallback_lesson(topic, level, lang, reason=f"Voice generation failed ({type(exc).__name__}).")
         build_timeline(sample, lang, out_dir, on_stage=on_stage)
@@ -177,7 +182,7 @@ def run_pipeline(
 
         with timed_stage(job_id, "narrate"):
             # the lesson's own language: a failed translation stays English and is voiced in English
-            voiced = narrate(lesson, req.topic, req.level, out_dir, lambda stage: _status(job_id, stage))
+            voiced = narrate(lesson, req.topic, req.level, out_dir, lambda stage: _status(job_id, stage), req.speed)
         if voiced is not lesson:  # TTS failed: the closest sample was voiced from cached audio
             lesson = voiced
             note_fallback(lesson)

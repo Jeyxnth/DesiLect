@@ -45,7 +45,9 @@ def encode_keyframes(
     out_mp4: Path,
     fps: int = FPS,
 ) -> Path:
-    """Encode keyframe PNGs (each held for its duration) plus lesson.wav into a 1280x720 H.264/AAC MP4.
+    """Encode still frames (each held for its duration) plus lesson.wav into a 1280x720 H.264/AAC MP4.
+
+    Used by both exports: keyframe (one PNG per change) and smooth (JPEGs at 15 fps while animating).
 
     Captions are already burned into the frames (the caption bar is part of the render page).
     captions.srt is also copied next to the MP4 as a separate download.
@@ -64,7 +66,8 @@ def encode_keyframes(
         "-i", str(wav),
         "-map", "0:v:0", "-map", "1:a:0",
         "-c:v", "libx264", "-preset", "veryfast", "-crf", "23", "-pix_fmt", "yuv420p",
-        "-r", str(fps), "-vf", "scale=1280:720",
+        # JPEG frames are full-range (yuvj420p); convert to standard limited-range yuv420p for every player
+        "-r", str(fps), "-vf", "scale=1280:720:out_range=tv,format=yuv420p",
         "-c:a", "aac", "-b:a", "128k",
         "-movflags", "+faststart", "-shortest",
         str(out_mp4),
@@ -76,14 +79,6 @@ def encode_keyframes(
     if Path(srt).resolve() != srt_copy.resolve():
         shutil.copyfile(srt, srt_copy)
     return out_mp4
-
-
-def encode_mp4(frames_dir: Path, audio_path: Path, out_path: Path, fps: int = 15) -> Path:
-    """Encode a dense frame sequence (smooth mode).
-
-    TODO(step 10): smooth 15 fps export. Keyframe mode (encode_keyframes) stays the demo fallback.
-    """
-    raise NotImplementedError("TODO(step 10): smooth frame-sequence encode")
 
 
 def ffprobe_summary(path: Path) -> dict[str, Any]:

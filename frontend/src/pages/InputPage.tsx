@@ -21,6 +21,13 @@ const LEVELS: { value: Level; label: string }[] = [
   { value: "intermediate", label: "Intermediate" },
 ];
 
+/** Narration speed choices (multipliers the TTS engines apply; see ConceptRequest.speed). */
+const SPEEDS: { value: number; label: string }[] = [
+  { value: 0.85, label: "Slow" },
+  { value: 1.0, label: "Normal" },
+  { value: 1.15, label: "Fast" },
+];
+
 type StageState = "done" | "active" | "todo" | "skipped" | "failed";
 
 /** Stage 1: concept input, then live job progress until the lesson can play. */
@@ -30,6 +37,7 @@ export default function InputPage() {
     level: "beginner",
     language: "en",
     target_seconds: 45,
+    speed: 1.0,
   });
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState("");
@@ -115,6 +123,22 @@ export default function InputPage() {
             <option value="ta">தமிழ்</option>
           </select>
         </label>
+        <div className="field">
+          <span className="field-label" id="speed-label">Voice speed</span>
+          <div className="toggle" role="group" aria-labelledby="speed-label">
+            {SPEEDS.map((s) => (
+              <button
+                type="button"
+                key={s.value}
+                aria-pressed={req.speed === s.value}
+                disabled={busy}
+                onClick={() => setReq({ ...req, speed: s.value })}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <label>Length: {req.target_seconds} s
           <input type="range" min={30} max={90} step={5} disabled={busy} value={req.target_seconds} onChange={(e) => setReq({ ...req, target_seconds: Number(e.target.value) })} />
         </label>

@@ -8,7 +8,7 @@ import pytest
 
 from app.cache.store import read_json
 from app.config import REPO_ROOT
-from app.export.capture import capture_times
+from app.export.capture import capture_times, smooth_shots
 from app.export.ffmpeg import ffprobe_summary, write_ffconcat
 
 
@@ -18,6 +18,46 @@ def test_capture_times_settle_inside_own_interval():
     # last interval ends at total
     assert capture_times([8.0], 8.5, 1.2) == [8.49]
     assert capture_times([0.0], 3.0, 0.0) == [0.0]
+
+
+def test_smooth_shots_animate_at_fps_and_hold_still_stretches():
+    shots = smooth_shots([0.0, 2.0], total=4.0, settle=0.5, fps=10)
+    times = [t for t, _ in shots]
+    # 0.0-0.5 animating (every 0.1 s), still until 2.0 (held), 2.0-2.5 animating, then held to the end
+    assert times[:6] == [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    assert 0.6 not in times and 1.9 not in times
+    assert times[6:12] == [2.0, 2.1, 2.2, 2.3, 2.4, 2.5]
+    assert len(times) == 12
+    assert sum(d for _, d in shots) == pytest.approx(4.0)
+    assert shots[5] == (0.5, 1.5) and shots[-1] == (2.5, 1.5)  # held frames last until the next change
+
+
+def test_smooth_shots_catch_a_keyframe_between_grid_points():
+    shots = smooth_shots([0.0, 1.03], total=2.0, settle=0.0, fps=10)
+    times = [t for t, _ in shots]
+    assert times == [0.0, 1.1]  # 1.03 changes the picture: the next grid point shows it
+    assert sum(d for _, d in shots) == pytest.approx(2.0)
+
+
+def test_smooth_export_falls_back_to_keyframes(tmp_path, monkeypatch):
+    from app.export import capture
+
+    out = tmp_path / "lessons" / "x1"
+    out.mkdir(parents=True)
+    monkeypatch.setattr(capture, "lesson_dir", lambda lid, create=True: out)
+    monkeypatch.setattr(capture, "timed_stage", lambda *a: __import__("contextlib").nullcontext())
+
+    def broken(*a, **k):
+        raise RuntimeError("chromium crashed")
+
+    monkeypatch.setattr(capture, "capture_frames", broken)
+    monkeypatch.setattr(capture, "capture_keyframes", lambda *a, **k: [(out / "k.png", 1.0)])
+    encoded = []
+    monkeypatch.setattr(capture, "encode_keyframes", lambda frames, *a: encoded.append(frames))
+    capture.export_lesson("x1", "http://x")
+    assert encoded == [[(out / "k.png", 1.0)]]
+    info = read_json(out / "export.json")
+    assert info["mode"] == "keyframe" and "chromium crashed" in info["smooth_failed"]
 
 
 def test_ffconcat_has_exact_durations_and_repeats_last_file(tmp_path):

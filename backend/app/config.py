@@ -13,6 +13,8 @@ SAMPLES_DIR = SHARED_DIR / "samples"
 
 MIN_TARGET_SECONDS = 30
 MAX_TARGET_SECONDS = 90
+MIN_SPEED = 0.7  # narration speed accepted by the API (1.0 = the voice's normal pace)
+MAX_SPEED = 1.3
 LANGUAGES = ("en", "hi", "ta")
 LEVELS = ("beginner", "intermediate")
 

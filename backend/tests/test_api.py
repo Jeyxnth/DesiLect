@@ -38,7 +38,7 @@ def stub_pipeline(monkeypatch, export=lambda *a, **k: None):
         def chat_json(self, *a, **k):
             raise OllamaNotRunning("down")
 
-    def fake_timeline(lesson, lang, out, on_stage=None):
+    def fake_timeline(lesson, lang, out, on_stage=None, **kw):
         on_stage("voice")
         on_stage("timing")
         (out / "timeline.json").write_text("{}", encoding="utf-8")
@@ -160,7 +160,7 @@ def test_failed_job_reports_the_stage_that_failed(monkeypatch):
 
     stub_pipeline(monkeypatch)
 
-    def no_voice(lesson, lang, out, on_stage=None):
+    def no_voice(lesson, lang, out, on_stage=None, **kw):
         on_stage("voice")
         raise FileNotFoundError("models/kokoro missing")
 
@@ -181,7 +181,7 @@ def test_failed_voice_falls_back_to_the_cached_sample(monkeypatch):
     monkeypatch.setattr(orch, "plan_lesson", lambda *a, **k: (planned, {"fallback": False}))
     voiced = []
 
-    def voice_fails_for_new_lessons(lesson, lang, out, on_stage=None):
+    def voice_fails_for_new_lessons(lesson, lang, out, on_stage=None, **kw):
         on_stage("voice")
         if not lesson["meta"]["fallback"]:
             raise MemoryError("parler ran out of RAM")
@@ -270,3 +270,43 @@ def test_health_survives_ollama_down(monkeypatch):
     monkeypatch.setattr(routes.OllamaClient, "list_models", down)
     body = client.get("/api/health").json()
     assert body["ollama"]["running"] is False and body["ollama"]["model_present"] is False
+
+
+def test_speed_reaches_the_voice_stage(monkeypatch):
+    from app.pipeline import orchestrator as orch
+
+    stub_pipeline(monkeypatch)
+    speeds = []
+
+    def record(lesson, lang, out, on_stage=None, speed=1.0, **kw):
+        speeds.append(speed)
+        on_stage("voice")
+        (out / "timeline.json").write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(orch, "build_timeline", record)
+    job = wait_until_finished(client.post("/api/lessons", json={"topic": "loops", "speed": 0.85}).json()["job_id"])
+    assert job["state"] == "done" and speeds == [0.85]
+    assert job["request"]["speed"] == 0.85
+
+
+def test_slow_sample_whose_voice_fails_falls_back_to_cached_normal_speed(monkeypatch):
+    """Ollama down -> sample lesson; at 0.85x it is not cached, so if the engine fails the 1.0x cached audio is used."""
+    from app.pipeline import orchestrator as orch
+
+    stub_pipeline(monkeypatch)
+    speeds = []
+
+    def engine_down_unless_cached(lesson, lang, out, on_stage=None, speed=1.0, **kw):
+        speeds.append(speed)
+        if speed != 1.0:
+            raise FileNotFoundError("model missing")
+        (out / "timeline.json").write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(orch, "build_timeline", engine_down_unless_cached)
+    job = wait_until_finished(client.post("/api/lessons", json={"topic": "loops", "speed": 0.85}).json()["job_id"])
+    assert job["state"] == "done" and speeds == [0.85, 1.0]
+
+
+def test_rejects_bad_speed():
+    assert client.post("/api/lessons", json={"topic": "loops", "speed": 2.0}).status_code == 422
+    assert client.post("/api/lessons", json={"topic": "loops", "speed": 0.5}).status_code == 422

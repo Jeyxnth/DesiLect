@@ -11,7 +11,7 @@ from typing import Any, Callable, Literal
 from pydantic import BaseModel, Field
 
 from ..cache.store import new_lesson_id
-from ..config import MAX_TARGET_SECONDS, MIN_TARGET_SECONDS
+from ..config import MAX_SPEED, MAX_TARGET_SECONDS, MIN_SPEED, MIN_TARGET_SECONDS
 
 log = logging.getLogger("blu.jobs")
 
@@ -26,6 +26,7 @@ class ConceptRequest(BaseModel):
     level: Literal["beginner", "intermediate"] = "beginner"
     language: Literal["en", "hi", "ta"] = "en"
     target_seconds: int = Field(default=45, ge=MIN_TARGET_SECONDS, le=MAX_TARGET_SECONDS)
+    speed: float = Field(default=1.0, ge=MIN_SPEED, le=MAX_SPEED)  # narration speed; the UI offers 0.85 / 1.0 / 1.15
 
 
 @dataclass

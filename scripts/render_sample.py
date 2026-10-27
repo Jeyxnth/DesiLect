@@ -1,6 +1,6 @@
 """Render the bundled sample lesson to an MP4 (make sample).
 
-timing + TTS (cached) -> build frontend if stale -> local server -> capture keyframes -> encode -> ffprobe.
+timing + TTS (cached) -> build frontend if stale -> local server -> capture (smooth or keyframe) -> encode -> ffprobe.
 Writes outputs/lessons/sample-<lang>/lesson.mp4 (other samples: sample-<name>-<lang>/) next to timeline.json, lesson.wav and captions.srt.
 """
 from __future__ import annotations
@@ -28,6 +28,8 @@ def main() -> int:
     ap.add_argument("--language", "--lang", dest="lang", choices=["en", "hi", "ta"], default="en")
     ap.add_argument("--sample", default="python_loop")
     ap.add_argument("--rebuild", action="store_true", help="force a frontend rebuild")
+    ap.add_argument("--mode", choices=["smooth", "keyframe"], default="smooth",
+                    help="smooth: animations at 15 fps (falls back to keyframe on failure); keyframe: one frame per change")
     args = ap.parse_args()
     logging.basicConfig(level=logging.WARNING)
 
@@ -42,9 +44,10 @@ def main() -> int:
     print("frontend: built" if ensure_frontend_built(args.rebuild) else "frontend: dist is up to date")
 
     with local_server() as url:
-        mp4 = export_lesson(lesson_id, url)
+        mp4 = export_lesson(lesson_id, url, args.mode)
 
     info = ffprobe_summary(mp4)
+    print(f"export mode: {read_json(out_dir / 'export.json')}")
     drift = abs(info["duration"] - timeline["total_seconds"])
     print(f"\n{mp4}")
     print(f"  {info['width']}x{info['height']}  video={info['video_codec']} ({info['pix_fmt']})  audio={info['audio_codec']}")

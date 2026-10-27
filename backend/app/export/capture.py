@@ -1,6 +1,9 @@
 """Playwright capture of the render page into PNG frames (CPU, headless) and the MP4 export driver."""
 from __future__ import annotations
 
+import bisect
+import logging
+import math
 import shutil
 import socket
 import subprocess
@@ -12,9 +15,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Iterator, Literal
 
-from ..cache.store import lesson_dir, read_json, timed_stage
+from ..cache.store import lesson_dir, read_json, timed_stage, write_json
 from ..config import REPO_ROOT
 from .ffmpeg import encode_keyframes
+
+log = logging.getLogger("blu.export")
 
 CaptureMode = Literal["smooth", "keyframe"]  # keyframe is the G2 fallback
 VIEWPORT = {"width": 1280, "height": 720}
@@ -29,6 +34,32 @@ def capture_times(keyframes: list[float], total: float, settle: float) -> list[f
     """
     ends = keyframes[1:] + [total]
     return [round(max(k, min(k + settle, e - 0.01)), 3) for k, e in zip(keyframes, ends)]
+
+
+SMOOTH_FPS = 15
+
+
+def smooth_shots(keyframes: list[float], total: float, settle: float, fps: int = SMOOTH_FPS) -> list[tuple[float, float]]:
+    """(time to photograph, seconds it stays on screen) for smooth export.
+
+    Time is sampled on a 1/fps grid. While an animation runs (from a keyframe until it settles) every grid
+    point is photographed; after that the picture cannot change until the next keyframe, so one photo is
+    held for the whole still stretch. The durations sum to total.
+    """
+    step = 1.0 / fps
+    n = max(1, math.ceil(total * fps - 1e-9))
+    times: list[float] = []
+    last_shot_key = -1
+    for i in range(n):
+        t = i * step
+        k_idx = bisect.bisect_right(keyframes, t + 1e-9) - 1
+        k = keyframes[k_idx] if k_idx >= 0 else 0.0
+        animating = t - k < settle + 1e-9
+        if not times or animating or k_idx != last_shot_key:
+            times.append(round(t, 4))
+            last_shot_key = k_idx
+    ends = times[1:] + [total]
+    return [(t, round(e - t, 4)) for t, e in zip(times, ends)]
 
 
 def _launch(p):  # type: ignore[no-untyped-def]
@@ -83,9 +114,43 @@ def capture_keyframes(
     return frames
 
 
-def capture_frames(lesson_id: str, out_dir: Path, fps: int = 15, base_url: str = "http://localhost:8000") -> list[Path]:
-    """Dense frame sequence for smooth export. TODO(step 10)."""
-    raise NotImplementedError("TODO(step 10): smooth 15 fps capture")
+def capture_frames(
+    lesson_id: str,
+    out_dir: Path,
+    fps: int = SMOOTH_FPS,
+    base_url: str = "http://localhost:8000",
+) -> list[tuple[Path, float]]:
+    """Photograph the render page for smooth export (animations at fps, still stretches held; see smooth_shots).
+
+    Returns [(jpg, seconds on screen)] like capture_keyframes, so the same encoder is used.
+    """
+    from playwright.sync_api import sync_playwright
+
+    out_dir = Path(out_dir)
+    frames_dir = out_dir / "frames"
+    if frames_dir.is_dir():
+        for old in frames_dir.glob("s_*.jpg"):
+            old.unlink()
+    frames_dir.mkdir(parents=True, exist_ok=True)
+    total = float(read_json(out_dir / "timeline.json")["total_seconds"])
+
+    with sync_playwright() as p:
+        browser = _launch(p)
+        try:
+            page = browser.new_page(viewport=VIEWPORT, device_scale_factor=1)
+            page.goto(f"{base_url}/render/{lesson_id}", wait_until="load")
+            page.wait_for_function("window.__ready === true", timeout=30_000)
+            keyframes: list[float] = page.evaluate("window.__keyframes()")
+            settle = float(page.evaluate("window.__settle ?? 0"))
+            frames: list[tuple[Path, float]] = []
+            for i, (t, duration) in enumerate(smooth_shots(keyframes, total, settle, fps), start=1):
+                page.evaluate("(t) => window.__seek(t)", t)
+                jpg = frames_dir / f"s_{i:05d}.jpg"
+                page.screenshot(path=str(jpg), type="jpeg", quality=92)
+                frames.append((jpg, duration))
+        finally:
+            browser.close()
+    return frames
 
 
 FRONTEND = REPO_ROOT / "frontend"
@@ -151,16 +216,31 @@ def local_server(timeout: float = 30.0) -> Iterator[str]:
             proc.kill()
 
 
-def export_lesson(lesson_id: str, base_url: str, mode: CaptureMode = "keyframe") -> Path:
-    """Capture the render page and encode outputs/lessons/<id>/lesson.mp4 (keyframe mode).
+def export_lesson(lesson_id: str, base_url: str, mode: CaptureMode = "smooth") -> Path:
+    """Capture the render page and encode outputs/lessons/<id>/lesson.mp4.
 
-    Needs timeline.json, lesson.wav and captions.srt in the lesson dir, and the app served at base_url.
-    Step 6 calls this from the API; step 10 adds mode="smooth".
+    mode="smooth" photographs animations at 15 fps; if it fails for any reason the keyframe export (one photo per
+    change) runs instead (G2). Writes export.json with the mode actually used. Needs timeline.json, lesson.wav and
+    captions.srt in the lesson dir, and the app served at base_url.
     """
-    if mode != "keyframe":
-        raise NotImplementedError("TODO(step 10): smooth export")
     out_dir = lesson_dir(lesson_id, create=False)
+    wav, srt, mp4 = out_dir / "lesson.wav", out_dir / "captions.srt", out_dir / "lesson.mp4"
+    if mode == "smooth":
+        try:
+            with timed_stage(lesson_id, "export_capture"):
+                frames = capture_frames(lesson_id, out_dir, SMOOTH_FPS, base_url)
+            with timed_stage(lesson_id, "export_encode"):
+                encode_keyframes(frames, wav, srt, mp4)
+            write_json(out_dir / "export.json", {"mode": "smooth", "fps": SMOOTH_FPS, "frames": len(frames)})
+            return mp4
+        except Exception as exc:  # noqa: BLE001 - the keyframe export is the fallback
+            log.warning("smooth export failed (%s); falling back to keyframe export", exc)
+            fallback_reason = f"{type(exc).__name__}: {exc}"[:300]
+    else:
+        fallback_reason = None
     with timed_stage(lesson_id, "export_capture"):
         frames = capture_keyframes(lesson_id, out_dir, base_url)
     with timed_stage(lesson_id, "export_encode"):
-        return encode_keyframes(frames, out_dir / "lesson.wav", out_dir / "captions.srt", out_dir / "lesson.mp4")
+        encode_keyframes(frames, wav, srt, mp4)
+    write_json(out_dir / "export.json", {"mode": "keyframe", "frames": len(frames), "smooth_failed": fallback_reason})
+    return mp4
