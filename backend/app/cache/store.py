@@ -69,8 +69,31 @@ def cache_key(*parts: str) -> str:
     return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()[:24]
 
 
-def audio_cache_path(language: str, voice: str, text: str) -> Path:
-    """Path of the cached WAV for one sentence. TODO(step 2): used by TTS stage."""
-    root = get_settings().outputs_dir / "cache" / "audio" / language
+def tts_cache_path(engine: str, voice: str, lang: str, speed: float, text: str) -> Path:
+    """Cache file for one sentence: outputs/cache/tts/<sha1(engine, voice, lang, speed, text)>.wav."""
+    key = hashlib.sha1("\x1f".join([engine, voice, lang, f"{speed:.3f}", text]).encode("utf-8")).hexdigest()
+    root = get_settings().outputs_dir / "cache" / "tts"
     root.mkdir(parents=True, exist_ok=True)
-    return root / f"{cache_key(language, voice, text)}.wav"
+    return root / f"{key}.wav"
+
+
+def load_cached_audio(path: Path) -> tuple[Any, int] | None:
+    """Return (float32 samples, sample_rate) if the cache file exists and reads cleanly."""
+    if not path.is_file():
+        return None
+    import soundfile as sf
+
+    try:
+        data, sr = sf.read(path, dtype="float32")
+    except Exception:  # noqa: BLE001 - a corrupt cache entry is just a miss
+        return None
+    return data, int(sr)
+
+
+def save_cached_audio(path: Path, samples: Any, sample_rate: int) -> None:
+    """Write lossless float WAV atomically so an interrupted run never leaves a bad entry."""
+    import soundfile as sf
+
+    tmp = path.with_suffix(".tmp.wav")
+    sf.write(tmp, samples, sample_rate, subtype="FLOAT")
+    tmp.replace(path)

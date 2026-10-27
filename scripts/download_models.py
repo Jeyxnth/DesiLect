@@ -13,11 +13,31 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 
 # name -> (huggingface repo id, target dir under models/, licence)
 MODELS = {
-    "kokoro": ("hexgrad/Kokoro-82M", "kokoro", "Apache-2.0"),
+    "kokoro": ("hexgrad/Kokoro-82M", "kokoro", "Apache-2.0"),  # fetched as ONNX files, see KOKORO_FILES
     "indictrans2": ("ai4bharat/indictrans2-en-indic-dist-200M", "indictrans2-en-indic-dist-200M", "MIT"),
     "indic-parler-tts": ("ai4bharat/indic-parler-tts", "indic-parler-tts", "Apache-2.0"),
 }
+# kokoro-onnx model files (weights Apache-2.0, kokoro-onnx runtime MIT), saved into models/kokoro/
+KOKORO_BASE = "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0"
+KOKORO_FILES = ["kokoro-v1.0.onnx", "voices-v1.0.bin"]
+
 # Ollama model is pulled separately: `ollama pull <OLLAMA_MODEL>` (see .env.example). TODO(step 5)
+
+
+def download_kokoro(target: Path) -> None:
+    """Fetch the two kokoro-onnx files (skips files already present)."""
+    import urllib.request
+
+    target.mkdir(parents=True, exist_ok=True)
+    for fname in KOKORO_FILES:
+        dest = target / fname
+        if dest.is_file() and dest.stat().st_size > 0:
+            print(f"  {fname}: already present")
+            continue
+        print(f"  downloading {fname} ...")
+        tmp = dest.with_suffix(dest.suffix + ".part")
+        urllib.request.urlretrieve(f"{KOKORO_BASE}/{fname}", tmp)
+        tmp.replace(dest)
 
 
 def main() -> int:
@@ -38,6 +58,9 @@ def main() -> int:
         if args.dry_run:
             continue
         os.environ["HF_HUB_OFFLINE"] = "0"  # this script is the network exception
+        if name == "kokoro":
+            download_kokoro(target)
+            continue
         try:
             from huggingface_hub import snapshot_download
         except ImportError:

@@ -1,5 +1,5 @@
 # Model runtimes, installed in later steps (CPU-only builds, H3).
-# TODO(step 2): kokoro, soundfile
+# step 2: kokoro-onnx, onnxruntime, soundfile are in requirements.txt
 # TODO(step 8): transformers, torch (CPU), IndicTransToolkit
 # TODO(step 9): parler-tts
 # TODO(step 4): playwright

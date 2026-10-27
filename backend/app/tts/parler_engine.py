@@ -1,13 +1,12 @@
 """Indic Parler-TTS for Tamil."""
 from __future__ import annotations
 
-from pathlib import Path
+import numpy as np
 
 from ..config import get_settings
-from .base import AudioResult, TTSEngine
 
 
-class ParlerEngine(TTSEngine):
+class ParlerEngine:
     """TODO(step 9): Tamil synthesis on CPU."""
 
     name = "parler"
@@ -20,8 +19,8 @@ class ParlerEngine(TTSEngine):
     def load(self) -> None:
         raise NotImplementedError("TODO(step 9): load Indic Parler-TTS from models/")
 
-    def synthesize(self, text: str, language: str, out_path: Path, voice: str | None = None) -> AudioResult:
-        raise NotImplementedError("TODO(step 9): Parler synthesis")
-
     def unload(self) -> None:
         self._model = None
+
+    def synth(self, text: str, lang: str, voice: str, speed: float = 1.0) -> tuple[np.ndarray, int]:
+        raise NotImplementedError("TODO(step 9): Parler synthesis")
