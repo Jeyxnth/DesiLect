@@ -139,6 +139,30 @@ def test_parler_description_is_fixed_per_voice_and_speed():
     assert pace_phrase(1.0) == "at a moderate pace"
 
 
+def test_parler_regenerates_a_cut_short_sentence():
+    from app.tts.parler_engine import MAX_ATTEMPTS, SEED, longest_complete
+
+    text = "செங்கோண முக்கோணத்துல ஒரு மூலை நேர் கோணமா இருக்கும்"  # 46 characters
+    lengths = {SEED: 0.5, SEED + 1: 3.4}  # seed 0 stops early, seed 1 is complete
+    seeds = []
+
+    def generate(seed):
+        seeds.append(seed)
+        return tone(lengths.get(seed, 0.4))
+
+    assert len(longest_complete(generate, text, SAMPLE_RATE)) == len(tone(3.4))
+    assert seeds == [SEED, SEED + 1]
+
+    seeds.clear()
+    assert len(longest_complete(lambda s: (seeds.append(s), tone(0.2 + 0.1 * s))[1], text, SAMPLE_RATE)) == len(
+        tone(0.2 + 0.1 * (SEED + MAX_ATTEMPTS - 1)))  # never complete: the longest attempt wins
+    assert len(seeds) == MAX_ATTEMPTS
+
+    seeds.clear()
+    longest_complete(lambda s: (seeds.append(s), tone(3.0))[1], text, SAMPLE_RATE)
+    assert seeds == [SEED]  # a normal sentence is generated once
+
+
 def test_parler_reports_missing_model(tmp_path, monkeypatch):
     monkeypatch.setattr("app.tts.parler_engine.get_settings", lambda: SimpleNamespace(models_dir=tmp_path))
     with pytest.raises(FileNotFoundError, match="download_models"):

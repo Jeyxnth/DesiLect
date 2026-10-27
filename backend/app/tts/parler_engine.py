@@ -4,6 +4,7 @@ from __future__ import annotations
 import gc
 import logging
 import os
+from typing import Callable
 
 import numpy as np
 
@@ -32,6 +33,25 @@ class _DropExpectedNotices(logging.Filter):
 logging.getLogger("parler_tts.modeling_parler_tts").addFilter(_DropExpectedNotices())
 
 SEED = 0  # reset before every sentence, so a sentence sounds the same whatever was spoken before it
+# Parler sometimes stops early. Normal Tamil speech is ~65-90 ms per character; far below that the sentence was cut
+# short, so it is generated again with the next seed (still deterministic) and the longest attempt is kept.
+MIN_MS_PER_CHAR = 40
+MAX_ATTEMPTS = 3
+
+
+def longest_complete(generate: Callable[[int], np.ndarray], text: str, sr: int) -> np.ndarray:
+    """Call generate(seed) for SEED, SEED+1, ... until the audio is long enough for the text."""
+    chars = max(1, len("".join(text.split())))
+    best = np.zeros(0, dtype=np.float32)
+    for attempt in range(MAX_ATTEMPTS):
+        audio = generate(SEED + attempt)
+        if len(audio) > len(best):
+            best = audio
+        if len(audio) / sr * 1000 / chars >= MIN_MS_PER_CHAR:
+            break
+        log.warning("parler: %.2fs for %d characters looks cut short (seed %d); retrying", len(audio) / sr, chars,
+                    SEED + attempt)
+    return best
 DEFAULT_VOICE = "jaya"
 # voice id -> speaker name known to Indic Parler-TTS. The model card lists two Tamil speakers, Jaya (recommended)
 # and Kavitha, both female. Kavitha was tried in step 9 and dropped: she drags words and cut a short sentence.
@@ -136,13 +156,18 @@ class ParlerEngine:
         assert self._model is not None and self._prompt_tok is not None and self._desc_tok is not None
         desc = self._desc_tok(self.description(voice, speed), return_tensors="pt")
         prompt = self._prompt_tok(text, return_tensors="pt")
-        torch.manual_seed(SEED)
-        with torch.inference_mode():
-            out = self._model.generate(
-                input_ids=desc.input_ids,
-                attention_mask=desc.attention_mask,
-                prompt_input_ids=prompt.input_ids,
-                prompt_attention_mask=prompt.attention_mask,
-            )
-        audio = out.cpu().numpy().squeeze().astype(np.float32)
-        return resample_fft(audio, int(self._model.config.sampling_rate), SAMPLE_RATE), SAMPLE_RATE
+        model = self._model
+
+        def generate(seed: int) -> np.ndarray:
+            torch.manual_seed(seed)
+            with torch.inference_mode():
+                out = model.generate(
+                    input_ids=desc.input_ids,
+                    attention_mask=desc.attention_mask,
+                    prompt_input_ids=prompt.input_ids,
+                    prompt_attention_mask=prompt.attention_mask,
+                )
+            audio = out.cpu().numpy().squeeze().astype(np.float32)
+            return resample_fft(audio, int(model.config.sampling_rate), SAMPLE_RATE)
+
+        return longest_complete(generate, text, SAMPLE_RATE), SAMPLE_RATE

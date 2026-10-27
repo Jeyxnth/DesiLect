@@ -56,9 +56,12 @@ with a GPU Ollama is about 4x faster. Set `OLLAMA_NUM_GPU=0` in `.env` to measur
 
 Full list: `LICENSES.md`.
 
-> Translation review status: the Hindi and Tamil samples are machine translations that **need a native speaker check**.
-> Made by the IndicTrans2 pipeline (step 8): `shared/samples/photosynthesis.{hi,ta}.json`, `shared/samples/binary_search.{hi,ta}.json`.
-> Earlier machine-assisted drafts: `shared/samples/python_loop.{hi,ta}.json`, `shared/samples/pythagorean_theorem.{hi,ta}.json`.
+> Translation review status: the Hindi samples are machine translations that **need a native speaker check**.
+> Made by the IndicTrans2 pipeline (step 8): `shared/samples/photosynthesis.hi.json`, `shared/samples/binary_search.hi.json`;
+> earlier machine-assisted drafts: `shared/samples/python_loop.hi.json`, `shared/samples/pythagorean_theorem.hi.json`.
+> The four Tamil samples were rewritten in step 9 in **spoken classroom Tamil** (e.g. செய்யுது, பார்ப்போம், இன்னைக்கு), because the
+> formal written Tamil sounded wrong when narrated; they are awaiting the team's native-speaker review.
+> Live translations still come from IndicTrans2, which writes formal Tamil, so a new Tamil lesson will sound bookish.
 > Things to look at: word order around English terms kept by the glossary (e.g. "oxygen", "sorted list"), and diagram labels.
 
 ## Voices (step 9)
@@ -67,7 +70,7 @@ Full list: `LICENSES.md`.
 |---|---|---|---|
 | en | Kokoro (kokoro-onnx) | `hf_alpha` (female), `hm_omega` (male) | Indian-accented English: these Hindi voices speak en-us phonemes |
 | hi | Kokoro | `hf_alpha` (female), `hm_omega` (male) | Hindi phonemes; Latin words switch to English phonemes |
-| ta | Indic Parler-TTS | `jaya` (female). The model's only other Tamil speaker, Kavitha, was dropped after a listening check (drags words; 0.66 s for a greeting Jaya says in 1.81 s); it has no male Tamil speaker | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed |
+| ta | Indic Parler-TTS | `jaya` (female). The model's only other Tamil speaker, Kavitha, was dropped after a listening check (drags words; 0.66 s for a greeting Jaya says in 1.81 s); it has no male Tamil speaker | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed. Parler sometimes stops mid-sentence, so audio under 40 ms per character is generated again with seed 1, then 2 |
 
 The registry (`backend/app/tts/registry.py`) keeps one engine loaded and `release_all()` unloads it after the voice stage. `list_voices(lang)`
 and the `voice` / `speed` arguments of `build_timeline` are what step 11 uses. Parler has no speed control, so speed changes its description
