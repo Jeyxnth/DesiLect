@@ -12,6 +12,11 @@ const MIN_PX = 22;
  * lines; a long sentence shrinks the font so it still fits in two. Explicit lines instead of a CSS line clamp,
  * which clips Devanagari and Tamil matras.
  */
+/** Wrap every cue of the lesson once (after the fonts load), so a new caption never measures text mid-playback. */
+export function warmCaptions(scenes: TimelineScene[], lang: Language): void {
+  for (const s of scenes) for (const c of s.cues) wrapCaption(c.text, CAPTION_PX, MIN_PX, MAX_W, lang);
+}
+
 export default function CaptionBar({ scene, t, lang }: { scene: TimelineScene | null; t: number; lang: Language }) {
   const text = (scene ? activeCue(scene.cues, t) : null)?.text ?? "";
   const { lines, size } = text ? wrapCaption(text, CAPTION_PX, MIN_PX, MAX_W, lang) : { lines: [], size: CAPTION_PX };

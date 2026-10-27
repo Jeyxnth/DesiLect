@@ -16,7 +16,7 @@ from ..planner.prompts import build_retry_prompt, build_system_prompt, build_use
 from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, parse_and_validate
 from ..timing.timeline import build_timeline
 from ..translate.indictrans import translate_lesson
-from ..tts.registry import voice_for
+from ..tts.registry import bundled_engine, voice_for
 from .jobs import JOBS, ConceptRequest
 
 log = logging.getLogger("blu.pipeline")
@@ -139,7 +139,8 @@ def narrate(
             raise  # already a sample in the cached voice and speed: there is nothing more cached to fall back to
         log.exception("voice stage failed; using the closest sample's cached narration")
         sample = fallback_lesson(topic, level, lang, reason=f"Voice generation failed ({type(exc).__name__}).")
-        build_timeline(sample, lang, out_dir, on_stage=on_stage)
+        # the engine its audio was bundled with, even if TAMIL_TTS picks another one (that one may be what failed)
+        build_timeline(sample, lang, out_dir, on_stage=on_stage, engine=bundled_engine(lang))
         return sample
 
 
@@ -249,6 +250,7 @@ def export_job(job_id: str, base_url: str | None = None) -> None:
     except Exception as exc:  # noqa: BLE001
         log.exception("export failed")
         JOBS.update(job_id, export_error=str(exc))
+        write_json(lesson_dir(job_id) / "export.json", {"mode": None, "error": str(exc)[:500]})  # survives a restart
     _status(job_id, "done")
     JOBS.update(job_id, state="done")
 

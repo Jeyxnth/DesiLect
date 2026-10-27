@@ -35,9 +35,9 @@ class SentenceSynth:
     cached, so the cached length is the final length the timeline uses.
     """
 
-    def __init__(self, lang: str, voice: str | None, speed: float, use_cache: bool) -> None:
+    def __init__(self, lang: str, voice: str | None, speed: float, use_cache: bool, engine: str | None = None) -> None:
         self.lang, self.speed, self.use_cache = lang, speed, use_cache
-        self.engine, default_voice = get_engine(lang)
+        self.engine, default_voice = get_engine(lang, engine)
         requested = voice or default_voice
         resolve = getattr(self.engine, "resolve_voice", None)
         self.voice = resolve(requested) if resolve else requested
@@ -105,8 +105,11 @@ def build_timeline(
     speed: float = 1.0,
     use_cache: bool = True,
     on_stage: Callable[[str], None] | None = None,
+    engine: str | None = None,
 ) -> dict[str, Any]:
     """Synthesise narration and write the lesson's audio, timeline and captions.
+
+    engine overrides the configured TTS engine (the sample fallback passes the one its audio was bundled with).
 
     Writes out_dir/audio/s{scene}_{k}.wav, lesson.wav, timeline.json, captions.srt, timings.json
     and returns the timeline dict (validated against shared/schema/timeline.schema.json).
@@ -119,7 +122,7 @@ def build_timeline(
     gap = round(SENTENCE_GAP_S * SAMPLE_RATE)
     pause = round(SCENE_PAUSE_S * SAMPLE_RATE)
     wall = time.perf_counter()
-    synth = SentenceSynth(lang, voice, speed, use_cache)
+    synth = SentenceSynth(lang, voice, speed, use_cache, engine)
 
     try:
         # Plan everything in integer samples so lesson.wav length matches total_seconds exactly.

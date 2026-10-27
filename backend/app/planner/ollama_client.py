@@ -8,7 +8,7 @@ from typing import Any
 
 import httpx
 
-from ..config import SCHEMA_DIR, get_settings
+from ..config import SCHEMA_DIR, drill, get_settings
 
 TIMEOUT_S = 120.0
 OPTIONS = {"temperature": 0.2, "num_ctx": 4096}
@@ -93,6 +93,8 @@ class OllamaClient:
 
     def chat_json(self, system: str, user: str, schema: dict[str, Any] | None = None) -> str:
         """Ask for JSON matching `schema` and return the raw message text. The caller must parse and validate it."""
+        if drill("planner-garbage"):  # failure drill: the planner answers with junk instead of a lesson
+            return "Sure! Here is your lesson about it: {scenes: [title_card, oops"
         body = {
             "model": self.model,
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],

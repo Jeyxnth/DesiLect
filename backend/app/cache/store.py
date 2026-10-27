@@ -61,6 +61,29 @@ def record_rss(lesson_id: str, stage: str, megabytes: float) -> None:
     write_json(path, timings)
 
 
+def ollama_rss(ps: Any) -> int:
+    """Resident bytes of the Ollama server and its children, each counted once.
+
+    The model itself runs in a child process (llama-server.exe in current Ollama), so matching the name
+    "ollama" alone missed it: step 12 measured 2.4 GB there while "plan (ollama)" showed 120 MB.
+    """
+    procs: dict[int, Any] = {}
+    for p in ps.process_iter(["name"]):
+        if (p.info["name"] or "").lower().startswith("ollama"):
+            procs[p.pid] = p
+            try:
+                procs.update((c.pid, c) for c in p.children(recursive=True))
+            except ps.Error:
+                pass
+    total = 0
+    for p in procs.values():
+        try:
+            total += p.memory_info().rss
+        except ps.Error:  # exited mid-sample
+            pass
+    return total
+
+
 class _PeakRSS:
     """Samples resident memory every 0.1 s on a thread: this process plus its children (ffmpeg, the browser).
 
@@ -88,9 +111,7 @@ class _PeakRSS:
             procs = [self._me, *self._me.children(recursive=True)]
             self.app = max(self.app, sum(p.memory_info().rss for p in procs if p.is_running()))
             if self._include_ollama:
-                total = sum(p.info["memory_info"].rss for p in ps.process_iter(["name", "memory_info"])
-                            if (p.info["name"] or "").lower().startswith("ollama") and p.info["memory_info"])
-                self.ollama = max(self.ollama, total)
+                self.ollama = max(self.ollama, ollama_rss(ps))
         except (ps.Error, OSError):  # a child exited mid-sample
             pass
 

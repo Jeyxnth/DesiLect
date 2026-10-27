@@ -129,16 +129,26 @@ def _status(lesson_id: str) -> dict[str, Any]:
         raise HTTPException(404, "unknown lesson")
     meta = read_json(out / "lesson.json").get("meta", {}) if (out / "lesson.json").is_file() else {}
     timings = read_json(out / "timings.json") if (out / "timings.json").is_file() else {}
+    export = read_json(out / "export.json") if (out / "export.json").is_file() else {}
+    mp4_ready = (out / "lesson.mp4").is_file()
+    try:  # the typed topic names the downloads
+        request = ConceptRequest(**read_json(out / "request.json")) if (out / "request.json").is_file() else None
+    except ValueError:
+        request = None
+    # No MP4 on disk: say why, so the player offers Retry export instead of a button that never enables
+    export_error = None if mp4_ready else export.get("error") or "The MP4 export did not finish (the app was restarted)."
     return Job(
         id=lesson_id,
-        request=None,
+        request=request,
         state="done",
         stage="done",
         progress=1.0,
         fallback_used=bool(meta.get("fallback")),
         fallback_reason=meta.get("reason"),
         timeline_ready=True,
-        mp4_ready=(out / "lesson.mp4").is_file(),
+        mp4_ready=mp4_ready,
+        export_mode=export.get("mode") if mp4_ready else None,
+        export_error=export_error,
         timings={k: round(v, 1) for k, v in timings.items() if isinstance(v, (int, float))},
     ).public()
 

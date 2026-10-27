@@ -232,6 +232,37 @@ def test_retry_export_works_for_a_lesson_the_server_did_not_make(monkeypatch):
     assert wait_until_finished("adopted-lesson-1")["status"]["mp4_ready"] is True
 
 
+def forget_job(lesson_id):
+    """Simulate an app restart: the job is no longer in memory, only its files are."""
+    from app.pipeline.jobs import JOBS
+
+    with JOBS._lock:
+        JOBS._jobs.pop(lesson_id, None)
+
+
+def test_failed_export_is_still_reported_after_a_restart(monkeypatch):
+    """Step 12 bug: after a restart a failed export showed a Download button that never enabled, with no Retry."""
+    def broken(*a, **k):
+        raise RuntimeError("no Chromium/Chrome/Edge available for capture")
+
+    job = run_job_with_ollama_down(monkeypatch, {"topic": "Loops in Python", "language": "en"}, export=broken)
+    forget_job(job["id"])
+    status = client.get(f"/api/lessons/{job['id']}").json()
+    assert status["status"]["mp4_ready"] is False
+    assert status["export_error"] == "no Chromium/Chrome/Edge available for capture"
+    assert status["request"]["topic"] == "Loops in Python"  # the download is named after the typed topic
+
+
+def test_lesson_whose_export_never_finished_offers_retry_after_a_restart():
+    from app.cache.store import lesson_dir
+
+    out = lesson_dir("interrupted-export-1")
+    (out / "timeline.json").write_text("{}", encoding="utf-8")
+    (out / "export.json").unlink(missing_ok=True)
+    status = client.get("/api/lessons/interrupted-export-1").json()
+    assert status["status"]["mp4_ready"] is False and "did not finish" in status["export_error"]
+
+
 def test_friendly_reasons():
     from app.pipeline.orchestrator import friendly_reason
 

@@ -121,11 +121,21 @@ export function wrapLines(text: string, size: number, maxWidth: number, lang: La
   return lines;
 }
 
-/** Caption lines: the largest size in [min, max] at which `text` wraps into at most maxLines lines. */
+const captionCache = new Map<string, { lines: string[]; size: number }>();
+
+/** Caption lines: the largest size in [min, max] at which `text` wraps into at most maxLines lines.
+ *  Memoised: the caption bar asks every frame, and a fresh wrap measures many prefixes at many sizes, which
+ *  stalled each new cue by ~80 ms on a slow phone (step 12). Cached only once the real fonts are loaded. */
 export function wrapCaption(text: string, max: number, min: number, maxWidth: number, lang: Language, maxLines = 2): { lines: string[]; size: number } {
-  for (let size = max; size > min; size--) {
+  const key = `${lang}|${max}|${min}|${maxWidth}|${maxLines}|${text}`;
+  const hit = captionCache.get(key);
+  if (hit) return hit;
+  let result: { lines: string[]; size: number } | null = null;
+  for (let size = max; size > min && !result; size--) {
     const lines = wrapLines(text, size, maxWidth, lang);
-    if (lines.length <= maxLines) return { lines, size };
+    if (lines.length <= maxLines) result = { lines, size };
   }
-  return { lines: wrapLines(text, min, maxWidth, lang), size: min };
+  result ??= { lines: wrapLines(text, min, maxWidth, lang), size: min };
+  if (typeof document === "undefined" || document.fonts?.status === "loaded") captionCache.set(key, result);
+  return result;
 }

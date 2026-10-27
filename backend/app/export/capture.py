@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Callable, Iterator, Literal
 
 from ..cache.store import lesson_dir, read_json, timed_stage, write_json
-from ..config import REPO_ROOT
+from ..config import REPO_ROOT, drill
 from .ffmpeg import check_mp4, encode_keyframes, finish_pipe_encoder, open_pipe_encoder
 
 log = logging.getLogger("blu.export")
@@ -73,6 +73,8 @@ def fresh_frames(keyframes: list[float], total: float, settle: float, fps: int =
 
 def _launch(p):  # type: ignore[no-untyped-def]
     """Bundled Chromium if installed, else the system Chrome or Edge (no runtime download, H2)."""
+    if drill("export-fail"):  # failure drill: no browser can be started, so both export modes fail
+        raise RuntimeError("no Chromium/Chrome/Edge available for capture (BLU_DRILL=export-fail)")
     errors = []
     for kwargs in ({}, {"channel": "chrome"}, {"channel": "msedge"}):
         try:

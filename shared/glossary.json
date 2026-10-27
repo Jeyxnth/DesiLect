@@ -30,6 +30,10 @@
       "point": "புள்ளி"
     }
   },
+  "tts_symbols": {
+    "_comment": "Spoken words for symbols in the TTS text only (step 12); captions keep the symbol. Indic-TTS has no '=' or '+' in its vocabulary and silently dropped them, so 'i = 0' was read as 'i zero'.",
+    "ta": { "==": "சமம்", "=": "சமம்", "+": "கூட்டல்" }
+  },
   "tts_translit": {
     "_comment": "Spoken form of English terms, used for the TTS text only (step 9); captions keep the original. Whole-word, case-insensitive, longer keys win. Single letters are variable names such as i, a, b, c.",
     "hi": {

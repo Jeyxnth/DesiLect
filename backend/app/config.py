@@ -65,6 +65,12 @@ class Settings:
     tts_translit: bool = True  # speak English terms via shared/glossary.json "tts_translit" (hi, ta)
 
 
+def drill(name: str) -> bool:
+    """Failure drills (step 12, scripts/drill.py): BLU_DRILL=planner-garbage,export-fail makes that stage fail
+    on purpose so its fallback can be tested. Read on every call, so a test can switch it per lesson."""
+    return name in {d.strip() for d in os.environ.get("BLU_DRILL", "").split(",")}
+
+
 def _flag(name: str, default: bool) -> bool:
     raw = os.environ.get(name)
     return default if raw is None else raw.strip().lower() not in ("0", "false", "no", "off", "")

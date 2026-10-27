@@ -35,7 +35,7 @@ def env(tmp_path, monkeypatch):
     settings = SimpleNamespace(outputs_dir=tmp_path / "outputs")
     monkeypatch.setattr("app.cache.store.get_settings", lambda: settings)
     monkeypatch.setattr(tl, "get_settings", lambda: settings)
-    monkeypatch.setattr(tl, "get_engine", lambda lang: (FakeEngine(), "v"))
+    monkeypatch.setattr(tl, "get_engine", lambda lang, engine=None: (FakeEngine(), "v"))
     FakeEngine.calls = 0
     return settings
 

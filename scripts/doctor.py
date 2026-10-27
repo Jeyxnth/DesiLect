@@ -20,7 +20,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 
-CURRENT_STEP = 9  # bump this each step so newly needed dependencies become hard requirements
+CURRENT_STEP = 12  # bump this each step so newly needed dependencies become hard requirements
 
 REPO = Path(__file__).resolve().parents[1]
 VENV_PY = REPO / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
@@ -42,7 +42,7 @@ results: list[Result] = []
 def report(name: str, ok: bool, detail: str = "", fix: str = "", since: int = 1) -> bool:
     status = OK if ok else (FAIL if since <= CURRENT_STEP else WARN)
     if not ok and since > CURRENT_STEP:
-        detail = f"{detail} (needed from step {since})".strip()
+        detail = f"{detail} ({'optional' if since >= 99 else f'needed from step {since}'})".strip()
     results.append(Result(name, status, detail, "" if ok else fix))
     return ok
 
@@ -159,9 +159,11 @@ def check_models() -> None:
                              "print(int('hf_alpha' in f or 'hm_omega' in f))")
         report("Voices hf_alpha / hm_omega present", code == 0 and out.strip().endswith("1"), "",
                "Re-download: delete models/kokoro/voices-v1.0.bin and run scripts/download_models.py kokoro")
+    parler = os.environ.get("TAMIL_TTS", "indic-tts").strip().lower() == "parler"
     for label, d, since in (("IndicTrans2 model", "indictrans2", 8),
-                            ("Indic Parler-TTS model", "indic-parler-tts", 9),
-                            ("Indic-TTS Tamil model (Plan B)", "indic-tts-ta", 9)):
+                            ("Indic-TTS Tamil model (default Tamil voice)", "indic-tts-ta", 9),
+                            # opt-in voice (TAMIL_TTS=parler): only a warning unless it is switched on
+                            ("Indic Parler-TTS model (TAMIL_TTS=parler)", "indic-parler-tts", 9 if parler else 99)):
         p = REPO / "models" / d
         report(label, p.is_dir() and any(p.iterdir()), "" if p.is_dir() else "missing",
                "Run once while online: python scripts/download_models.py " + d, since)
@@ -182,7 +184,7 @@ def check_ollama() -> None:
 
 def check_fonts() -> None:
     fonts = REPO / "frontend" / "public" / "fonts"
-    need = ["NotoSans-Regular.ttf", "NotoSansDevanagari-Regular.ttf", "NotoSansTamil-Regular.ttf", "NotoSansMono-Regular.ttf"]
+    need = ["NotoSans-Regular.ttf", "NotoSansDevanagari-Regular.woff2", "NotoSansTamil-Regular.woff2", "NotoSansMono-Regular.ttf"]
     missing = [f for f in need if not (fonts / f).is_file()]
     report("Noto fonts in frontend/public/fonts", not missing, ", ".join(missing),
            "Add the files listed in frontend/public/fonts/README.md", since=10)

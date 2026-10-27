@@ -52,6 +52,15 @@ def number_words(digits: str, table: dict[str, Any]) -> str:
     return " ".join(words)
 
 
+@lru_cache(maxsize=4)
+def _symbols(lang: str) -> tuple[re.Pattern[str], dict[str, str]] | None:
+    """Symbols the voice cannot say, from shared/glossary.json "tts_symbols" (longest first: "==" before "=")."""
+    table = {k: v for k, v in glossary().get("tts_symbols", {}).get(lang, {}).items() if not k.startswith("_")}
+    if not table:
+        return None
+    return re.compile("|".join(re.escape(k) for k in sorted(table, key=len, reverse=True))), table
+
+
 def _speak_numbers(text: str, table: dict[str, Any]) -> str:
     def repl(m: re.Match[str]) -> str:
         whole = number_words(m.group(1), table)
@@ -67,7 +76,8 @@ def prepare_tts_text(text: str, lang: str) -> str:
 
     Transliteration (hi, ta) is controlled by TTS_TRANSLIT and uses shared/glossary.json "tts_translit". In Tamil
     a comma follows each such term so the voice pauses before the next word, and digits become spoken number words
-    ("tts_numbers"). English is only cleaned up. The caption is never changed.
+    ("tts_numbers"), and symbols the voice would drop become words ("tts_symbols"). English is only cleaned up.
+    The caption is never changed.
     """
     spoken = text.replace("`", "")
     entry = _translit(lang) if lang != "en" and get_settings().tts_translit else None
@@ -82,4 +92,7 @@ def prepare_tts_text(text: str, lang: str) -> str:
     table = _numbers(lang)
     if table is not None:
         spoken = _speak_numbers(spoken, table)
+    symbols = _symbols(lang)
+    if symbols is not None:
+        spoken = symbols[0].sub(lambda m: f" {symbols[1][m.group(0)]} ", spoken)
     return " ".join(spoken.split())

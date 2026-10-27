@@ -113,6 +113,14 @@ def test_tamil_numbers_in_sentences():
     assert prepare_tts_text("range(3) हमें 0 देता है", "hi") == "रेंज 3 हमें 0 देता है"  # Hindi digits untouched
 
 
+def test_tamil_symbols_are_spoken_not_dropped():
+    """Step 12 bug: Indic-TTS has no '=' in its vocabulary, so 'i = 0' was voiced as 'i zero'."""
+    spoken = prepare_tts_text("i = 0, total+1 ஆகும்; a == b", "ta")
+    assert "=" not in spoken and "+" not in spoken
+    assert "சமம் பூஜ்ஜியம்" in spoken and "கூட்டல் ஒண்ணு" in spoken and spoken.count("சமம்") == 2
+    assert prepare_tts_text("i = 0", "en") == "i = 0"  # Kokoro reads English symbols itself
+
+
 def test_transliteration_switch(monkeypatch):
     monkeypatch.setattr("app.tts.prep.get_settings", lambda: SimpleNamespace(tts_translit=False))
     assert prepare_tts_text("Python loop", "hi") == "Python loop"
@@ -249,7 +257,7 @@ def env(tmp_path, monkeypatch):
     monkeypatch.setattr("app.cache.store.get_settings", lambda: settings)
     monkeypatch.setattr(tl, "get_settings", lambda: settings)
     monkeypatch.setattr(store, "BUNDLED_TTS_DIR", tmp_path / "no-bundle")
-    monkeypatch.setattr(tl, "get_engine", lambda lang: (VoiceFake(), "v"))
+    monkeypatch.setattr(tl, "get_engine", lambda lang, engine=None: (VoiceFake(), "v"))
     VoiceFake.spoken = []
     return settings
 
@@ -321,7 +329,7 @@ def test_fallback_samples_play_from_the_bundled_cache(lang, tmp_path, monkeypatc
     real_engine, voice = registry.get_engine(lang)
     NoTTS.name, NoTTS.languages = real_engine.name, (lang,)
     registry.release_all()
-    monkeypatch.setattr(tl, "get_engine", lambda _lang: (NoTTS(), voice))
+    monkeypatch.setattr(tl, "get_engine", lambda _lang, engine=None: (NoTTS(), voice))
     for name in SAMPLE_NAMES:
         timeline = tl.build_timeline(sample(name, lang), lang, tmp_path / "lessons" / f"{name}-{lang}")
         assert timeline["total_seconds"] > 20
@@ -369,3 +377,24 @@ def test_lesson_cache_key_normalises_topic_and_covers_voice_and_speed():
     assert k != lesson_cache_key("How does a Python loop work?", "beginner", "ta", 45, "male", 1.0)
     assert k != lesson_cache_key("How does a Python loop work?", "beginner", "ta", 45, "female", 1.1)
     assert k != lesson_cache_key("How does a Python loop work?", "beginner", "hi", 45, "female", 1.0)
+
+
+def test_tamil_voice_fallback_uses_bundled_audio_whichever_engine_is_chosen(tmp_path, monkeypatch):
+    """Step 12 drill bug: with TAMIL_TTS=parler and no Parler model, the sample fallback looked for Parler-voiced
+    sample audio. Only a laptop that had once run Parler had it cached, so on a fresh laptop the job failed."""
+    from app.pipeline import orchestrator as orch
+
+    settings = SimpleNamespace(outputs_dir=tmp_path / "outputs", models_dir=tmp_path / "no-models", tamil_tts="parler")
+    for target in ("app.cache.store.get_settings", "app.timing.timeline.get_settings", "app.tts.registry.get_settings",
+                   "app.tts.parler_engine.get_settings", "app.tts.indic_tts_engine.get_settings"):
+        monkeypatch.setattr(target, lambda: settings)
+    planned = orch.fallback_lesson("Photosynthesis", "beginner", "ta")
+    planned["meta"] = {"fallback": False, "source": "ollama:test", "topic": "Photosynthesis"}
+    try:
+        voiced = orch.narrate(planned, "Photosynthesis", "beginner", tmp_path / "lesson", lambda stage: None)
+    finally:
+        registry.release_all()
+    assert voiced["meta"]["fallback"] is True and voiced["language"] == "ta"
+    assert "Voice generation failed" in voiced["meta"]["reason"]
+    timeline = json.loads((tmp_path / "lesson" / "timeline.json").read_text(encoding="utf-8"))
+    assert timeline["total_seconds"] > 20

@@ -53,9 +53,20 @@ def list_voices(lang: str) -> list[dict[str, str]]:
     return [{"id": v, "label": label, "gender": gender, "engine": engine} for v, label, gender in ENGINE_VOICES[engine]]
 
 
-def get_engine(lang: str) -> tuple[TTSEngine, str]:
-    """Return (engine, default voice) for a language, dropping any other engine first."""
-    name, voice = _engine_for(lang)
+def bundled_engine(lang: str) -> str:
+    """The engine shared/tts_cache was voiced with (scripts/pregen_audio.py on the default settings).
+
+    The sample fallback must use it whatever TAMIL_TTS says: its audio is committed, so no model has to load.
+    """
+    return LANG_ENGINES[lang][0]
+
+
+def get_engine(lang: str, engine: str | None = None) -> tuple[TTSEngine, str]:
+    """Return (engine, default voice) for a language, dropping any other engine first.
+
+    engine names one explicitly (e.g. bundled_engine(lang)) instead of the configured choice.
+    """
+    name, voice = (engine, ENGINE_VOICES[engine][0][0]) if engine else _engine_for(lang)
     for other in [n for n in _active if n != name]:
         _active.pop(other).unload()
     if name not in _active:

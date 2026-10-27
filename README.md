@@ -169,9 +169,65 @@ engine writes a corrected copy at load time.
 
 Measured through the app on this laptop: English lesson (male voice) planned in 10 s, voiced in 47 s, smooth MP4 in 30 s; re-voiced into
 Hindi in 113 s total (plan reused in 0.002 s, translate 23 s, voice 48 s, export 43 s), peak 1.85 GB during export. Kokoro ran at
-0.85-1.14x real time in these runs against 0.25x when measured alone earlier; step 12 should re-measure it.
+0.85-1.14x real time in these runs against 0.25x when measured alone earlier (re-measured in step 12, below).
+
+## Offline testing and hardening (step 12)
+
+```
+make offline-check                 # python scripts/check_offline.py [--deep]
+make drill ARGS=--wifi-off         # python scripts/drill.py: 18-lesson matrix + 6 failure drills -> docs/offline-test.md
+python scripts/bench.py --run      # fresh 60 s lessons in en/hi/ta -> docs/bench.md (OLLAMA_NUM_GPU=0 for a CPU-only planner)
+make serve-lan                     # the app on the LAN for the phone check; python scripts/phone_check.py emulates one
+```
+
+- **`check_offline.py`** forces `HF_HUB_OFFLINE` / `TRANSFORMERS_OFFLINE`, blocks every non-loopback socket inside its own process, then checks
+  that the Ollama model, IndicTrans2, Kokoro, Indic-TTS (and Parler when `TAMIL_TTS=parler`), the fonts, the samples and their bundled
+  narration, FFmpeg (libx264 + aac), Playwright and a launchable Chromium/Chrome/Edge are all on disk. It also scans the source and the
+  *built* frontend for external URLs (XML namespace URIs and React's error-decoder text are allowed). `--deep` runs IndicTrans2, Kokoro and
+  Indic-TTS once with the network blocked. It exits non-zero with the list of what is missing.
+- **Drills.** `scripts/drill.py` runs the real pipeline in-process behind the same socket guard. The six drills are: Ollama unreachable
+  (`OLLAMA_URL` on a closed port), planner junk (`BLU_DRILL=planner-garbage`), `models/indictrans2` renamed, `models/indic-tts-ta` renamed,
+  `models/indic-parler-tts` renamed with `TAMIL_TTS=parler`, and capture browser failing (`BLU_DRILL=export-fail`). Each one must end with
+  a playable lesson and the matching badge in the player (fallback lesson / translation unavailable / MP4 export failed + Retry export).
+  Renamed folders are put back afterwards, and again on the next run if a run was killed. `BLU_DRILL` is read per call and is empty in normal use.
+- **Results on this laptop** (i7-13650HX, 24 GB): 18/18 matrix lessons and 6/6 drills passed, every matrix lesson with a smooth MP4
+  (`docs/offline-test.md`). These runs used the in-process socket guard **with Wi-Fi still on**: the Wi-Fi-off run on both laptops is still
+  to do (`make drill ARGS=--wifi-off`), and so is the real phone check. Hindi and Tamil lessons run 45-73 s for a 45 s target (the translated
+  narration is longer than the English plan the length is budgeted for).
+
+Bugs found and fixed, each with a regression test:
+
+| Bug | Fix | Test |
+|---|---|---|
+| With `TAMIL_TTS=parler` and no Parler model, the sample fallback looked for Parler-voiced sample audio, which is not bundled, so a fresh laptop failed the job (it only passed here because Parler audio from step 9 was still in `outputs/cache`) | the fallback always voices the sample with the engine its audio was bundled with (`registry.bundled_engine`) | `test_tamil_voice_fallback_uses_bundled_audio_whichever_engine_is_chosen` |
+| After an app restart a lesson whose MP4 export failed (or never finished) showed a Download button that never enabled and no Retry | the export error is saved in `export.json`; the status rebuilt from disk reports it, the export mode and the typed topic | `test_failed_export_is_still_reported_after_a_restart`, `test_lesson_whose_export_never_finished_offers_retry_after_a_restart` |
+| "plan (ollama)" peak memory showed ~120 MB: the model runs in Ollama's child `llama-server.exe` (2.4 GB) | count the Ollama processes and all their children, once each | `test_planner_memory_counts_the_ollama_runner_child` |
+| Indic-TTS drops "=" and "+", so "i = 0" was read as "i zero" | spoken words from `shared/glossary.json` `tts_symbols` (Tamil; captions keep the symbol) | `test_tamil_symbols_are_spoken_not_dropped` |
+| Phone jank: the caption bar re-wrapped its text every frame and each new cue measured dozens of prefixes (about 80 ms stalls at 6x CPU throttle); each new scene measured its labels on first draw | caption wraps are memoised and every cue and scene layout is measured once when the lesson loads (hidden, never painted) | `scripts/phone_check.py` (exits non-zero on jank) |
+| `doctor.py` still looked for `.ttf` Indic fonts (now `.woff2`) and required the opt-in Parler model | woff2 names; Parler is a warning unless `TAMIL_TTS=parler` | `python scripts/doctor.py` |
+
+**Phone check (emulated).** `scripts/phone_check.py` plays a lesson in a Pixel 5 viewport with the CPU slowed 4x or 6x and records every frame.
+After the fixes, the 72.6 s Tamil photosynthesis lesson ran at a median of 7 ms per frame, with a p95 of 14 ms and a worst frame of 62 ms (4x), or 21 ms and 132 ms (6x).
+0.3% / 1.3% of frames were over 33 ms; before the fixes the worst frames were 181 ms / 444 ms. Only `transform` and `opacity` animate, plus the arrow
+draw-on (`stroke-dashoffset`), which the profile did not implicate, so it stays.
+
+**Memory.** Loading, using and unloading IndicTrans2, Indic-TTS and Kokoro three times in one process settles at about 0.9 GB resident after the
+first round and does not grow (torch / onnxruntime keep their arenas). Peaks: the planner 2.4 GB in Ollama (planning only; `keep_alive: 0`
+frees it), translation about 1.7 GB, Tamil voice about 2.1 GB, export up to 2.2 GB (app + Chromium + ffmpeg).
 
 ## Tested laptops
+
+Budget: a 60 s lesson ready, MP4 included, in about 5 minutes on the weakest laptop; otherwise lower the planner to `qwen2.5:1.5b`, the
+export to keyframe, and the TTS threads. Full tables in `docs/bench.md` (`python scripts/bench.py --run` appends one per machine).
+
+| Laptop | Planner | en 60 s lesson | hi | ta | Peak RAM | Verdict |
+|---|---|---|---|---|---|---|
+| Dev: i7-13650HX, 14 cores / 20 threads, 24 GB, Windows 11 | llama3.2:3b on CPU (`OLLAMA_NUM_GPU=0`), 45 s | 112 s | 144 s | 173 s | 2.66 GB (planner in Ollama); app 2.1 GB at export | within budget, nothing lowered |
+| Weakest: 8 GB laptop | **not measured yet**: run `python scripts/bench.py --run` and `make drill ARGS=--wifi-off` on it | | | | | |
+
+Stage seconds on the dev laptop (en / hi / ta): plan 45 / 45 / 46, translate - / 19 / 11, voice + timing 12 / 18 / 37, smooth MP4 export
+54 / 60 / 76. Kokoro measured alone in step 9 was 0.25x real time; in these runs most sentences came from the voice cache, so the per-miss
+real-time factor printed by bench (which includes loading the model) is not comparable.
 
 ## Architecture
 

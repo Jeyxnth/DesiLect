@@ -4,7 +4,8 @@ import { say } from "../scenes/i18n";
 import { renderScene } from "../scenes/registry";
 import { STAGE_H, STAGE_W } from "../scenes/tokens";
 import type { Timeline } from "../types/lesson";
-import CaptionBar from "./CaptionBar";
+import { useFontsReady } from "../scenes/measure";
+import CaptionBar, { warmCaptions } from "./CaptionBar";
 import { AudioClock, ManualClock, useClock, type Clock } from "./clock";
 import Controls from "./Controls";
 import ProgressBar from "./ProgressBar";
@@ -78,6 +79,16 @@ export default function Player({ timeline, autoplay = false }: { timeline: Timel
     if (autoplay) clock.play();
   }, [clock, autoplay]);
 
+  // Measure all captions and scene layouts once, while paused, so a phone does not stall at each new cue
+  // or scene (step 12). The hidden copy is never painted and is dropped after one render.
+  const fontsReady = useFontsReady();
+  const [warmed, setWarmed] = useState<Timeline | null>(null);
+  useEffect(() => {
+    if (!fontsReady) return;
+    warmCaptions(timeline.scenes, timeline.language);
+    setWarmed(timeline);
+  }, [timeline, fontsReady]);
+
   const { t, playing } = useClock(clock);
   const fitRef = useRef<HTMLDivElement>(null);
   const scale = useWidth(fitRef) / STAGE_W;
@@ -117,6 +128,11 @@ export default function Player({ timeline, autoplay = false }: { timeline: Timel
           <Stage timeline={timeline} t={t} onSeek={(x) => clock.seek(x)} poster={!playing && t < 0.001} />
         </div>
       </div>
+      {fontsReady && warmed !== timeline && (
+        <div hidden aria-hidden="true">
+          {timeline.scenes.map((s) => <div key={s.index}>{renderScene(s, s.end, timeline.language)}</div>)}
+        </div>
+      )}
       {audioFailed && <p className="notice">Audio could not be loaded; scrub only.</p>}
       <Controls playing={playing} onToggle={toggle} onPrev={prev} onNext={next} onReplay={replay} />
     </div>
