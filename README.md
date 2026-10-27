@@ -8,8 +8,9 @@ make setup
 .venv/Scripts/python -m pip install -r backend/requirements-models.txt
 .venv/Scripts/python -m pip install git+https://github.com/huggingface/parler-tts.git   # Tamil TTS (step 9)
 .venv/Scripts/python -m pip install transformers==4.46.3   # parler-tts downgrades it; put the tested pin back
+.venv/Scripts/python -m pip install --no-deps coqui-tts==0.28.0 coqui-tts-trainer==0.4.0 coqpit-config==0.2.5 torchcodec==0.17.0 monotonic-alignment-search==0.2.1 anyascii==0.3.3 pysbd==0.3.4 inflect num2words typeguard more-itertools jaraco.functools docopt   # default Tamil TTS (Indic-TTS); --no-deps keeps transformers pinned
 .venv/Scripts/hf auth login            # once: IndicTrans2 and Indic Parler-TTS are gated (accept their terms on huggingface.co first)
-.venv/Scripts/python scripts/download_models.py kokoro ollama indictrans2 indic-parler-tts   # one-time, needs network (H2 exception)
+.venv/Scripts/python scripts/download_models.py kokoro ollama indictrans2 indic-tts-ta indic-parler-tts   # one-time, needs network (H2 exception)
 python scripts/doctor.py --smoke                         # preflight: checks every dependency, prints the fix for each gap
 ```
 
