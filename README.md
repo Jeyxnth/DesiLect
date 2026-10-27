@@ -5,7 +5,12 @@
 ```
 make setup
 .venv/Scripts/python scripts/download_models.py kokoro   # one-time, needs network (H2 exception)
+python scripts/doctor.py --smoke                         # preflight: checks every dependency, prints the fix for each gap
 ```
+
+On a fresh or test laptop run `python scripts/doctor.py` first. It needs only Python, reports what is missing
+(Python 3.11, Node 20, FFmpeg, browser, models, Ollama, fonts) and exits non-zero if anything required for the
+current step is absent. Do not start testing until it reports 0 failed.
 
 ## Run offline
 

@@ -1,4 +1,4 @@
-.PHONY: setup dev dev-backend dev-frontend sample test test-backend test-frontend offline-check bench
+.PHONY: doctor setup dev dev-backend dev-frontend sample test test-backend test-frontend offline-check bench
 
 # Python used to create the venv (project targets 3.11)
 PYTHON ?= python
@@ -8,6 +8,9 @@ VPY := $(VENV)/Scripts/python
 else
 VPY := $(VENV)/bin/python
 endif
+
+doctor:
+	$(PYTHON) scripts/doctor.py
 
 setup:
 	$(PYTHON) -m venv $(VENV)
