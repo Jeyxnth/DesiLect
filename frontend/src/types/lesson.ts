@@ -60,6 +60,8 @@ export interface Lesson {
   language: Language;
   scenes: Scene[]; // 3..6
   quiz?: QuizQuestion[]; // 2..3, optional: a bad quiz is dropped, never the lesson
+  next_topics?: [string, string]; // bonus B2: always English (what try-next sends), each 3..60
+  next_topic_labels?: [string, string]; // hi/ta: next_topics in the lesson language, for the buttons
   meta?: LessonMeta;
 }
 
@@ -93,6 +95,8 @@ export interface Timeline {
   audio_url: string;
   scenes: TimelineScene[];
   quiz?: QuizQuestion[]; // copied from the lesson; the player shows it after the last scene, the MP4 never does
+  next_topics?: [string, string]; // copied from the lesson (English; the try-next request)
+  next_topic_labels?: [string, string]; // copied from the lesson (hi/ta button text)
 }
 
 export interface ConceptRequest {

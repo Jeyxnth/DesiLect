@@ -4,6 +4,7 @@ from __future__ import annotations
 import json
 
 from ..config import SAMPLES_DIR
+from .fallback import next_topics_for
 
 WORDS_PER_SECOND = 2.3  # spoken narration pace the word budget is based on
 
@@ -20,7 +21,14 @@ def _example(quiz_questions: int = 3) -> str:
         sample["quiz"] = sample["quiz"][:quiz_questions]
     else:
         sample.pop("quiz", None)
+    sample["next_topics"] = next_topics_for("python_loop")  # bonus B2: the example shows the shape
     return json.dumps(sample, ensure_ascii=False, indent=1)
+
+
+NEXT_TOPICS_RULE = (
+    '- Add "next_topics": exactly 2 short topics (3 to 60 characters each, in English) the learner should study next: '
+    "each one step harder or one step sideways from this topic. They are not spoken."
+)
 
 
 def quiz_rule(quiz_questions: int) -> str:
@@ -64,6 +72,7 @@ Rules:
 - Narration is spoken aloud: simple English for a {level} learner, 2 to 3 short sentences per scene, no lists, no symbols that are hard to read aloud.
 - Aim for {scenes} scenes, each with 2 to 3 full sentences, about {per_scene} words of narration per scene. Total narration across all scenes: about {words} words (too short or too long is rejected).
 - "language" must be "en" and "level" must be "{level}". Do not add any other fields (no durations, no meta).{quiz_rule(quiz_questions)}
+{NEXT_TOPICS_RULE}
 
 Example (topic "How a Python loop works", beginner, 45 seconds):
 {_example(quiz_questions)}"""

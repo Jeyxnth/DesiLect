@@ -16,9 +16,25 @@
       "items": { "$ref": "#/$defs/scene" }
     },
     "quiz": { "$ref": "#/$defs/quiz" },
+    "next_topics": { "$ref": "#/$defs/next_topics" },
+    "next_topic_labels": { "$ref": "#/$defs/next_topic_labels" },
     "meta": { "$ref": "#/$defs/meta" }
   },
   "$defs": {
+    "next_topics": {
+      "description": "Optional (bonus B2): two topics to study next, one step harder or sideways. Always English: it is what the try-next request sends. Validated on its own (validate.py clean_next_topics); invalid ones are dropped, never retried.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "string", "minLength": 3, "maxLength": 60 }
+    },
+    "next_topic_labels": {
+      "description": "Optional (bonus B2): next_topics in the lesson language (hi, ta), parallel to next_topics, for the button text only.",
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": { "type": "string", "minLength": 1, "maxLength": 120 }
+    },
     "quiz": {
       "description": "Optional end-of-lesson quiz (bonus B1). Validated on its own (validate.py clean_quiz): a bad quiz is dropped, never a reason to reject the lesson. Not narrated, so it never changes the timeline. Lengths leave room for Indic scripts; English is held to 160 / 80 / 200.",
       "type": "array",

@@ -368,7 +368,7 @@ A lesson without a quiz ends exactly as before.
   byte-identical audio.
 - **Fallback.** `shared/samples/python_loop.{en,hi,ta}.json` carry a hand-written 3-question quiz. The Hindi and Tamil need a
   native speaker's check before the demo, as do the UI words.
-- **Switch.** `QUIZ_QUESTIONS` in `.env`: 3 (default), 2, or 0 to turn the quiz off. `PIPELINE_VERSION` is 14, so cached lessons
+- **Switch.** `QUIZ_QUESTIONS` in `.env`: 3 (default), 2, or 0 to turn the quiz off. `PIPELINE_VERSION` is 15 (B2), so cached lessons
   made without a quiz are not reused.
 
 **Planner time with the quiz** (dev laptop, CPU only with `OLLAMA_NUM_GPU=0`, 45 s lessons, seconds per planner call):
@@ -389,6 +389,37 @@ With the GPU, as in normal use on this laptop, plans took 14-24 s with the quiz.
 Three new topics (vaccines, gravity, hash tables) were planned in English and re-voiced into Hindi and Tamil. All nine lessons
 showed their quiz: 3 questions each, except vaccines, where an "all of the above" question was dropped and 2 remained. Feedback
 was checked in the player in English (desktop), Hindi (desktop) and Tamil (phone width).
+
+### Learning habit: next topics, streak, revise list (bonus B2)
+
+No account and no server state: everything personal stays in this browser.
+
+- **Next topics.** The same planner call returns `next_topics`: two English topics, each one step harder or one step sideways.
+  English is what the try-next request sends. For Hindi and Tamil lessons, translation adds `next_topic_labels` for the button text.
+  Invalid or missing topics are dropped, never retried (`clean_next_topics`). The fallback is the matching sample's entry in
+  `shared/next_topics.json` (all four samples have one, with hi/ta labels), and with no entry there are no suggestions. Both fields
+  are carried in `timeline.json`.
+- **Try next.** Two cards appear on the quiz end card, or under the player at the end of a lesson without a quiz. Tapping one opens the
+  input page with the topic, level, language, length, voice and speed filled in, and generation starts at once with the usual
+  progress view.
+- **Streak.** A lesson counts when its quiz is finished, or when 90% of it has played if it has no quiz. Days are the device's local
+  calendar day (`YYYY-MM-DD`, not UTC). The same day changes nothing, the next day adds 1, a gap of 2 or more days restarts at 1,
+  and a clock moved backwards changes nothing. A flame badge shows the count on the input page and the end card.
+- **Revise list.** A "Save to revise" toggle is on the end card, and a quiz score below 2/3 adds the lesson by itself. The input page
+  lists saved lessons newest first, with title, language and score. Tapping one re-opens `/lesson/:id` from the lesson files on
+  disk, which works offline. Each row has a Remove button. The list keeps at most 50 entries.
+- **Storage.** One localStorage key, `blu.habit.v1` = `{version: 1, streak: {count, last_day}, revise: [...]}`
+  (`frontend/src/habit/storage.ts`). Every read and write is guarded. If storage is blocked or the JSON is corrupt, the habit UI hides
+  itself and lessons play as usual. Cleared site data simply starts fresh.
+- **Tests.** `npm test` in `frontend/` (Vitest, 20 tests) covers the streak rules (same day, next day, month and year ends, gaps,
+  clock moved backwards), corrupt or blocked storage, and the revise cap. `make test` runs it after the typecheck. The backend tests
+  are in `backend/tests/test_next_topics.py`.
+- **Checked in the browser.** A low quiz score was auto-saved to Revise and re-opened from the input page. The streak went 1 to 2 with
+  the page's clock moved forward a day (`Date` overridden in the page; the laptop's clock was not changed). In a Hindi lesson the end
+  card showed the Hindi words, and Try next started a new Hindi lesson that was planned live. Corrupt and cleared storage both left
+  the app working.
+- **Known rough edge.** The Hindi and Tamil labels are IndicTrans2 output and can be clumsy: "Python for loop" came out as
+  "लूप के लिए पायथन". The request itself stays English, so the next lesson is still right.
 
 ### Offline testing and hardening (step 12)
 

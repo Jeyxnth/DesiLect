@@ -1,8 +1,12 @@
 import { useEffect, useState } from "react";
+import type { ConceptRequest } from "./types/lesson";
 
-/** Navigation state: autoplay is set when the input page opens a lesson it just generated. */
+/** Navigation state: autoplay is set when the input page opens a lesson it just generated; prefill + autostart
+ *  when "Try next" sends a topic to the input page (bonus B2). */
 export interface NavState {
   autoplay?: boolean;
+  prefill?: Partial<ConceptRequest>;
+  autostart?: boolean;
 }
 
 const EVENT = "blu:navigate";

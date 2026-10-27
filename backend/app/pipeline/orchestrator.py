@@ -11,10 +11,10 @@ from ..cache.store import (lesson_cache_key, lesson_dir, read_json, record_timin
                            write_json)
 from ..config import drill, get_settings
 from ..export.capture import ensure_frontend_built, export_lesson, local_server
-from ..planner.fallback import fallback_lesson
+from ..planner.fallback import add_static_next_topics, closest_sample, fallback_lesson
 from ..planner.ollama_client import OllamaClient, OllamaError, lesson_format_schema
 from ..planner.prompts import build_retry_prompt, build_system_prompt, build_user_prompt
-from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, clean_quiz, parse_and_validate, parse_quiz, shuffle_quiz
+from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, clean_quiz, parse_and_validate, parse_next_topics, parse_quiz, shuffle_quiz
 from ..timing.timeline import build_timeline
 from ..translate.indictrans import translate_lesson
 from ..tts.registry import bundled_engine, voice_for
@@ -117,8 +117,27 @@ def plan_lesson(
     lesson["level"], lesson["language"] = level, "en"  # the plan is always English; level is the request's
     if quiz_questions > 0:
         attach_quiz(lesson, accepted_raw, quiz_questions, lesson_id or topic, meta, raw_path)
+    attach_next_topics(lesson, accepted_raw, topic, meta, raw_path)
     lesson["meta"] = {"fallback": False, "source": f"ollama:{client.model}", "topic": topic[:200]}
     return lesson, meta
+
+
+def attach_next_topics(lesson: dict[str, Any], raw: str, topic: str, meta: dict[str, Any], raw_path: Path | None) -> None:
+    """The reply's two follow-up topics (bonus B2). Invalid or missing: the static map of the matching built-in
+    sample (shared/next_topics.json), else none. Never a reason to retry or fall back."""
+    topics, warnings = parse_next_topics(raw)
+    if topics:
+        lesson["next_topics"] = topics
+    else:
+        sample, matches = closest_sample(topic)
+        if matches:
+            add_static_next_topics(lesson, sample.name)
+    meta["next_topics_dropped"] = topics is None
+    if raw_path and warnings:
+        with raw_path.open("a", encoding="utf-8") as f:
+            f.write("".join(f"--- warning: {w}\n" for w in warnings) + "\n")
+    for w in warnings:
+        log.warning("planner next topics: %s", w)
 
 
 def attach_quiz(lesson: dict[str, Any], raw: str, quiz_questions: int, seed: str, meta: dict[str, Any],

@@ -206,7 +206,7 @@ def test_oneof_errors_name_the_real_problem():
 def test_format_schema_drops_meta_only():
     s = lesson_format_schema()
     assert "meta" not in s["properties"] and "meta" not in s["$defs"]
-    assert set(s["properties"]) == {"title", "level", "language", "scenes", "quiz"}  # quiz: bonus B1
+    assert set(s["properties"]) == {"title", "level", "language", "scenes", "quiz", "next_topics"}  # bonus B1, B2
 
 
 # --- fallback ----------------------------------------------------------------------------------

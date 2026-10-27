@@ -42,7 +42,7 @@ test-backend:
 	cd backend && ../$(VPY) -m pytest -q
 
 test-frontend:
-	cd frontend && npm run typecheck
+	cd frontend && npm run typecheck && npm test
 
 offline-check:
 	$(VPY) scripts/check_offline.py

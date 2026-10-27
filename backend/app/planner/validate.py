@@ -307,6 +307,7 @@ def parse_and_validate(
     if not isinstance(data, dict):
         return None, ["the top level must be a JSON object"]
     data.pop("quiz", None)  # judged on its own by parse_quiz: a bad quiz never rejects the lesson
+    data.pop("next_topics", None)  # likewise parse_next_topics (bonus B2)
     lesson = sanitize(data, cut_labels)
     errors = unsafe_strings(lesson) or foreign_script_strings(lesson)
     if errors:
@@ -410,6 +411,38 @@ def parse_quiz(raw: str, max_questions: int = 3) -> tuple[list[dict[str, Any]] |
     except json.JSONDecodeError:
         return None, ["quiz dropped: the reply is not JSON"]
     return clean_quiz(data.get("quiz") if isinstance(data, dict) else None, max_questions)
+
+
+# --- next topics (bonus B2): two follow-up topics, dropped (never retried) when invalid ------------------------
+
+NEXT_TOPIC_MIN, NEXT_TOPIC_MAX = 3, 60
+
+
+def clean_next_topics(raw: Any) -> tuple[list[str] | None, list[str]]:
+    """(two English topics or None, warnings): exactly 2 distinct strings of 3-60 characters, no markup, English only."""
+    if raw is None:
+        return None, ["no next_topics in the plan"]
+    if not isinstance(raw, list) or len(raw) != 2 or not all(isinstance(t, str) for t in raw):
+        return None, ["next_topics dropped: needs exactly 2 strings"]
+    topics = [_clean(t) for t in raw]
+    problems = []
+    if any(not NEXT_TOPIC_MIN <= len(t) <= NEXT_TOPIC_MAX for t in topics):
+        problems.append(f"each must be {NEXT_TOPIC_MIN}-{NEXT_TOPIC_MAX} characters")
+    if topics[0].casefold() == topics[1].casefold():
+        problems.append("the two are the same")
+    problems += [e.split(": ", 1)[-1] for e in unsafe_strings(topics) + foreign_script_strings(topics)]
+    if problems:
+        return None, ["next_topics dropped: " + "; ".join(problems)]
+    return topics, []
+
+
+def parse_next_topics(raw: str) -> tuple[list[str] | None, list[str]]:
+    """The next_topics part of a planner reply."""
+    try:
+        data = json.loads(extract_json_text(raw))
+    except json.JSONDecodeError:
+        return None, ["next_topics dropped: the reply is not JSON"]
+    return clean_next_topics(data.get("next_topics") if isinstance(data, dict) else None)
 
 
 def validate_timeline(data: Any) -> list[str]:

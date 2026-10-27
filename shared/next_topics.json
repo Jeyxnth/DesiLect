@@ -1,0 +1,31 @@
+{
+  "_comment": "Follow-up topics for the built-in samples (bonus B2), used when a lesson has no next_topics from the planner. topics are English (what the try-next request sends); labels are the button text in hi/ta. A sample with no entry shows no suggestions.",
+  "python_loop": {
+    "topics": ["Python while loop", "Python lists"],
+    "labels": {
+      "hi": ["Python while loop", "Python lists"],
+      "ta": ["Python while loop", "Python lists"]
+    }
+  },
+  "binary_search": {
+    "topics": ["Linear search", "Sorting algorithms"],
+    "labels": {
+      "hi": ["लीनियर सर्च", "सॉर्टिंग algorithms"],
+      "ta": ["லீனியர் சர்ச்", "Sorting algorithms"]
+    }
+  },
+  "photosynthesis": {
+    "topics": ["How plants breathe", "The water cycle"],
+    "labels": {
+      "hi": ["पौधे कैसे साँस लेते हैं", "जल चक्र"],
+      "ta": ["தாவரங்கள் எப்படி சுவாசிக்குது", "நீர் சுழற்சி"]
+    }
+  },
+  "pythagorean_theorem": {
+    "topics": ["Area of a triangle", "Trigonometry basics"],
+    "labels": {
+      "hi": ["त्रिभुज का क्षेत्रफल", "त्रिकोणमिति की शुरुआत"],
+      "ta": ["முக்கோணத்தோட பரப்பளவு", "Trigonometry அடிப்படைகள்"]
+    }
+  }
+}

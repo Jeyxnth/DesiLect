@@ -271,6 +271,16 @@ def translate_quiz(quiz: list[dict[str, Any]], lang: str, stats: dict[str, int])
     return out
 
 
+def translate_next_topics(topics: list[str], lang: str, stats: dict[str, int]) -> list[str] | None:
+    """The two follow-up topics as button labels in lang; None (English buttons) on any problem. Never raises."""
+    try:
+        labels = [v.rstrip().rstrip("।.").rstrip() for v in translate_texts(list(topics), lang, stats)]
+    except Exception as exc:  # noqa: BLE001
+        log.warning("next topics translation to %s failed, buttons stay English: %s", lang, exc)
+        return None
+    return labels if all(1 <= len(v) <= 120 for v in labels) else None
+
+
 def translate_lesson(lesson: dict[str, Any], target_lang: str, keep_loaded: bool = False) -> dict[str, Any]:
     """Translate heading, subheading, narration, title, non-code items and longer arrow labels.
 
@@ -290,6 +300,10 @@ def translate_lesson(lesson: dict[str, Any], target_lang: str, keep_loaded: bool
         out = _translate_lesson({k: v for k, v in lesson.items() if k != "quiz"}, target_lang, stats)
         if lesson.get("quiz"):
             out["quiz"] = translate_quiz(lesson["quiz"], target_lang, stats)
+        if lesson.get("next_topics"):  # button text only; next_topics stays English for the request (bonus B2)
+            labels = translate_next_topics(lesson["next_topics"], target_lang, stats)
+            if labels:
+                out["next_topic_labels"] = labels
         log.info("translated lesson to %s in %.1fs %s", target_lang, time.perf_counter() - start, stats)
         return out
     except Exception as exc:  # noqa: BLE001 - any failure falls back (G2)

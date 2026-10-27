@@ -172,8 +172,10 @@ def build_timeline(
         "audio_url": _audio_url(out_dir),
         "scenes": scenes_out,
     }
-    if lesson.get("quiz"):  # shown by the player after the last scene; never voiced, so no effect on timing (bonus B1)
-        timeline["quiz"] = lesson["quiz"]
+    # shown by the player after the last scene; never voiced, so no effect on timing (bonus B1, B2)
+    for key in ("quiz", "next_topics", "next_topic_labels"):
+        if lesson.get(key):
+            timeline[key] = lesson[key]
     errors = validate_timeline(timeline)
     if errors:
         raise ValueError("timeline does not match schema: " + "; ".join(errors[:5]))

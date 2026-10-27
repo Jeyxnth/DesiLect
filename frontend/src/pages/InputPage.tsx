@@ -1,7 +1,10 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createLesson, watchStatus, type Job } from "../api/jobs";
 import FallbackNotice from "../components/FallbackNotice";
-import { navigate } from "../router";
+import { StreakBadge } from "../habit/LessonEnd";
+import { currentStreak, localDay, removeRevise, useHabit } from "../habit/storage";
+import { ui } from "../i18n/strings";
+import { navState, navigate } from "../router";
 import type { ConceptRequest, Language, Level, Voice } from "../types/lesson";
 
 /** Topics the built-in samples cover, so the demo always has a known-good path. */
@@ -27,6 +30,8 @@ const SPEEDS: { value: number; label: string }[] = [
   { value: 1.0, label: "Normal" },
   { value: 1.1, label: "Fast" },
 ];
+
+const LANGUAGE_NAMES: Record<Language, string> = { en: "English", hi: "हिन्दी", ta: "தமிழ்" };
 
 const VOICES: { value: Voice; label: string }[] = [
   { value: "female", label: "Female" },
@@ -63,17 +68,34 @@ export default function InputPage() {
     );
   }, [jobId]);
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault();
+  const start = async (request: ConceptRequest) => {
     setError("");
     setJob(null);
     try {
-      setJob(await createLesson({ ...req, topic: req.topic.trim() }));
+      setJob(await createLesson({ ...request, topic: request.topic.trim() }));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      setError(msg === "Failed to fetch" ? "The backend is not reachable. Is make dev running?" : msg);
+      setError(msg === "Failed to fetch" ? "The backend is not reachable. Is the backend running?" : msg);
     }
   };
+  const submit = (e: FormEvent) => {
+    e.preventDefault();
+    void start(req);
+  };
+
+  // "Try next" from a finished lesson (bonus B2): topic, level and language pre-filled, generation starts at once.
+  useEffect(() => {
+    const { prefill, autostart } = navState();
+    if (!prefill?.topic) return;
+    const request = { ...req, ...prefill };
+    setReq(request);
+    window.history.replaceState({}, "", window.location.pathname); // a reload or Back must not start it again
+    if (autostart) void start(request);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const { habit, update } = useHabit();
+  const streak = habit ? currentStreak(habit, localDay()) : 0;
 
   const language = job?.request?.language ?? req.language;
   const failedAt = job?.state === "failed" ? job.status.failed_stage : null;
@@ -88,7 +110,10 @@ export default function InputPage() {
 
   return (
     <div className="page input-page">
-      <h1>Blu Visual Teacher</h1>
+      <div className="input-head">
+        <h1>Blu Visual Teacher</h1>
+        <StreakBadge count={streak} lang={req.language} />
+      </div>
       <form className="form" onSubmit={submit}>
         <label>Concept
           <input
@@ -197,6 +222,24 @@ export default function InputPage() {
       )}
 
       {error && <p className="error" role="alert">{error}</p>}
+
+      {habit && habit.revise.length > 0 && (
+        <section className="revise-list" lang={req.language} aria-labelledby="revise-heading">
+          <h2 id="revise-heading">{ui(req.language, "revise")}</h2>
+          <ul>
+            {habit.revise.map((e) => (
+              <li key={e.lesson_id}>
+                <a href={`/lesson/${encodeURIComponent(e.lesson_id)}`} lang={e.language}
+                  onClick={(ev) => { ev.preventDefault(); navigate(`/lesson/${encodeURIComponent(e.lesson_id)}`); }}>
+                  {e.title}
+                </a>
+                <span className="muted">{LANGUAGE_NAMES[e.language] ?? e.language}{e.score ? ` · ${e.score.correct} / ${e.score.total}` : ""}</span>
+                <button type="button" onClick={() => update((s) => removeRevise(s, e.lesson_id))}>{ui(req.language, "remove")}</button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
   );
 }

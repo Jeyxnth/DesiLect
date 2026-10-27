@@ -50,6 +50,7 @@ own sample text; `submissions/*.mp4` are rendered by this app (planner Llama 3.2
 | Vite, @vitejs/plugin-react | 5.4.21, 4.7.0 | MIT |
 | TypeScript | 5.9.3 | Apache-2.0 |
 | @types/react, @types/react-dom | 18.3.31, 18.3.7 | MIT |
+| Vitest (dev only: frontend unit tests) | 2.1.9 | MIT |
 
 ## Python libraries (versions on the dev laptop; licence from the package metadata or its LICENSE file)
 

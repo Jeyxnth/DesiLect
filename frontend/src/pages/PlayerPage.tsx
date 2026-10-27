@@ -1,10 +1,12 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getLesson, retryExport, revoiceLesson, watchStatus, type Job } from "../api/jobs";
 import { downloadName } from "../api/slug";
 import FallbackNotice from "../components/FallbackNotice";
 import SpeedPanel from "../components/SpeedPanel";
+import LessonEnd from "../habit/LessonEnd";
+import { addRevise, currentStreak, localDay, recordStreak, removeRevise, useHabit } from "../habit/storage";
 import { loadTimeline } from "../player/loadTimeline";
-import Player from "../player/Player";
+import Player, { type LessonResult } from "../player/Player";
 import { navState, navigate } from "../router";
 import type { Language, Lesson, Timeline } from "../types/lesson";
 
@@ -55,6 +57,32 @@ export default function PlayerPage({ id }: { id: string }) {
     }
   };
 
+  // Learning habit (bonus B2): streak, revise list, try next. All in this browser; hidden if storage is unavailable.
+  const { habit, update } = useHabit();
+  const title = lesson?.title ?? timeline?.scenes[0]?.heading ?? id;
+  const entry = (result?: LessonResult) => ({
+    lesson_id: id, title, language: timeline?.language ?? "en", added_at: new Date().toISOString(),
+    ...(result?.total ? { score: { correct: result.score ?? 0, total: result.total } } : {}),
+  });
+  const onComplete = useCallback((result: LessonResult) => {
+    update((s) => {
+      const next = recordStreak(s, localDay());
+      // a low quiz score (below 2/3) goes on the revise list by itself
+      return result.total && (result.score ?? 0) / result.total < 2 / 3 ? addRevise(next, entry(result)) : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [update, id, title, timeline?.language]);
+  const saved = habit ? habit.revise.some((e) => e.lesson_id === id) : null;
+  const toggleSave = () => update((s) => (s.revise.some((e) => e.lesson_id === id) ? removeRevise(s, id) : addRevise(s, entry())));
+  const tryNext = (topic: string) => {
+    const req = job?.request;
+    navigate("/", {
+      autostart: true,
+      prefill: { topic, level: lesson?.level ?? req?.level ?? "beginner", language: timeline?.language ?? "en",
+        ...(req ? { target_seconds: req.target_seconds, voice: req.voice, speed: req.speed } : {}) },
+    });
+  };
+
   const retry = async () => {
     try {
       setJob(await retryExport(id));
@@ -89,7 +117,13 @@ export default function PlayerPage({ id }: { id: string }) {
         </div>
       )}
       {error && <p className="error" role="alert">{error}</p>}
-      {timeline ? <Player key={timeline.lesson_id} timeline={timeline} autoplay={autoplay} /> : !error && <p>Loading...</p>}
+      {timeline ? (
+        <Player key={timeline.lesson_id} timeline={timeline} autoplay={autoplay} onComplete={onComplete}
+          endExtra={
+            <LessonEnd lang={timeline.language} nextTopics={timeline.next_topics} nextLabels={timeline.next_topic_labels} onTryNext={tryNext}
+              streak={habit ? currentStreak(habit, localDay()) : null} saved={saved} onToggleSave={toggleSave} />
+          } />
+      ) : !error && <p>Loading...</p>}
       {timeline && (
         <div className="downloads">
           {status?.mp4_ready ? (

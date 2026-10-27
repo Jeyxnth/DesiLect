@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ui } from "../i18n/strings";
 import type { Language, QuizQuestion } from "../types/lesson";
 
@@ -7,17 +7,26 @@ import type { Language, QuizQuestion } from "../types/lesson";
  * feedback (green tick on the right answer, red cross on a wrong pick), the explanation, then Next; an end
  * card with the score and Replay lesson. Keyboard: 1-4 pick, Enter next. Text is rendered as text only (H4).
  */
-export default function Quiz({ quiz, lang, onReplay, onSkip }: {
+export default function Quiz({ quiz, lang, onReplay, onSkip, onDone, extra }: {
   quiz: QuizQuestion[];
   lang: Language;
   onReplay: () => void;
   onSkip: () => void;
+  onDone?: (score: number, total: number) => void; // once, when the last question is answered and Next pressed
+  extra?: ReactNode; // shown on the end card (bonus B2: try next, streak, save to revise)
 }) {
   const [index, setIndex] = useState(0);
   const [picked, setPicked] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const done = index >= quiz.length;
   const q = done ? null : quiz[index];
+  const reported = useRef(false);
+  useEffect(() => {
+    if (done && !reported.current) {
+      reported.current = true;
+      onDone?.(score, quiz.length);
+    }
+  }, [done, score, quiz.length, onDone]);
 
   const pick = (k: number) => {
     if (!q || picked !== null) return;
@@ -89,6 +98,7 @@ export default function Quiz({ quiz, lang, onReplay, onSkip }: {
           <p className="quiz-count">{ui(lang, "yourScore")}</p>
           <p className="quiz-score">{score} / {quiz.length}</p>
           <button type="button" className="quiz-btn" onClick={onReplay} autoFocus>{ui(lang, "replayLesson")}</button>
+          {extra}
         </div>
       )}
     </div>

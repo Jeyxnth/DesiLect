@@ -10,6 +10,16 @@
     "language": { "enum": ["en", "hi", "ta"] },
     "total_seconds": { "type": "number", "exclusiveMinimum": 0 },
     "audio_url": { "type": "string", "minLength": 1 },
+    "next_topics": {
+      "description": "Optional, copied from the lesson (lesson.schema.json #/$defs/next_topics): the try-next requests, in English.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "next_topic_labels": {
+      "description": "Optional, copied from the lesson: next_topics in the lesson language, for the buttons.",
+      "type": "array",
+      "items": { "type": "string" }
+    },
     "quiz": {
       "description": "Optional, copied unchanged from the lesson (lesson.schema.json #/$defs/quiz); validate.py checks it against that definition. The player shows it after the last scene; the render page and the MP4 ignore it.",
       "type": "array"

@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..cache.store import read_json
-from ..config import LANGUAGES, SAMPLES_DIR
+from ..config import LANGUAGES, SAMPLES_DIR, SHARED_DIR
 from .validate import cut_at_word
 
 SAMPLE_NAME = "python_loop"  # default sample, used when nothing matches
@@ -47,6 +47,34 @@ SAMPLES: tuple[FallbackSample, ...] = (
 )
 
 
+def _next_topic_map() -> dict[str, Any]:
+    path = SHARED_DIR / "next_topics.json"
+    return read_json(path) if path.is_file() else {}
+
+
+def next_topics_for(sample_name: str) -> list[str] | None:
+    """The static follow-up topics of a built-in sample (shared/next_topics.json), English; None without an entry."""
+    entry = _next_topic_map().get(sample_name)
+    return list(entry["topics"]) if isinstance(entry, dict) and len(entry.get("topics", [])) == 2 else None
+
+
+def next_topic_labels_for(sample_name: str, language: str) -> list[str] | None:
+    """The same topics as button text in hi / ta (None for English or without an entry)."""
+    entry = _next_topic_map().get(sample_name)
+    labels = entry.get("labels", {}).get(language) if isinstance(entry, dict) else None
+    return list(labels) if isinstance(labels, list) and len(labels) == 2 else None
+
+
+def add_static_next_topics(lesson: dict[str, Any], sample_name: str) -> None:
+    """Fallback for next_topics (bonus B2): the sample's entry in shared/next_topics.json, if any."""
+    topics = next_topics_for(sample_name)
+    if topics:
+        lesson["next_topics"] = topics
+        labels = next_topic_labels_for(sample_name, lesson.get("language", "en"))
+        if labels and lesson.get("language") != "en":
+            lesson["next_topic_labels"] = labels
+
+
 def _words(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", text.lower()))
 
@@ -80,6 +108,7 @@ def fallback_lesson(topic: str = "", level: str = "beginner", language: str = "e
     if matches and clean_topic and lang == "en":  # translated titles stay in their own language
         lesson["title"] = cut_at_word(clean_topic, 80)
     lesson["meta"] = {"fallback": True, "source": f"sample:{sample.name}", "topic": clean_topic[:200]}
+    add_static_next_topics(lesson, sample.name)
     if reason:
         lesson["meta"]["reason"] = reason[:200]
     return lesson

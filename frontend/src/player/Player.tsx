@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { SETTLE_S, sceneAt } from "../scenes/anim";
 import { say } from "../scenes/i18n";
 import { renderScene } from "../scenes/registry";
@@ -65,7 +65,18 @@ function isTyping(target: EventTarget | null): boolean {
  * Keyboard: Space play/pause, Left/Right previous/next scene, R replay.
  * autoplay starts playback on mount (the browser may still refuse it; then Play works as usual).
  */
-export default function Player({ timeline, autoplay = false }: { timeline: Timeline; autoplay?: boolean }) {
+/** A finished lesson (bonus B2): the quiz was completed (with its score), or 90% played when there is no quiz. */
+export interface LessonResult {
+  score?: number;
+  total?: number;
+}
+
+export default function Player({ timeline, autoplay = false, onComplete, endExtra }: {
+  timeline: Timeline;
+  autoplay?: boolean;
+  onComplete?: (result: LessonResult) => void;
+  endExtra?: ReactNode; // on the quiz end card, or under the controls at the end of a lesson with no quiz
+}) {
   const [audioFailed, setAudioFailed] = useState(false);
   const clock = useMemo<Clock>(() => {
     if (audioFailed) return new ManualClock(); // no audio: scrubbing only
@@ -104,7 +115,16 @@ export default function Player({ timeline, autoplay = false }: { timeline: Timel
     setQuizSkipped(false);
     setQuizRound((n) => n + 1);
   }, [playing]);
-  const showQuiz = ended && !quizSkipped && (timeline.quiz?.length ?? 0) > 0;
+  const hasQuiz = (timeline.quiz?.length ?? 0) > 0;
+  const showQuiz = ended && !quizSkipped && hasQuiz;
+
+  // No quiz: the lesson counts as finished once 90% of it has played (once per page view).
+  const counted = useRef<string | null>(null);
+  useEffect(() => {
+    if (hasQuiz || counted.current === timeline.lesson_id || t < 0.9 * total) return;
+    counted.current = timeline.lesson_id;
+    onComplete?.({});
+  }, [hasQuiz, t, total, timeline.lesson_id, onComplete]);
   const scene = sceneAt(timeline.scenes, t);
   const goToScene = (i: number) => clock.seek(timeline.scenes[Math.max(0, Math.min(timeline.scenes.length - 1, i))]?.start ?? 0);
 
@@ -139,7 +159,8 @@ export default function Player({ timeline, autoplay = false }: { timeline: Timel
           <Stage timeline={timeline} t={t} onSeek={(x) => clock.seek(x)} poster={!playing && t < 0.001} />
         </div>
         {showQuiz && timeline.quiz && (
-          <Quiz key={quizRound} quiz={timeline.quiz} lang={timeline.language} onReplay={replay} onSkip={() => setQuizSkipped(true)} />
+          <Quiz key={quizRound} quiz={timeline.quiz} lang={timeline.language} onReplay={replay} onSkip={() => setQuizSkipped(true)}
+            onDone={(score, n) => onComplete?.({ score, total: n })} extra={endExtra} />
         )}
       </div>
       {fontsReady && warmed !== timeline && (
@@ -149,6 +170,7 @@ export default function Player({ timeline, autoplay = false }: { timeline: Timel
       )}
       {audioFailed && <p className="notice">Audio could not be loaded; scrub only.</p>}
       <Controls playing={playing} onToggle={toggle} onPrev={prev} onNext={next} onReplay={replay} />
+      {ended && !hasQuiz && endExtra}
     </div>
   );
 }
