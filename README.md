@@ -149,6 +149,28 @@ Install notes: coqui-tts is installed **without dependencies** (see `backend/req
 transformers and huggingface_hub and break IndicTrans2 and Parler. The released config points its speaker list at the authors' training folder, so the
 engine writes a corrected copy at load time.
 
+## Bonus features (step 11, feature freeze)
+
+- **Reuse cache.** A finished lesson is indexed by sha1(normalised topic, level, language, length, voice, speed, `PIPELINE_VERSION`)
+  in `outputs/cache/lessons/`. Repeating the request returns that lesson at once (`"cached": true`; measured 27 ms). Only lessons with
+  an MP4 and no fallback are cached, so a sample shown while Ollama was down is not reused later. Bump `PIPELINE_VERSION` in
+  `backend/app/config.py` when a change makes old lessons stale.
+- **Voice and speed.** The input form offers Female / Male and Slow / Normal / Fast (0.9 / 1.0 / 1.1). Female/male map per language:
+  Kokoro `hf_alpha` / `hm_omega` (en, hi), Indic-TTS `female` / `male` (ta); Parler has no male Tamil voice and stays on Jaya.
+  Timing still comes from the generated audio. Bundled sample audio is female at 1.0x; other choices are voiced live.
+- **Re-voice.** The player's "Same lesson in" dropdown calls `POST /api/lessons/{id}/revoice {language}`: the stored English plan
+  (`lesson.en.json`) is reused, then translated, voiced, timed and exported as a new lesson with the same topic, level, length, voice and
+  speed (a repeat comes from the cache). Bundled samples have no stored plan and answer 409.
+- **Speed panel.** Under the player: seconds and peak memory per stage, from `timings.json`. `python scripts/bench.py [lesson_id|--all]`
+  (`make bench`) prints the same as a table. Peak RSS is sampled every 0.1 s per stage: the app plus its children (ffmpeg, the capture
+  browser); the Ollama server is a separate process and is measured only during planning (`plan (ollama)`), and with the model on a GPU
+  its RSS is small.
+- **Not done:** a fourth language (optional item; left out at feature freeze).
+
+Measured through the app on this laptop: English lesson (male voice) planned in 10 s, voiced in 47 s, smooth MP4 in 30 s; re-voiced into
+Hindi in 113 s total (plan reused in 0.002 s, translate 23 s, voice 48 s, export 43 s), peak 1.85 GB during export. Kokoro ran at
+0.85-1.14x real time in these runs against 0.25x when measured alone earlier; step 12 should re-measure it.
+
 ## Tested laptops
 
 ## Architecture

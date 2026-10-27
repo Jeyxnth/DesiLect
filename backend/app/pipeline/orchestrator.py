@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any, Callable
 
-from ..cache.store import lesson_dir, read_json, record_timing, timed_stage, write_json
+from ..cache.store import lesson_cache_key, lesson_dir, read_json, record_timing, remember_lesson, timed_stage, write_json
 from ..config import get_settings
 from ..export.capture import ensure_frontend_built, export_lesson, local_server
 from ..planner.fallback import fallback_lesson
@@ -16,6 +16,7 @@ from ..planner.prompts import build_retry_prompt, build_system_prompt, build_use
 from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, parse_and_validate
 from ..timing.timeline import build_timeline
 from ..translate.indictrans import translate_lesson
+from ..tts.registry import voice_for
 from .jobs import JOBS, ConceptRequest
 
 log = logging.getLogger("blu.pipeline")
@@ -120,20 +121,22 @@ def narrate(
     out_dir: Path,
     on_stage: Callable[[str], None],
     speed: float = 1.0,
+    voice: str = "female",
 ) -> dict[str, Any]:
     """Voice and time the lesson at the requested speed; never leaves the job without audio if a sample can stand in (G2).
 
     If TTS fails (model missing, out of memory, engine error) the closest built-in sample in the same language
     is voiced instead, at normal speed: that is the narration pre-generated in shared/tts_cache, so no engine
     has to load. Returns the lesson that was actually voiced. A sample that fails too is re-raised.
+    voice is "female" or "male"; each language's engine maps it to a concrete voice (tts/registry.py voice_for).
     """
     lang = lesson["language"]
     try:
-        build_timeline(lesson, lang, out_dir, on_stage=on_stage, speed=speed)
+        build_timeline(lesson, lang, out_dir, on_stage=on_stage, speed=speed, voice=voice_for(lang, voice))
         return lesson
     except Exception as exc:  # noqa: BLE001 - any TTS failure falls back to the cached sample
-        if lesson.get("meta", {}).get("fallback") and speed == 1.0:
-            raise  # already a sample at the cached speed: there is nothing more cached to fall back to
+        if lesson.get("meta", {}).get("fallback") and speed == 1.0 and voice == "female":
+            raise  # already a sample in the cached voice and speed: there is nothing more cached to fall back to
         log.exception("voice stage failed; using the closest sample's cached narration")
         sample = fallback_lesson(topic, level, lang, reason=f"Voice generation failed ({type(exc).__name__}).")
         build_timeline(sample, lang, out_dir, on_stage=on_stage)
@@ -145,11 +148,13 @@ def run_pipeline(
     base_url: str | None = None,
     client: OllamaClient | None = None,
     export: bool = True,
+    plan_from: str | None = None,
 ) -> None:
     """Run all stages for a job. Never raises; failures are recorded on the job.
 
     base_url is where the app (frontend + /media) is served for capture; by default a private local
-    server is started for the export.
+    server is started for the export. plan_from (a lesson id) re-voices that lesson: its stored English plan
+    is reused instead of planning again. A finished lesson that needed no fallback goes into the reuse cache.
     """
     job = JOBS.get(job_id)
     if job is None or job.request is None:
@@ -163,10 +168,15 @@ def run_pipeline(
             JOBS.update(job_id, fallback_used=True, fallback_reason=meta.get("reason"))
 
     JOBS.update(job_id, state="running")
+    write_json(out_dir / "request.json", req.model_dump())  # re-voicing reads it back
     try:
         _status(job_id, "plan")
         with timed_stage(job_id, "plan"):
-            lesson, plan_meta = plan_lesson(req.topic, req.level, req.target_seconds, job_id, client)
+            if plan_from:
+                lesson = read_json(lesson_dir(plan_from, create=False) / "lesson.en.json")
+                plan_meta = {"reused_plan_from": plan_from}
+            else:
+                lesson, plan_meta = plan_lesson(req.topic, req.level, req.target_seconds, job_id, client)
         note_fallback(lesson)
         write_json(out_dir / "plan_meta.json", plan_meta)
         write_json(out_dir / "lesson.en.json", lesson)  # the English plan; re-voicing reuses it (step 11)
@@ -182,7 +192,7 @@ def run_pipeline(
 
         with timed_stage(job_id, "narrate"):
             # the lesson's own language: a failed translation stays English and is voiced in English
-            voiced = narrate(lesson, req.topic, req.level, out_dir, lambda stage: _status(job_id, stage), req.speed)
+            voiced = narrate(lesson, req.topic, req.level, out_dir, lambda stage: _status(job_id, stage), req.speed, req.voice)
         if voiced is not lesson:  # TTS failed: the closest sample was voiced from cached audio
             lesson = voiced
             note_fallback(lesson)
@@ -200,6 +210,13 @@ def run_pipeline(
     else:
         _status(job_id, "done")
         JOBS.update(job_id, state="done")
+    done = JOBS.get(job_id)
+    if done is not None and done.mp4_ready and not done.fallback_used:
+        remember_lesson(request_cache_key(req), job_id)
+
+
+def request_cache_key(req: ConceptRequest) -> str:
+    return lesson_cache_key(req.topic, req.level, req.language, req.target_seconds, req.voice, req.speed)
 
 
 def run_job(job_id: str, request: ConceptRequest | None = None) -> None:

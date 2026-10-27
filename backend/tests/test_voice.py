@@ -325,3 +325,47 @@ def test_fallback_samples_play_from_the_bundled_cache(lang, tmp_path, monkeypatc
     for name in SAMPLE_NAMES:
         timeline = tl.build_timeline(sample(name, lang), lang, tmp_path / "lessons" / f"{name}-{lang}")
         assert timeline["total_seconds"] > 20
+
+
+def test_voice_for_maps_gender_per_engine(monkeypatch):
+    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="indic-tts"))
+    assert registry.voice_for("en", "female") == "hf_alpha" and registry.voice_for("hi", "male") == "hm_omega"
+    assert registry.voice_for("ta", "male") == "male"
+    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="parler"))
+    assert registry.voice_for("ta", "male") == "jaya"  # Parler has no male Tamil voice: its default
+
+
+def test_timed_stage_records_peak_memory(tmp_path, monkeypatch):
+    from app.cache.store import read_json, timed_stage
+
+    monkeypatch.setattr("app.cache.store.get_settings", lambda: SimpleNamespace(outputs_dir=tmp_path))
+    with timed_stage("rss-test", "narrate"):
+        block = bytearray(50 * 2**20)  # 50 MB while the stage runs
+        import time
+        time.sleep(0.3)
+        del block
+    timings = read_json(tmp_path / "lessons" / "rss-test" / "timings.json")
+    assert timings["narrate"] > 0.2 and timings["rss_mb"]["narrate"] > 50
+
+
+def test_bench_table_rows():
+    import importlib.util
+    from app.config import REPO_ROOT
+
+    spec = importlib.util.spec_from_file_location("bench", REPO_ROOT / "scripts" / "bench.py")
+    bench = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(bench)
+    rows = bench.table({"plan": 9.0, "narrate": 29.4, "export_smooth": 50.0,
+                        "rss_mb": {"plan": 300, "plan_ollama": 2900, "narrate": 1800, "export_smooth": 900}})
+    assert rows[0] == ("plan", "9.0", "300") and rows[1] == ("plan (ollama)", "", "2900")
+    assert ("voice + timing", "29.4", "1800") in rows and rows[-1] == ("total", "88.4", "2900")
+
+
+def test_lesson_cache_key_normalises_topic_and_covers_voice_and_speed():
+    from app.cache.store import lesson_cache_key
+
+    k = lesson_cache_key("How does a Python loop work?", "beginner", "ta", 45, "female", 1.0)
+    assert k == lesson_cache_key("  how does a PYTHON loop work ", "beginner", "ta", 45, "female", 1.0)
+    assert k != lesson_cache_key("How does a Python loop work?", "beginner", "ta", 45, "male", 1.0)
+    assert k != lesson_cache_key("How does a Python loop work?", "beginner", "ta", 45, "female", 1.1)
+    assert k != lesson_cache_key("How does a Python loop work?", "beginner", "hi", 45, "female", 1.0)

@@ -91,4 +91,7 @@ export interface ConceptRequest {
   language: Language;
   target_seconds: number; // 30..90
   speed?: number; // narration speed 0.7..1.3, default 1.0 (ConceptRequest in backend/app/pipeline/jobs.py)
+  voice?: Voice; // default female; each language maps it to a concrete voice
 }
+
+export type Voice = "female" | "male";

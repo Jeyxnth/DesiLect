@@ -1,11 +1,18 @@
 import { useEffect, useState } from "react";
-import { getLesson, retryExport, watchStatus, type Job } from "../api/jobs";
+import { getLesson, retryExport, revoiceLesson, watchStatus, type Job } from "../api/jobs";
 import { downloadName } from "../api/slug";
 import FallbackNotice from "../components/FallbackNotice";
+import SpeedPanel from "../components/SpeedPanel";
 import { loadTimeline } from "../player/loadTimeline";
 import Player from "../player/Player";
 import { navState, navigate } from "../router";
-import type { Lesson, Timeline } from "../types/lesson";
+import type { Language, Lesson, Timeline } from "../types/lesson";
+
+const LANGUAGES: { value: Language; label: string }[] = [
+  { value: "en", label: "English" },
+  { value: "hi", label: "हिन्दी" },
+  { value: "ta", label: "தமிழ்" },
+];
 
 /** /lesson/:id: plays the lesson; shows the fallback notice, MP4 export status and downloads. */
 export default function PlayerPage({ id }: { id: string }) {
@@ -15,6 +22,7 @@ export default function PlayerPage({ id }: { id: string }) {
   const [error, setError] = useState("");
   const [watch, setWatch] = useState(0); // bump to follow the status again (after Retry export)
   const [autoplay] = useState(() => navState().autoplay === true);
+  const [revoice, setRevoice] = useState<Job | null>(null); // the job making this lesson in another language
 
   useEffect(() => {
     loadTimeline(id).then(setTimeline).catch((e: Error) => setError(e.message));
@@ -22,6 +30,30 @@ export default function PlayerPage({ id }: { id: string }) {
   }, [id]);
 
   useEffect(() => watchStatus(id, setJob, () => setJob(null)), [id, watch]);
+
+  // Re-voicing: follow the new lesson's job and open it as soon as it can play.
+  const revoiceId = revoice?.lesson_id;
+  useEffect(() => {
+    if (!revoiceId) return;
+    return watchStatus(
+      revoiceId,
+      (next) => {
+        setRevoice(next);
+        if (next.state === "failed") setError(next.error ?? "Re-voicing failed.");
+        else if (next.status.timeline_ready) navigate(`/lesson/${encodeURIComponent(next.lesson_id)}`, { autoplay: true });
+      },
+      setError,
+    );
+  }, [revoiceId]);
+
+  const startRevoice = async (language: Language) => {
+    setError("");
+    try {
+      setRevoice(await revoiceLesson(id, language));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  };
 
   const retry = async () => {
     try {
@@ -77,6 +109,21 @@ export default function PlayerPage({ id }: { id: string }) {
         </div>
       )}
       {job?.export_error && <p className="error" role="alert">MP4 export failed: {job.export_error}. The lesson still plays here.</p>}
+      {timeline && lesson && (
+        <div className="revoice">
+          <label>Same lesson in
+            <select value={lang} disabled={revoice !== null} onChange={(e) => void startRevoice(e.target.value as Language)}>
+              {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+            </select>
+          </label>
+          {revoice && (
+            <span className="muted">
+              {revoice.cached ? "Opening the earlier version..." : `Re-voicing (no re-planning): ${revoice.status.stage}...`}
+            </span>
+          )}
+        </div>
+      )}
+      {timeline && <SpeedPanel id={id} refresh={`${status?.mp4_ready}-${status?.stage}`} />}
       {timeline && !job && <p className="muted downloads">MP4 status unavailable.</p>}
     </div>
   );

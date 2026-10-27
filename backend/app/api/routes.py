@@ -7,17 +7,18 @@ import platform
 import shutil
 from importlib import metadata
 from pathlib import Path
-from typing import Any, AsyncIterator
+from typing import Any, AsyncIterator, Literal
 
 from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
 
 from .. import __version__
-from ..cache.store import lesson_dir, read_json
+from ..cache.store import find_cached_lesson, lesson_dir, read_json
 from ..config import LANGUAGES, SAMPLES_DIR, get_settings
 from ..export.ffmpeg import find_ffmpeg
 from ..pipeline.jobs import JOBS, QUEUE, ConceptRequest, Job
-from ..pipeline.orchestrator import export_job, run_job
+from ..pipeline.orchestrator import export_job, request_cache_key, run_job, run_pipeline
 from ..planner.ollama_client import OllamaClient, OllamaError
 
 router = APIRouter(prefix="/api")
@@ -89,14 +90,26 @@ def get_sample(name: str) -> dict[str, Any]:
     return read_json(SAMPLES_DIR / f"{name}.json")
 
 
+def _start(req: ConceptRequest, plan_from: str | None = None) -> dict[str, Any]:
+    """A finished lesson for exactly this request (reuse cache), else a new queued job."""
+    cached = find_cached_lesson(request_cache_key(req))
+    if cached is not None:
+        return {**_status(cached), "cached": True}
+    job = JOBS.create(req)
+    QUEUE.submit(job.id, lambda: run_pipeline(job.id, plan_from=plan_from) if plan_from else run_job(job.id, req))
+    return {**job.public(QUEUE.ahead(job.id)), "cached": False}
+
+
 @router.post("/lessons", status_code=202)
 def create_lesson(req: ConceptRequest) -> dict[str, Any]:
-    """Queue the pipeline for a concept (one job runs at a time). Follow it with /lessons/{id}/events."""
+    """Queue the pipeline for a concept (one job runs at a time). Follow it with /lessons/{id}/events.
+
+    A repeat of a request whose lesson finished (same topic, level, language, length, voice and speed) returns
+    that lesson at once with "cached": true.
+    """
     if req.language not in LANGUAGES:
         raise HTTPException(422, "unsupported language")
-    job = JOBS.create(req)
-    QUEUE.submit(job.id, lambda: run_job(job.id, req))
-    return job.public(QUEUE.ahead(job.id))
+    return _start(req)
 
 
 def _dir(lesson_id: str) -> Path:
@@ -194,3 +207,31 @@ def get_timeline(lesson_id: str) -> Any:
 @router.get("/lessons/{lesson_id}/timings")
 def get_timings(lesson_id: str) -> Any:
     return _lesson_file(lesson_id, "timings.json")
+
+
+class RevoiceRequest(BaseModel):
+    language: Literal["en", "hi", "ta"]
+
+
+def _source_request(lesson_id: str) -> ConceptRequest:
+    """The request a lesson was made from: in memory, else request.json, else rebuilt from its English plan."""
+    job = JOBS.get(lesson_id)
+    if job is not None and job.request is not None:
+        return job.request
+    out = _dir(lesson_id)
+    if (out / "request.json").is_file():
+        return ConceptRequest(**read_json(out / "request.json"))
+    plan = read_json(out / "lesson.en.json")
+    topic = plan.get("meta", {}).get("topic") or plan.get("title") or "lesson"
+    return ConceptRequest(topic=topic[:120], level=plan.get("level", "beginner"))
+
+
+@router.post("/lessons/{lesson_id}/revoice", status_code=202)
+def revoice_lesson(lesson_id: str, body: RevoiceRequest) -> dict[str, Any]:
+    """The same lesson in another language: reuses the stored English plan (no re-planning), then translates,
+    voices, times and exports it as a new lesson. Returns that lesson's status (instantly if it is cached).
+    """
+    if not (_dir(lesson_id) / "lesson.en.json").is_file():
+        raise HTTPException(409, "this lesson has no stored English plan to re-voice (bundled samples cannot be re-voiced)")
+    req = _source_request(lesson_id).model_copy(update={"language": body.language})
+    return _start(req, plan_from=lesson_id)

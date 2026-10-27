@@ -26,7 +26,8 @@ class ConceptRequest(BaseModel):
     level: Literal["beginner", "intermediate"] = "beginner"
     language: Literal["en", "hi", "ta"] = "en"
     target_seconds: int = Field(default=45, ge=MIN_TARGET_SECONDS, le=MAX_TARGET_SECONDS)
-    speed: float = Field(default=1.0, ge=MIN_SPEED, le=MAX_SPEED)  # narration speed; the UI offers 0.85 / 1.0 / 1.15
+    speed: float = Field(default=1.0, ge=MIN_SPEED, le=MAX_SPEED)  # narration speed; the UI offers 0.9 / 1.0 / 1.1
+    voice: Literal["female", "male"] = "female"  # mapped per language to a concrete voice (tts/registry.py voice_for)
 
 
 @dataclass

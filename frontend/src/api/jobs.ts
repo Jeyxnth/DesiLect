@@ -1,4 +1,4 @@
-import type { ConceptRequest, Lesson } from "../types/lesson";
+import type { ConceptRequest, Language, Lesson } from "../types/lesson";
 
 /** Mirror of Job.public() in backend/app/pipeline/jobs.py. Change both together. */
 export interface JobStatus {
@@ -25,6 +25,7 @@ export interface Job {
   error: string | null;
   export_error: string | null; // MP4 failed; the lesson still plays
   request: ConceptRequest | null; // null for a lesson this server did not generate
+  cached?: boolean; // POST answers: true when an identical finished lesson was reused
 }
 
 const lessonUrl = (id: string) => `/api/lessons/${encodeURIComponent(id)}`;
@@ -66,6 +67,29 @@ export async function getStatus(id: string): Promise<Job | null> {
 export async function getLesson(id: string): Promise<Lesson | null> {
   const res = await fetch(`${lessonUrl(id)}/lesson`);
   return res.ok ? ((await res.json()) as Lesson) : null;
+}
+
+/** The same lesson in another language, from its stored English plan (no re-planning); may answer from the cache. */
+export async function revoiceLesson(id: string, language: Language): Promise<Job> {
+  const res = await fetch(`${lessonUrl(id)}/revoice`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ language }),
+  });
+  if (!res.ok) throw new Error(await errorText(res));
+  return (await res.json()) as Job;
+}
+
+/** timings.json: seconds per stage, "rss_mb" peak memory per stage, "timeline" TTS stats; null if none yet. */
+export async function getTimings(id: string): Promise<Timings | null> {
+  const res = await fetch(`${lessonUrl(id)}/timings`);
+  return res.ok ? ((await res.json()) as Timings) : null;
+}
+
+export interface Timings {
+  [stage: string]: number | Record<string, number | string | null> | undefined;
+  rss_mb?: Record<string, number>;
+  timeline?: { total_seconds?: number; tts_rtf?: number | null; tts_engine?: string };
 }
 
 /** Queue the MP4 export again (after an export failure). */

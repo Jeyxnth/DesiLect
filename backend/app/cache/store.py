@@ -5,6 +5,7 @@ import hashlib
 import json
 import logging
 import re
+import threading
 import time
 import uuid
 from contextlib import contextmanager
@@ -52,16 +53,110 @@ def record_timing(lesson_id: str, stage: str, seconds: float) -> None:
     write_json(path, timings)
 
 
+def record_rss(lesson_id: str, stage: str, megabytes: float) -> None:
+    """Merge one stage's peak memory (MB) into timings.json under "rss_mb"."""
+    path = lesson_dir(lesson_id) / "timings.json"
+    timings = read_json(path) if path.is_file() else {}
+    timings.setdefault("rss_mb", {})[stage] = round(megabytes, 1)
+    write_json(path, timings)
+
+
+class _PeakRSS:
+    """Samples resident memory every 0.1 s on a thread: this process plus its children (ffmpeg, the browser).
+
+    With include_ollama it also tracks the Ollama server (a separate process), reported as "<stage>_ollama".
+    Without psutil it records nothing.
+    """
+
+    def __init__(self, include_ollama: bool = False) -> None:
+        self.app = self.ollama = 0
+        self._include_ollama = include_ollama
+        self._stop = threading.Event()
+        try:
+            import psutil
+
+            self._psutil, self._me = psutil, psutil.Process()
+        except ImportError:
+            self._psutil = None
+            return
+        self._thread = threading.Thread(target=self._run, daemon=True)
+        self._thread.start()
+
+    def _sample(self) -> None:
+        ps = self._psutil
+        try:
+            procs = [self._me, *self._me.children(recursive=True)]
+            self.app = max(self.app, sum(p.memory_info().rss for p in procs if p.is_running()))
+            if self._include_ollama:
+                total = sum(p.info["memory_info"].rss for p in ps.process_iter(["name", "memory_info"])
+                            if (p.info["name"] or "").lower().startswith("ollama") and p.info["memory_info"])
+                self.ollama = max(self.ollama, total)
+        except (ps.Error, OSError):  # a child exited mid-sample
+            pass
+
+    def _run(self) -> None:
+        while not self._stop.wait(0.1):
+            self._sample()
+
+    def stop(self) -> None:
+        if self._psutil is None:
+            return
+        self._stop.set()
+        self._thread.join(timeout=1)
+        self._sample()
+
+
 @contextmanager
 def timed_stage(lesson_id: str, stage: str) -> Iterator[None]:
-    """Log and persist the wall time of a pipeline stage (G6), even on failure."""
+    """Log and persist the wall time and peak memory of a pipeline stage (G6), even on failure."""
     start = time.perf_counter()
+    peak = _PeakRSS(include_ollama=stage == "plan")
     try:
         yield
     finally:
         elapsed = time.perf_counter() - start
-        log.info("stage %s finished in %.2fs (lesson %s)", stage, elapsed, lesson_id)
+        peak.stop()
+        log.info("stage %s finished in %.2fs, peak %.0f MB (lesson %s)", stage, elapsed, peak.app / 2**20, lesson_id)
         record_timing(lesson_id, stage, elapsed)
+        if peak.app:
+            record_rss(lesson_id, stage, peak.app / 2**20)
+        if peak.ollama:
+            record_rss(lesson_id, f"{stage}_ollama", peak.ollama / 2**20)
+
+
+# --- reuse cache: finished lessons by request ---------------------------------------------------
+
+def normalise_topic(topic: str) -> str:
+    """Case, spacing and trailing punctuation do not make a different lesson."""
+    return " ".join(topic.casefold().split()).strip(" ?!.")
+
+
+def lesson_cache_key(topic: str, level: str, lang: str, target_seconds: int, voice: str, speed: float) -> str:
+    from ..config import PIPELINE_VERSION
+
+    parts = [normalise_topic(topic), level, lang, str(int(target_seconds)), voice, f"{speed:.2f}", PIPELINE_VERSION]
+    return hashlib.sha1("\x1f".join(parts).encode("utf-8")).hexdigest()
+
+
+def _lesson_index(key: str) -> Path:
+    return get_settings().outputs_dir / "cache" / "lessons" / f"{key}.json"
+
+
+def find_cached_lesson(key: str) -> str | None:
+    """Id of a finished lesson (timeline and MP4 on disk) made for this request, else None."""
+    path = _lesson_index(key)
+    if not path.is_file():
+        return None
+    try:
+        lesson_id = str(read_json(path)["lesson_id"])
+        out = lesson_dir(lesson_id, create=False)
+    except (ValueError, KeyError, OSError):
+        return None
+    return lesson_id if (out / "timeline.json").is_file() and (out / "lesson.mp4").is_file() else None
+
+
+def remember_lesson(key: str, lesson_id: str) -> None:
+    write_json(_lesson_index(key), {"lesson_id": lesson_id})
 
 
 def cache_key(*parts: str) -> str:

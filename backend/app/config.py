@@ -15,6 +15,8 @@ MIN_TARGET_SECONDS = 30
 MAX_TARGET_SECONDS = 90
 MIN_SPEED = 0.7  # narration speed accepted by the API (1.0 = the voice's normal pace)
 MAX_SPEED = 1.3
+# Part of the reuse-cache key for finished lessons: bump it when a change makes earlier lessons stale.
+PIPELINE_VERSION = "11"
 LANGUAGES = ("en", "hi", "ta")
 LEVELS = ("beginner", "intermediate")
 

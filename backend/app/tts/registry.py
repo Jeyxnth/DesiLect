@@ -42,6 +42,12 @@ def _engine_for(lang: str) -> tuple[str, str]:
     return LANG_ENGINES[lang]
 
 
+def voice_for(lang: str, gender: str) -> str:
+    """The language's engine voice for "female" or "male"; its default voice when the engine has no such voice."""
+    engine, default = _engine_for(lang)
+    return next((v for v, _, g in ENGINE_VOICES[engine] if g == gender), default)
+
+
 def list_voices(lang: str) -> list[dict[str, str]]:
     engine = _engine_for(lang)[0]
     return [{"id": v, "label": label, "gender": gender, "engine": engine} for v, label, gender in ENGINE_VOICES[engine]]

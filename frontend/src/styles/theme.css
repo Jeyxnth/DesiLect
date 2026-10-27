@@ -178,3 +178,12 @@ body {
   .controls kbd { display: none; } /* no keyboard on a phone */
   .controls .controls-main { min-width: 0; }
 }
+
+/* Player extras (step 11): re-voice switch and speed panel */
+.revoice { display: flex; align-items: center; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
+.revoice label { display: flex; align-items: center; gap: 8px; }
+.speed-panel { margin-top: 12px; color: var(--muted); }
+.speed-panel summary { cursor: pointer; }
+.speed-panel table { border-collapse: collapse; margin-top: 8px; }
+.speed-panel th, .speed-panel td { padding: 4px 16px 4px 0; text-align: left; }
+.speed-panel td:nth-child(2), .speed-panel td:nth-child(3), .speed-panel th:nth-child(2), .speed-panel th:nth-child(3) { text-align: right; }

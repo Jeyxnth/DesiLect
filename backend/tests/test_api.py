@@ -1,5 +1,6 @@
 import json
 import time
+import uuid
 
 from fastapi.testclient import TestClient
 
@@ -312,3 +313,92 @@ def test_slow_sample_whose_voice_fails_falls_back_to_cached_normal_speed(monkeyp
 def test_rejects_bad_speed():
     assert client.post("/api/lessons", json={"topic": "loops", "speed": 2.0}).status_code == 422
     assert client.post("/api/lessons", json={"topic": "loops", "speed": 0.5}).status_code == 422
+
+
+def planner_up(monkeypatch, plans):
+    """Ollama 'up': returns a valid English plan (from the sample) and counts the calls; export writes an MP4."""
+    from app.pipeline import orchestrator as orch
+    from app.planner.fallback import fallback_lesson
+
+    stub_pipeline(monkeypatch)
+
+    def plan(topic, level, target_seconds, lesson_id=None, client=None):
+        plans.append(topic)
+        lesson = fallback_lesson("loops", level, "en")
+        lesson["meta"] = {"fallback": False, "source": "ollama:test", "topic": topic}
+        return lesson, {"fallback": False}
+
+    def export(lesson_id, *a, **k):
+        from app.cache.store import lesson_dir
+        (lesson_dir(lesson_id) / "lesson.mp4").write_bytes(b"mp4")
+
+    monkeypatch.setattr(orch, "plan_lesson", plan)
+    monkeypatch.setattr(orch, "translate_lesson", lambda lesson, lang: {**lesson, "language": lang})
+    monkeypatch.setattr(orch, "export_lesson", export)
+
+
+def test_repeat_request_is_served_from_the_cache(monkeypatch):
+    plans = []
+    planner_up(monkeypatch, plans)
+    run = uuid.uuid4().hex[:8]  # tests share outputs/, so each run needs its own topic
+    req = {"topic": f"Cache me {run}: loops?", "language": "en", "target_seconds": 40}
+    first = client.post("/api/lessons", json=req).json()
+    assert first["cached"] is False
+    assert wait_until_finished(first["job_id"])["status"]["mp4_ready"] is True
+    again = client.post("/api/lessons", json={**req, "topic": f"  cache ME {run}: LOOPS  "}).json()  # same topic, normalised
+    assert again["cached"] is True and again["lesson_id"] == first["lesson_id"] and again["state"] == "done"
+    assert plans == [req["topic"]]  # planned once
+    other = client.post("/api/lessons", json={**req, "voice": "male"}).json()  # a different voice is a new lesson
+    assert other["cached"] is False
+    wait_until_finished(other["job_id"])
+
+
+def test_fallback_lessons_are_not_cached(monkeypatch):
+    first = run_job_with_ollama_down(monkeypatch, {"topic": "never cached loops", "language": "en"})
+    assert first["status"]["fallback_used"] is True
+    again = client.post("/api/lessons", json={"topic": "never cached loops", "language": "en"}).json()
+    assert again["cached"] is False and again["lesson_id"] != first["id"]
+    wait_until_finished(again["job_id"])
+
+
+def test_revoice_reuses_the_english_plan(monkeypatch):
+    plans = []
+    planner_up(monkeypatch, plans)
+    topic = f"revoice loops {uuid.uuid4().hex[:8]}"  # tests share outputs/, so each run needs its own topic
+    first = client.post("/api/lessons", json={"topic": topic, "language": "en", "voice": "male", "speed": 0.9}).json()
+    wait_until_finished(first["job_id"])
+    r = client.post(f"/api/lessons/{first['lesson_id']}/revoice", json={"language": "ta"})
+    assert r.status_code == 202 and r.json()["cached"] is False
+    job = wait_until_finished(r.json()["job_id"])
+    assert job["state"] == "done" and job["lesson_id"] != first["lesson_id"]
+    assert job["request"]["language"] == "ta" and job["request"]["voice"] == "male" and job["request"]["speed"] == 0.9
+    assert plans == [topic]  # no re-planning
+    lesson = client.get(f"/api/lessons/{job['lesson_id']}/lesson").json()
+    assert lesson["language"] == "ta"
+    # the same re-voice again comes from the cache
+    again = client.post(f"/api/lessons/{first['lesson_id']}/revoice", json={"language": "ta"}).json()
+    assert again["cached"] is True and again["lesson_id"] == job["lesson_id"]
+
+
+def test_revoice_needs_a_stored_plan():
+    from app.cache.store import lesson_dir
+
+    out = lesson_dir("sample-noplan")
+    (out / "timeline.json").write_text("{}", encoding="utf-8")
+    assert client.post("/api/lessons/sample-noplan/revoice", json={"language": "hi"}).status_code == 409
+    assert client.post("/api/lessons/sample-noplan/revoice", json={"language": "fr"}).status_code == 422
+
+
+def test_voice_is_passed_to_the_engine_as_a_concrete_voice(monkeypatch):
+    from app.pipeline import orchestrator as orch
+
+    stub_pipeline(monkeypatch)
+    voices = []
+
+    def record(lesson, lang, out, on_stage=None, voice=None, **kw):
+        voices.append((lang, voice))
+        (out / "timeline.json").write_text("{}", encoding="utf-8")
+
+    monkeypatch.setattr(orch, "build_timeline", record)
+    wait_until_finished(client.post("/api/lessons", json={"topic": "loops", "voice": "male"}).json()["job_id"])
+    assert voices == [("en", "hm_omega")]

@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createLesson, watchStatus, type Job } from "../api/jobs";
 import FallbackNotice from "../components/FallbackNotice";
 import { navigate } from "../router";
-import type { ConceptRequest, Language, Level } from "../types/lesson";
+import type { ConceptRequest, Language, Level, Voice } from "../types/lesson";
 
 /** Topics the built-in samples cover, so the demo always has a known-good path. */
 const EXAMPLES = ["How does a Python loop work?", "Photosynthesis", "How does binary search work?"];
@@ -23,9 +23,14 @@ const LEVELS: { value: Level; label: string }[] = [
 
 /** Narration speed choices (multipliers the TTS engines apply; see ConceptRequest.speed). */
 const SPEEDS: { value: number; label: string }[] = [
-  { value: 0.85, label: "Slow" },
+  { value: 0.9, label: "Slow" },
   { value: 1.0, label: "Normal" },
-  { value: 1.15, label: "Fast" },
+  { value: 1.1, label: "Fast" },
+];
+
+const VOICES: { value: Voice; label: string }[] = [
+  { value: "female", label: "Female" },
+  { value: "male", label: "Male" },
 ];
 
 type StageState = "done" | "active" | "todo" | "skipped" | "failed";
@@ -38,6 +43,7 @@ export default function InputPage() {
     language: "en",
     target_seconds: 45,
     speed: 1.0,
+    voice: "female",
   });
   const [job, setJob] = useState<Job | null>(null);
   const [error, setError] = useState("");
@@ -123,6 +129,22 @@ export default function InputPage() {
             <option value="ta">தமிழ்</option>
           </select>
         </label>
+        <div className="field">
+          <span className="field-label" id="voice-label">Voice</span>
+          <div className="toggle" role="group" aria-labelledby="voice-label">
+            {VOICES.map((v) => (
+              <button
+                type="button"
+                key={v.value}
+                aria-pressed={req.voice === v.value}
+                disabled={busy}
+                onClick={() => setReq({ ...req, voice: v.value })}
+              >
+                {v.label}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="field">
           <span className="field-label" id="speed-label">Voice speed</span>
           <div className="toggle" role="group" aria-labelledby="speed-label">
