@@ -1,0 +1,37 @@
+{
+  "title": "The Pythagorean theorem",
+  "level": "beginner",
+  "language": "en",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "The Pythagorean theorem",
+      "subheading": "A rule for right triangles",
+      "narration": "Welcome! Today we will learn the Pythagorean theorem. It tells us how the sides of a right triangle are related."
+    },
+    {
+      "type": "diagram",
+      "heading": "The three sides",
+      "layout": "row",
+      "items": ["Side a", "Side b", "Hypotenuse c"],
+      "narration": "A right triangle has one square corner and three sides. The two shorter sides are called a and b. The longest side, opposite the square corner, is called c, the hypotenuse."
+    },
+    {
+      "type": "diagram",
+      "heading": "The rule",
+      "layout": "row",
+      "items": ["a squared", "b squared", "c squared"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "plus" },
+        { "from": 1, "to": 2, "label": "equals" }
+      ],
+      "narration": "The rule is simple. Square side a, square side b, and add them together. The result equals c squared."
+    },
+    {
+      "type": "title_card",
+      "heading": "Example and recap",
+      "subheading": "9 + 16 = 25",
+      "narration": "Try a triangle with sides 3 and 4. Then 9 plus 16 is 25, so c is 5. Now you can find a missing side of any right triangle!"
+    }
+  ]
+}

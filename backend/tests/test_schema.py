@@ -7,15 +7,18 @@ from app.config import SAMPLES_DIR
 from app.planner.validate import parse_and_validate, validate_lesson, validate_timeline
 from app.timing.sentences import split_sentences
 
-SAMPLES = sorted(SAMPLES_DIR.glob("python_loop.*.json"))
+SAMPLES = sorted(SAMPLES_DIR.glob("*.*.json"))
+SAMPLE_NAMES = sorted({p.name.split(".")[0] for p in SAMPLES})
 
 
 def load(path):
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def test_three_samples_present():
-    assert [p.name for p in SAMPLES] == ["python_loop.en.json", "python_loop.hi.json", "python_loop.ta.json"]
+def test_every_sample_exists_in_en_hi_ta():
+    assert SAMPLE_NAMES == ["photosynthesis", "pythagorean_theorem", "python_loop"]
+    for name in SAMPLE_NAMES:
+        assert [p.name for p in SAMPLES if p.name.startswith(name + ".")] == [f"{name}.en.json", f"{name}.hi.json", f"{name}.ta.json"]
 
 
 @pytest.mark.parametrize("path", SAMPLES, ids=lambda p: p.name)
@@ -28,14 +31,27 @@ def test_sample_language_matches_filename(path):
     assert load(path)["language"] == path.name.split(".")[1]
 
 
-def test_translations_keep_structure_and_code():
-    en = load(SAMPLES_DIR / "python_loop.en.json")
+@pytest.mark.parametrize("name", SAMPLE_NAMES)
+def test_translations_keep_structure_and_code(name):
+    en = load(SAMPLES_DIR / f"{name}.en.json")
     for lang in ("hi", "ta"):
-        tr = load(SAMPLES_DIR / f"python_loop.{lang}.json")
+        tr = load(SAMPLES_DIR / f"{name}.{lang}.json")
         assert [s["type"] for s in tr["scenes"]] == [s["type"] for s in en["scenes"]]
         for a, b in zip(en["scenes"], tr["scenes"]):
-            for key in ("code", "items", "arrows", "highlight_lines", "layout"):
+            for key in ("code", "highlight_lines", "layout"):
                 assert a.get(key) == b.get(key)
+            assert len(a.get("items", [])) == len(b.get("items", []))
+            assert [(x["from"], x["to"]) for x in a.get("arrows", [])] == [(x["from"], x["to"]) for x in b.get("arrows", [])]
+    if name == "python_loop":  # its diagram items are code, so they stay identical
+        for lang in ("hi", "ta"):
+            tr = load(SAMPLES_DIR / f"{name}.{lang}.json")
+            assert [s.get("items") for s in tr["scenes"]] == [s.get("items") for s in en["scenes"]]
+
+
+@pytest.mark.parametrize("name", SAMPLE_NAMES)
+def test_sample_word_count_fits_a_45_second_budget(name):
+    words = sum(len(s["narration"].split()) for s in load(SAMPLES_DIR / f"{name}.en.json")["scenes"])
+    assert 77 <= words <= 129
 
 
 @pytest.mark.parametrize("path", SAMPLES, ids=lambda p: p.name)

@@ -1,7 +1,7 @@
 """Render the bundled sample lesson to an MP4 (make sample).
 
 timing + TTS (cached) -> build frontend if stale -> local server -> capture keyframes -> encode -> ffprobe.
-Writes outputs/lessons/sample-<lang>/lesson.mp4 next to timeline.json, lesson.wav and captions.srt.
+Writes outputs/lessons/sample-<lang>/lesson.mp4 (other samples: sample-<name>-<lang>/) next to timeline.json, lesson.wav and captions.srt.
 """
 from __future__ import annotations
 
@@ -32,7 +32,8 @@ def main() -> int:
     logging.basicConfig(level=logging.WARNING)
 
     start = time.perf_counter()
-    lesson_id = f"sample-{args.lang}"
+    # the Python-loop sample keeps the id the tests and docs use; others get their own folder
+    lesson_id = f"sample-{args.lang}" if args.sample == "python_loop" else f"sample-{args.sample}-{args.lang}"
     out_dir = get_settings().outputs_dir / "lessons" / lesson_id
 
     print(f"timing: {args.sample}.{args.lang} -> {out_dir}")

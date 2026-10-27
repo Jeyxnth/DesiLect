@@ -215,9 +215,9 @@ def test_fallback_title_follows_topic_only_when_it_matches():
     matching = fallback_lesson("How do for loops work in Python?", "intermediate")
     assert matching["title"] == "How do for loops work in Python?" and matching["level"] == "intermediate"
     assert matching["meta"] == {"fallback": True, "source": "sample:python_loop", "topic": "How do for loops work in Python?"}
-    other = fallback_lesson("Photosynthesis")
+    other = fallback_lesson("Newton's third law")
     assert other["title"] == "How a Python loop works" and other["meta"]["fallback"] is True
-    assert closest_sample("Photosynthesis")[1] is False and closest_sample("python loop")[1] is True
+    assert closest_sample("Newton's third law")[1] is False and closest_sample("python loop")[1] is True
 
 
 def test_fallback_hi_keeps_translated_title():
@@ -237,3 +237,32 @@ def test_english_typography_is_allowed():
     d = good()
     d["scenes"][0]["narration"] = "Plants’ leaves — at 25°C → make sugar (π × r²). " + d["scenes"][0]["narration"]
     assert parse_and_validate(json.dumps(d), TARGET)[0] is not None
+
+
+@pytest.mark.parametrize("topic, sample, matches", [
+    ("How does photosynthesis work?", "photosynthesis", True),
+    ("What does chlorophyll do", "photosynthesis", True),
+    ("Pythagoras theorem for beginners", "pythagorean_theorem", True),
+    ("Explain the hypotenuse", "pythagorean_theorem", True),
+    ("How do for loops work in Python?", "python_loop", True),
+    ("How do plants get energy from sunlight", "photosynthesis", False),  # related words only: closest, not a match
+    ("Triangles and angles in geometry", "pythagorean_theorem", False),
+    ("Newton's third law", "python_loop", False),  # nothing overlaps: the default sample
+])
+def test_closest_sample_selection(topic, sample, matches):
+    chosen, is_match = closest_sample(topic)
+    assert (chosen.name, is_match) == (sample, matches)
+
+
+def test_fallback_retitles_only_on_a_real_match():
+    assert fallback_lesson("How does photosynthesis work?")["title"] == "How does photosynthesis work?"
+    related = fallback_lesson("How do plants get energy from sunlight")
+    assert related["title"] == "How photosynthesis works" and related["meta"]["source"] == "sample:photosynthesis"
+    assert fallback_lesson("Pythagoras theorem")["meta"]["source"] == "sample:pythagorean_theorem"
+
+
+@pytest.mark.parametrize("lang", ["en", "hi", "ta"])
+@pytest.mark.parametrize("topic", ["photosynthesis", "pythagorean theorem", "python loop", "anything else"])
+def test_every_fallback_is_valid_in_every_language(topic, lang):
+    lesson = fallback_lesson(topic, "intermediate", lang)
+    assert validate_lesson(lesson) == [] and lesson["language"] == lang and lesson["level"] == "intermediate"

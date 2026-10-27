@@ -1,0 +1,37 @@
+{
+  "title": "How photosynthesis works",
+  "level": "beginner",
+  "language": "en",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "How photosynthesis works",
+      "subheading": "How plants turn light into food",
+      "narration": "Welcome! Today we will learn how photosynthesis works. It is how green plants make their own food from sunlight."
+    },
+    {
+      "type": "diagram",
+      "heading": "What a plant needs",
+      "layout": "row",
+      "items": ["Sunlight", "Water", "Carbon dioxide"],
+      "narration": "A plant needs three things. First, light from the sun. Second, water from the soil, and third, carbon dioxide from the air."
+    },
+    {
+      "type": "diagram",
+      "heading": "Inside the leaf",
+      "layout": "row",
+      "items": ["Leaf absorbs light", "Makes glucose", "Releases oxygen"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "then" },
+        { "from": 1, "to": 2, "label": "and" }
+      ],
+      "narration": "Inside the leaf, a green substance called chlorophyll absorbs the light. The plant uses this energy to make glucose, which is its food. At the same time, it releases oxygen into the air."
+    },
+    {
+      "type": "title_card",
+      "heading": "Recap",
+      "subheading": "Sunlight, water and air become food",
+      "narration": "To recap, plants use sunlight, water and carbon dioxide to make glucose. They also give us the oxygen we breathe. Next time you see a green leaf, remember photosynthesis!"
+    }
+  ]
+}

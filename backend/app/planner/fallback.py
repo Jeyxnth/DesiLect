@@ -9,7 +9,7 @@ from ..cache.store import read_json
 from ..config import LANGUAGES, SAMPLES_DIR
 from .validate import cut_at_word
 
-SAMPLE_NAME = "python_loop"  # default sample (kept for callers that want it by name)
+SAMPLE_NAME = "python_loop"  # default sample, used when nothing matches
 
 
 @dataclass(frozen=True)
@@ -17,12 +17,28 @@ class FallbackSample:
     """A built-in lesson, stored as shared/samples/<name>.<lang>.json."""
 
     name: str
-    keywords: frozenset[str]  # lower-case words that make a topic "match" this sample
+    subject: str  # for logs and the UI notice, e.g. "programming"
+    keywords: frozenset[str]  # specific words: the topic really is this sample's topic
+    related: frozenset[str] = frozenset()  # broad words: help pick the closest sample, never count as a match
 
 
 # To add a sample: drop <name>.{en,hi,ta}.json into shared/samples and register it here.
 SAMPLES: tuple[FallbackSample, ...] = (
-    FallbackSample("python_loop", frozenset({"python", "loop", "loops", "for", "while", "range", "iteration", "iterate", "repeat"})),
+    FallbackSample(
+        "python_loop", "programming",
+        keywords=frozenset({"loop", "loops", "iteration", "iterate", "iterating", "range", "while"}),
+        related=frozenset({"python", "for", "repeat", "code", "coding", "programming", "program", "computer", "javascript", "java"}),
+    ),
+    FallbackSample(
+        "photosynthesis", "science",
+        keywords=frozenset({"photosynthesis", "chlorophyll", "glucose", "stomata"}),
+        related=frozenset({"plant", "plants", "leaf", "leaves", "sunlight", "oxygen", "biology", "science", "nature", "cell", "cells", "food", "energy"}),
+    ),
+    FallbackSample(
+        "pythagorean_theorem", "maths",
+        keywords=frozenset({"pythagoras", "pythagorean", "hypotenuse", "theorem"}),
+        related=frozenset({"triangle", "triangles", "right", "angle", "math", "maths", "mathematics", "geometry", "square", "squares", "algebra", "equation", "sides"}),
+    ),
 )
 
 
@@ -31,13 +47,21 @@ def _words(text: str) -> set[str]:
 
 
 def closest_sample(topic: str) -> tuple[FallbackSample, bool]:
-    """The best-matching sample and whether the topic really matches it (shares a keyword)."""
+    """The best-matching sample and whether the topic really matches it.
+
+    Specific keywords score 3, related words 1. With no overlap at all the default (first) sample is used.
+    "Matches" means a specific keyword was hit; related words alone only help choose.
+    """
     words = _words(topic)
-    best = max(SAMPLES, key=lambda s: len(words & s.keywords))
+
+    def score(s: FallbackSample) -> int:
+        return 3 * len(words & s.keywords) + len(words & s.related)
+
+    best = max(SAMPLES, key=score)  # max keeps the first sample on ties
     return best, bool(words & best.keywords)
 
 
-def fallback_lesson(topic: str = "", level: str = "beginner", language: str = "en") -> dict[str, Any]:
+def fallback_lesson(topic: str = "", level: str = "beginner", language: str = "en", reason: str = "") -> dict[str, Any]:
     """Return the closest built-in lesson (pre-translated for hi/ta), flagged meta.fallback = true.
 
     The title becomes the requested topic only when the topic matches the sample; otherwise the
@@ -51,4 +75,6 @@ def fallback_lesson(topic: str = "", level: str = "beginner", language: str = "e
     if matches and clean_topic and lang == "en":  # translated titles stay in their own language
         lesson["title"] = cut_at_word(clean_topic, 80)
     lesson["meta"] = {"fallback": True, "source": f"sample:{sample.name}", "topic": clean_topic[:200]}
+    if reason:
+        lesson["meta"]["reason"] = reason[:200]
     return lesson

@@ -1,0 +1,37 @@
+{
+  "title": "Photosynthesis कैसे काम करता है",
+  "level": "beginner",
+  "language": "hi",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "Photosynthesis कैसे काम करता है",
+      "subheading": "पौधे रोशनी को भोजन में कैसे बदलते हैं",
+      "narration": "नमस्ते! आज हम सीखेंगे कि photosynthesis कैसे काम करता है। इसी से हरे पौधे सूरज की रोशनी से अपना भोजन खुद बनाते हैं।"
+    },
+    {
+      "type": "diagram",
+      "heading": "पौधे को क्या चाहिए",
+      "layout": "row",
+      "items": ["सूरज की रोशनी", "पानी", "carbon dioxide"],
+      "narration": "पौधे को तीन चीज़ें चाहिए। पहली, सूरज की रोशनी। दूसरी, मिट्टी से पानी, और तीसरी, हवा से carbon dioxide।"
+    },
+    {
+      "type": "diagram",
+      "heading": "पत्ती के अंदर",
+      "layout": "row",
+      "items": ["पत्ती रोशनी लेती है", "glucose बनता है", "oxygen निकलती है"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "फिर" },
+        { "from": 1, "to": 2, "label": "और" }
+      ],
+      "narration": "पत्ती के अंदर chlorophyll नाम का हरा पदार्थ रोशनी सोख लेता है। पौधा इस ऊर्जा से glucose बनाता है, जो उसका भोजन है। साथ ही वह हवा में oxygen छोड़ता है।"
+    },
+    {
+      "type": "title_card",
+      "heading": "सारांश",
+      "subheading": "रोशनी, पानी और हवा से बनता है भोजन",
+      "narration": "संक्षेप में, पौधे सूरज की रोशनी, पानी और carbon dioxide से glucose बनाते हैं। वे हमें साँस लेने के लिए oxygen भी देते हैं। अगली बार हरी पत्ती देखें तो photosynthesis याद करें!"
+    }
+  ]
+}

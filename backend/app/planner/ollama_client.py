@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import copy
 import json
+import os
 from typing import Any
 
 import httpx
@@ -52,6 +53,14 @@ class OllamaClient:
         self.model = model or s.ollama_model
         self._http = http_client or httpx.Client(timeout=httpx.Timeout(TIMEOUT_S, connect=3.0))
 
+    @staticmethod
+    def _options() -> dict[str, Any]:
+        """Sampling options; OLLAMA_NUM_GPU=0 forces CPU-only inference (to measure a CPU-only laptop, H3)."""
+        options: dict[str, Any] = dict(OPTIONS)
+        if os.environ.get("OLLAMA_NUM_GPU", "").strip() != "":
+            options["num_gpu"] = int(os.environ["OLLAMA_NUM_GPU"])
+        return options
+
     def list_models(self, timeout: float = 1.5) -> list[str]:
         """Names of pulled models. Raises OllamaNotRunning if the server is down."""
         try:
@@ -89,7 +98,7 @@ class OllamaClient:
             "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
             "stream": False,
             "format": schema if schema is not None else "json",
-            "options": OPTIONS,
+            "options": self._options(),
             "keep_alive": 0,  # free the model's RAM as soon as planning ends (H3)
         }
         try:
