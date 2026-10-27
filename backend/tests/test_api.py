@@ -14,7 +14,7 @@ def test_health():
     assert r.status_code == 200
     body = r.json()
     assert body["status"] == "ok"
-    assert set(body["models"]) == {"kokoro", "indictrans2", "indic_parler_tts"}
+    assert set(body["models"]) == {"kokoro", "indictrans2", "indic_parler_tts", "indic_tts_ta"}
     assert "python" in body["versions"]
 
 

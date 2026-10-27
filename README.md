@@ -70,8 +70,8 @@ Full list: `LICENSES.md`.
 |---|---|---|---|
 | en | Kokoro (kokoro-onnx) | `hf_alpha` (female), `hm_omega` (male) | Indian-accented English: these Hindi voices speak en-us phonemes |
 | hi | Kokoro | `hf_alpha` (female), `hm_omega` (male) | Hindi phonemes; Latin words switch to English phonemes |
-| ta | Indic Parler-TTS | `jaya` (female). The model's only other Tamil speaker, Kavitha, was dropped after a listening check (drags words; 0.66 s for a greeting Jaya says in 1.81 s); it has no male Tamil speaker | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed. Parler sometimes stops mid-sentence, so audio under 40 ms per character is generated again with seed 1, then 2 |
-| ta (Plan B, `TAMIL_TTS=indic-tts`) | AI4Bharat Indic-TTS (FastPitch + HiFi-GAN, via coqui-tts) | `female`, `male` | `backend/app/tts/indic_tts_engine.py`: about 10x faster than Parler, same text always gives the same audio, cannot stop mid-sentence; real speed control (duration scale 1 / speed). Its alphabet is Tamil letters only, so the transliteration and number words below are required |
+| ta (opt-in, `TAMIL_TTS=parler`) | Indic Parler-TTS | `jaya` (female). The model's only other Tamil speaker, Kavitha, was dropped after a listening check (drags words; 0.66 s for a greeting Jaya says in 1.81 s); it has no male Tamil speaker | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed. Parler sometimes stops mid-sentence, so audio under 40 ms per character is generated again with seed 1, then 2 |
+| ta (default) | AI4Bharat Indic-TTS (FastPitch + HiFi-GAN, via coqui-tts) | `female` (default), `male` | `backend/app/tts/indic_tts_engine.py`: about 10x faster than Parler, same text always gives the same audio, cannot stop mid-sentence; real speed control (duration scale 1 / speed). Its alphabet is Tamil letters only, so the transliteration and number words below are required |
 
 The registry (`backend/app/tts/registry.py`) keeps one engine loaded and `release_all()` unloads it after the voice stage. `list_voices(lang)`
 and the `voice` / `speed` arguments of `build_timeline` are what step 11 uses. Parler has no speed control, so speed changes its description
@@ -112,10 +112,11 @@ Rule: if Indic Parler-TTS is slower than 3x real time on the weakest laptop, add
 triggered. **Plan B is built**: Indic-TTS runs at **0.48x real time** on the same laptop, about 10x faster (26 s instead of 262 s for the Python-loop
 lesson). Repeat with `TAMIL_TTS=indic-tts python -m app.timing.timeline --lang ta --no-cache` (from `backend/`).
 
-- `TAMIL_TTS=parler` (default for now): Jaya, pre-generated audio for the four samples is bundled. Live Tamil takes 5-9 min per minute of lesson.
-- `TAMIL_TTS=indic-tts`: female or male voice, live Tamil in well under real time. Run `python scripts/pregen_audio.py --lang ta` with it set to bundle
-  its sample audio too (the cache is keyed by engine, so both sets can live side by side).
-- Which one is the default is a listening decision for the team (sound quality vs speed); not yet made.
+**Decision (step 9): Indic-TTS is the default Tamil engine, voice `female`** (matches the female defaults in English and Hindi; `male` is
+available). The bundled Tamil sample audio in `shared/tts_cache/` is Indic-TTS (all four samples voiced in 80 s).
+- `TAMIL_TTS=indic-tts` (default): live Tamil in well under real time.
+- `TAMIL_TTS=parler`: Jaya, opt-in. Its sample audio is no longer bundled, so even the samples are voiced live (5-9 min per minute of lesson);
+  run `TAMIL_TTS=parler python scripts/pregen_audio.py --lang ta` first if you switch.
 
 Install notes: coqui-tts is installed **without dependencies** (see `backend/requirements-models.txt`), because its normal install would upgrade
 transformers and huggingface_hub and break IndicTrans2 and Parler. The released config points its speaker list at the authors' training folder, so the

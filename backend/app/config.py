@@ -57,7 +57,7 @@ class Settings:
     frontend_dist: Path
     host: str
     port: int
-    tamil_tts: str = "parler"  # "parler" (Indic Parler-TTS) or the Plan B engine, see README
+    tamil_tts: str = "indic-tts"  # "indic-tts" (AI4Bharat Indic-TTS, default) or "parler" (Indic Parler-TTS, slow)
     tts_translit: bool = True  # speak English terms via shared/glossary.json "tts_translit" (hi, ta)
 
 
@@ -79,6 +79,6 @@ def get_settings() -> Settings:
         frontend_dist=REPO_ROOT / "frontend" / "dist",
         host=os.environ.get("HOST", "127.0.0.1"),
         port=int(os.environ.get("PORT", "8000")),
-        tamil_tts=os.environ.get("TAMIL_TTS", "parler").strip().lower(),
+        tamil_tts=os.environ.get("TAMIL_TTS", "indic-tts").strip().lower(),
         tts_translit=_flag("TTS_TRANSLIT", True),
     )

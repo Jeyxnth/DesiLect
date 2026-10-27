@@ -158,8 +158,9 @@ def test_no_cache_flag_resynthesises(env, tmp_path):
     assert FakeEngine.calls == 2 * n
 
 
-def test_tamil_engine_is_parler():
-    from app.tts.registry import get_engine, release_all
-    engine, voice = get_engine("ta")
-    assert (engine.name, voice) == ("parler", "jaya")  # object only; the model loads on the first cache miss
-    release_all()
+def test_tamil_engine_object_is_light(monkeypatch):
+    from app.tts import registry
+    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="indic-tts"))
+    engine, voice = registry.get_engine("ta")
+    assert (engine.name, voice) == ("indic-tts", "female")  # object only; the model loads on the first cache miss
+    registry.release_all()

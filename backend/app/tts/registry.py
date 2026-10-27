@@ -11,12 +11,12 @@ from .parler_engine import ParlerEngine
 LANG_ENGINES: dict[str, tuple[str, str]] = {
     "en": ("kokoro", "hf_alpha"),  # Indian-accented English: a Hindi voice speaking en-us phonemes
     "hi": ("kokoro", "hf_alpha"),
-    "ta": ("parler", "jaya"),
+    "ta": ("indic-tts", "female"),
 }
 # TAMIL_TTS value -> (engine name, default voice)
 TAMIL_ENGINES: dict[str, tuple[str, str]] = {
-    "parler": ("parler", "jaya"),
-    "indic-tts": ("indic-tts", "female"),  # Plan B: FastPitch + HiFi-GAN, about 10x faster than Parler on CPU
+    "indic-tts": ("indic-tts", "female"),  # default: FastPitch + HiFi-GAN, about 10x faster than Parler on CPU
+    "parler": ("parler", "jaya"),  # opt-in: 5-9x real time, so live Tamil lessons take minutes to voice
 }
 _ENGINE_CLASSES: dict[str, type] = {"kokoro": KokoroEngine, "parler": ParlerEngine, "indic-tts": IndicTTSEngine}
 

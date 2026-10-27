@@ -132,22 +132,33 @@ def test_every_sample_term_has_a_spoken_form():
 
 # --- engines ---------------------------------------------------------------------
 
-def test_registry_engines_and_one_loaded_at_a_time():
-    assert registry.LANG_ENGINES == {"en": ("kokoro", "hf_alpha"), "hi": ("kokoro", "hf_alpha"), "ta": ("parler", "jaya")}
+def test_indic_tts_female_is_the_default_tamil_voice():
+    from app.config import Settings
+
+    assert Settings.__dataclass_fields__["tamil_tts"].default == "indic-tts"
+    assert registry.LANG_ENGINES == {
+        "en": ("kokoro", "hf_alpha"), "hi": ("kokoro", "hf_alpha"), "ta": ("indic-tts", "female")}
+    assert registry.TAMIL_ENGINES["indic-tts"] == ("indic-tts", "female")
+
+
+def test_registry_keeps_one_engine_loaded(monkeypatch):
+    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="indic-tts"))
     kokoro, _ = registry.get_engine("hi")
-    parler, _ = registry.get_engine("ta")
-    assert (kokoro.name, parler.name) == ("kokoro", "parler")
-    assert list(registry._active) == ["parler"]  # the Kokoro engine was unloaded and dropped
+    tamil, _ = registry.get_engine("ta")
+    assert (kokoro.name, tamil.name) == ("kokoro", "indic-tts")
+    assert list(registry._active) == ["indic-tts"]  # the Kokoro engine was unloaded and dropped
     registry.release_all()
     assert registry._active == {}
 
 
-def test_list_voices():
+def test_list_voices(monkeypatch):
     assert [v["id"] for v in registry.list_voices("hi")] == ["hf_alpha", "hm_omega"]
-    assert [v["id"] for v in registry.list_voices("ta")] == ["jaya"]
-    assert registry.list_voices("ta")[0]["engine"] == "parler"
     with pytest.raises(ValueError):
         registry.list_voices("xx")
+    monkeypatch.setattr(registry, "get_settings", lambda: SimpleNamespace(tamil_tts="parler"))
+    assert [v["id"] for v in registry.list_voices("ta")] == ["jaya"]  # Parler stays selectable
+    assert registry.get_engine("ta")[0].name == "parler"
+    registry.release_all()
 
 
 def test_unknown_tamil_engine_is_refused(monkeypatch):

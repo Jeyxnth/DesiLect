@@ -29,6 +29,7 @@ MODEL_DIRS = {
     "kokoro": "kokoro",
     "indictrans2": "indictrans2",
     "indic_parler_tts": "indic-parler-tts",
+    "indic_tts_ta": "indic-tts-ta",
 }
 
 
