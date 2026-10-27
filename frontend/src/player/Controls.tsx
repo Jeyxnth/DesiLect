@@ -1,4 +1,4 @@
-/** Play/pause, previous/next scene, replay. TODO(step 3): icons, keyboard shortcuts. */
+/** Play/pause, previous/next scene, replay, each with its keyboard shortcut (handled in Player). */
 export interface ControlsProps {
   playing: boolean;
   onToggle: () => void;
@@ -9,11 +9,19 @@ export interface ControlsProps {
 
 export default function Controls({ playing, onToggle, onPrev, onNext, onReplay }: ControlsProps) {
   return (
-    <div className="controls">
-      <button onClick={onPrev} aria-label="Previous scene">Prev</button>
-      <button onClick={onToggle} aria-label={playing ? "Pause" : "Play"}>{playing ? "Pause" : "Play"}</button>
-      <button onClick={onNext} aria-label="Next scene">Next</button>
-      <button onClick={onReplay} aria-label="Replay">Replay</button>
+    <div className="controls" role="toolbar" aria-label="Player controls">
+      <button onClick={onPrev} aria-label="Previous scene" aria-keyshortcuts="ArrowLeft" title="Previous scene (←)">
+        <span aria-hidden="true">⏮</span> Prev <kbd>←</kbd>
+      </button>
+      <button className="controls-main" onClick={onToggle} aria-label={playing ? "Pause" : "Play"} aria-keyshortcuts="Space" title="Play / pause (Space)">
+        <span aria-hidden="true">{playing ? "❚❚" : "▶"}</span> {playing ? "Pause" : "Play"} <kbd>Space</kbd>
+      </button>
+      <button onClick={onNext} aria-label="Next scene" aria-keyshortcuts="ArrowRight" title="Next scene (→)">
+        Next <span aria-hidden="true">⏭</span> <kbd>→</kbd>
+      </button>
+      <button onClick={onReplay} aria-label="Replay" aria-keyshortcuts="R" title="Replay (R)">
+        <span aria-hidden="true">↺</span> Replay <kbd>R</kbd>
+      </button>
     </div>
   );
 }

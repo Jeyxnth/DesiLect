@@ -245,6 +245,8 @@ def test_english_typography_is_allowed():
     ("Pythagoras theorem for beginners", "pythagorean_theorem", True),
     ("Explain the hypotenuse", "pythagorean_theorem", True),
     ("How do for loops work in Python?", "python_loop", True),
+    ("How does binary search work?", "binary_search", True),
+    ("Searching a sorted array", "binary_search", False),  # related words only
     ("How do plants get energy from sunlight", "photosynthesis", False),  # related words only: closest, not a match
     ("Triangles and angles in geometry", "pythagorean_theorem", False),
     ("Newton's third law", "python_loop", False),  # nothing overlaps: the default sample

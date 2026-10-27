@@ -16,7 +16,7 @@ def load(path):
 
 
 def test_every_sample_exists_in_en_hi_ta():
-    assert SAMPLE_NAMES == ["photosynthesis", "pythagorean_theorem", "python_loop"]
+    assert SAMPLE_NAMES == ["binary_search", "photosynthesis", "pythagorean_theorem", "python_loop"]
     for name in SAMPLE_NAMES:
         assert [p.name for p in SAMPLES if p.name.startswith(name + ".")] == [f"{name}.en.json", f"{name}.hi.json", f"{name}.ta.json"]
 

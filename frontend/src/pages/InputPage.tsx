@@ -5,7 +5,7 @@ import { navigate } from "../router";
 import type { ConceptRequest, Language, Level } from "../types/lesson";
 
 /** Topics the built-in samples cover, so the demo always has a known-good path. */
-const EXAMPLES = ["How does a Python loop work?", "Photosynthesis", "The Pythagorean theorem"];
+const EXAMPLES = ["How does a Python loop work?", "Photosynthesis", "How does binary search work?"];
 
 /** Pipeline stages in order (ids from backend/app/pipeline/orchestrator.py); times are typical on a CPU-only laptop. */
 const STAGES: { id: string; label: string; hint?: string }[] = [

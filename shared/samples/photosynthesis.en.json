@@ -13,19 +13,43 @@
       "type": "diagram",
       "heading": "What a plant needs",
       "layout": "row",
-      "items": ["Sunlight", "Water", "Carbon dioxide"],
+      "items": [
+        "Sunlight",
+        "Water",
+        "Carbon dioxide"
+      ],
       "narration": "A plant needs three things. First, light from the sun. Second, water from the soil, and third, carbon dioxide from the air."
     },
     {
       "type": "diagram",
-      "heading": "Inside the leaf",
-      "layout": "row",
-      "items": ["Leaf absorbs light", "Makes glucose", "Releases oxygen"],
-      "arrows": [
-        { "from": 0, "to": 1, "label": "then" },
-        { "from": 1, "to": 2, "label": "and" }
+      "heading": "The air cycle",
+      "layout": "cycle",
+      "items": [
+        "Plants take in CO2",
+        "Plants make oxygen",
+        "Animals breathe oxygen",
+        "Animals breathe out CO2"
       ],
-      "narration": "Inside the leaf, a green substance called chlorophyll absorbs the light. The plant uses this energy to make glucose, which is its food. At the same time, it releases oxygen into the air."
+      "arrows": [
+        {
+          "from": 0,
+          "to": 1,
+          "label": "with light"
+        },
+        {
+          "from": 1,
+          "to": 2
+        },
+        {
+          "from": 2,
+          "to": 3
+        },
+        {
+          "from": 3,
+          "to": 0
+        }
+      ],
+      "narration": "Inside the leaf, green chlorophyll uses sunlight to turn carbon dioxide into glucose, the plant's food. This also makes oxygen, which animals and people breathe in. We breathe out carbon dioxide, and plants take it in again, so the cycle goes on."
     },
     {
       "type": "title_card",

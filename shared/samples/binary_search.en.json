@@ -1,0 +1,40 @@
+{
+  "title": "How binary search works",
+  "level": "beginner",
+  "language": "en",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "How binary search works",
+      "subheading": "Find an item fast in a sorted list",
+      "narration": "Welcome! Today we will learn binary search. It finds an item in a sorted list very quickly."
+    },
+    {
+      "type": "diagram",
+      "heading": "Halve the list each time",
+      "layout": "stack",
+      "items": ["16 sorted numbers", "8 left", "4 left", "2 left", "Found it!"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "halve" },
+        { "from": 1, "to": 2, "label": "halve" },
+        { "from": 2, "to": 3, "label": "halve" },
+        { "from": 3, "to": 4, "label": "check" }
+      ],
+      "narration": "Start with 16 sorted numbers. Each check looks at the middle and drops the half that cannot hold our number. So 16 becomes 8, then 4, then 2, and then we find it!"
+    },
+    {
+      "type": "code_walkthrough",
+      "heading": "Binary search in Python",
+      "code": "def binary_search(items, target):\n    low, high = 0, len(items) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if items[mid] == target:\n            return mid\n        if items[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1",
+      "language_hint": "python",
+      "highlight_lines": [4, 6, 8],
+      "narration": "First we work out mid, the middle of the part we still search. If the item at mid equals the target, we return mid. If it is too small, we move low past mid and loop again."
+    },
+    {
+      "type": "title_card",
+      "heading": "Recap",
+      "subheading": "Check the middle, drop half, repeat",
+      "narration": "To recap, binary search checks the middle and throws away half each time. Even a list of one million items needs only about twenty checks. Just remember, the list must be sorted first!"
+    }
+  ]
+}

@@ -13,19 +13,43 @@
       "type": "diagram",
       "heading": "पौधे को क्या चाहिए",
       "layout": "row",
-      "items": ["सूरज की रोशनी", "पानी", "carbon dioxide"],
+      "items": [
+        "सूरज की रोशनी",
+        "पानी",
+        "carbon dioxide"
+      ],
       "narration": "पौधे को तीन चीज़ें चाहिए। पहली, सूरज की रोशनी। दूसरी, मिट्टी से पानी, और तीसरी, हवा से carbon dioxide।"
     },
     {
       "type": "diagram",
-      "heading": "पत्ती के अंदर",
-      "layout": "row",
-      "items": ["पत्ती रोशनी लेती है", "glucose बनता है", "oxygen निकलती है"],
-      "arrows": [
-        { "from": 0, "to": 1, "label": "फिर" },
-        { "from": 1, "to": 2, "label": "और" }
+      "heading": "हवा का चक्र",
+      "layout": "cycle",
+      "items": [
+        "पौधे CO2 लेते हैं",
+        "पौधे oxygen बनाते हैं",
+        "जीव oxygen लेते हैं",
+        "जीव CO2 छोड़ते हैं"
       ],
-      "narration": "पत्ती के अंदर chlorophyll नाम का हरा पदार्थ रोशनी सोख लेता है। पौधा इस ऊर्जा से glucose बनाता है, जो उसका भोजन है। साथ ही वह हवा में oxygen छोड़ता है।"
+      "arrows": [
+        {
+          "from": 0,
+          "to": 1,
+          "label": "रोशनी से"
+        },
+        {
+          "from": 1,
+          "to": 2
+        },
+        {
+          "from": 2,
+          "to": 3
+        },
+        {
+          "from": 3,
+          "to": 0
+        }
+      ],
+      "narration": "पत्ती के अंदर हरा chlorophyll सूरज की रोशनी से carbon dioxide को glucose में बदलता है, जो पौधे का भोजन है। इससे oxygen भी बनती है, जिसे जीव और इंसान साँस में लेते हैं। हम carbon dioxide छोड़ते हैं और पौधे उसे फिर से लेते हैं, इस तरह यह चक्र चलता रहता है।"
     },
     {
       "type": "title_card",

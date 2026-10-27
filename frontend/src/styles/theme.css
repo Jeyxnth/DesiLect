@@ -42,14 +42,31 @@
   font-display: swap;
 }
 
+/* Design tokens. src/scenes/tokens.ts mirrors the sizes; change both together. */
 :root {
-  --bg: #0f172a;
-  --panel: #1e293b;
-  --panel-2: #334155;
-  --text: #f1f5f9;
-  --muted: #94a3b8;
+  /* colour: dark blue background, one accent, high-contrast text */
+  --bg: #0b1428;
+  --panel: #12203b;          /* stage background */
+  --panel-2: #1b2d50;        /* diagram boxes, side notes */
+  --box-edge: #4a6185;
+  --line: #c3d0e3;           /* arrows */
+  --text: #f5f8fc;
+  --muted: #9fb0c8;
   --accent: #38bdf8;
-  --accent-2: #fbbf24;
+  --warn: #fbbf24;           /* UI warnings only (fallback notice), never on the stage */
+  --caption-band: rgba(5, 10, 22, 0.7);
+  --code-bg: #0a1222;
+  --code-kw: #38bdf8;        /* keywords use the accent */
+  --code-str: #b9e4a8;
+  --code-num: #f7c98b;
+  --code-com: #7d8ea8;
+
+  /* type and spacing */
+  --heading-px: 44px;
+  --body-px: 28px;
+  --caption-px: 30px;
+  --safe: 64px;
+
   --font-ui: "Noto Sans", "Noto Sans Devanagari", "Noto Sans Tamil", system-ui, sans-serif;
   --font-code: "Noto Sans Mono", ui-monospace, Consolas, monospace;
 }
@@ -66,25 +83,38 @@ body {
 
 /* Layout */
 .page { max-width: 1100px; margin: 0 auto; padding: 16px; }
-.notice { color: var(--accent-2); }
+.notice { color: var(--warn); }
 .scene-text { fill: var(--text); font-family: var(--font-ui); }
 .scene-code { fill: var(--text); font-family: var(--font-code); }
 .scene-muted { fill: var(--muted); }
+.scene-label { fill: var(--line); }
+.code-ln { fill: var(--code-com); }
+.tok-kw { fill: var(--code-kw); }
+.tok-str { fill: var(--code-str); }
+.tok-num { fill: var(--code-num); }
+.tok-com { fill: var(--code-com); font-style: italic; }
 
 /* The stage is a fixed 1280x720 logical canvas. The player scales it with a CSS transform to keep 16:9.
-   No CSS transitions or animations anywhere: visuals are a pure function of time (G3). */
-.stage-fit { width: min(100%, calc((100vh - 120px) * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; position: relative; overflow: hidden; border-radius: 12px; background: var(--panel); }
+   No CSS transitions or animations anywhere: visuals are a pure function of time (G3). Only transform
+   and opacity change per frame; nothing that moves has a filter or shadow. */
+.stage-fit { width: min(100%, calc((100vh - 140px) * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; position: relative; overflow: hidden; border-radius: 12px; background: var(--panel); }
 .stage-scaler { width: 1280px; height: 720px; transform-origin: 0 0; }
 .stage-canvas { position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden; }
-.step-heading { position: absolute; left: 40px; right: 40px; top: 14px; height: 40px; line-height: 40px; font-size: 26px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.scene-area { position: absolute; left: 0; top: 60px; width: 1280px; height: 540px; }
-.scene-area svg { width: 1280px; height: 540px; display: block; }
-.caption-bar { position: absolute; left: 0; top: 604px; width: 1280px; height: 100px; padding: 0 60px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 34px; line-height: 1.3; overflow: hidden; }
-.progress { position: absolute; left: 0; top: 704px; width: 1280px; height: 16px; display: flex; align-items: flex-end; cursor: pointer; }
-.progress-track { width: 100%; height: 6px; background: #0b1220; }
-.progress-fill { height: 100%; background: var(--accent); }
-.controls { display: flex; gap: 8px; justify-content: center; padding: 10px; }
+.step-pill { position: absolute; left: var(--safe); top: 20px; height: 36px; line-height: 36px; padding: 0 16px; border-radius: 18px; background: var(--panel-2); color: var(--muted); font-size: 20px; font-weight: 700; white-space: nowrap; }
+.scene-area { position: absolute; left: 0; top: 72px; width: 1280px; height: 528px; }
+.scene-area svg { width: 1280px; height: 528px; display: block; }
+.caption-bar { position: absolute; left: 0; top: 600px; width: 1280px; height: 104px; padding: 0 var(--safe); display: flex; align-items: center; justify-content: center; text-align: center; background: var(--caption-band); font-size: var(--caption-px); line-height: 1.3; }
+.caption-bar.empty { background: transparent; }
+.caption-bar span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.progress { position: absolute; left: 0; top: 704px; width: 1280px; height: 16px; display: flex; align-items: flex-end; cursor: pointer; background: var(--caption-band); }
+.progress-track { position: relative; width: 100%; height: 6px; background: #050a16; }
+.progress-fill { height: 100%; width: 100%; background: var(--accent); transform-origin: 0 50%; }
+.progress-tick { position: absolute; top: -6px; width: 3px; height: 12px; margin-left: -1px; border-radius: 1px; background: var(--muted); }
+.progress-tick.passed { background: var(--text); }
+.controls { display: flex; gap: 8px; justify-content: center; padding: 10px; flex-wrap: wrap; }
 .controls button, .form button { background: var(--panel); color: var(--text); border: 1px solid var(--muted); border-radius: 8px; padding: 8px 14px; font: inherit; cursor: pointer; }
+.controls .controls-main { border-color: var(--accent); min-width: 9.5em; }
+.controls kbd { font-family: var(--font-code); font-size: 0.75em; color: var(--muted); border: 1px solid var(--box-edge); border-radius: 4px; padding: 0 4px; margin-left: 4px; }
 
 /* Render page: exactly 1280x720 for capture */
 .render-root { width: 1280px; height: 720px; overflow: hidden; background: var(--panel); }
@@ -117,8 +147,8 @@ body {
 .stage-active { color: var(--accent); font-weight: 700; }
 .job-bar { height: 8px; background: var(--panel); border-radius: 4px; overflow: hidden; }
 .job-bar-fill { height: 100%; background: var(--accent); }
-.fallback-notice { border: 2px solid var(--accent-2); background: #3a2e0b; color: var(--text); border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
-.fallback-notice strong { color: var(--accent-2); }
+.fallback-notice { border: 2px solid var(--warn); background: #3a2e0b; color: var(--text); border-radius: 8px; padding: 10px 14px; margin: 12px 0; }
+.fallback-notice strong { color: var(--warn); }
 .fallback-notice p { margin: 6px 0 0; }
 .player-header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
 .player-header h1 { font-size: 1.4em; margin: 8px 0; }
@@ -137,4 +167,6 @@ body {
   .stage-fit { border-radius: 6px; }
   .controls { gap: 6px; padding: 8px 0; }
   .controls button { padding: 8px 10px; }
+  .controls kbd { display: none; } /* no keyboard on a phone */
+  .controls .controls-main { min-width: 0; }
 }

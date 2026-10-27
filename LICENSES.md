@@ -12,3 +12,5 @@ Every model, voice, font and asset must be listed here (and in README) before it
 | Llama 3.2 3B Instruct (`llama3.2:3b`, via Ollama) | LLM | lesson planner (JSON plans) | Llama 3.2 Community License (requires the "Built with Llama" notice and the Acceptable Use Policy) | Ollama library `llama3.2` (Meta) |
 | Ollama | local model server | runs the planner on CPU | MIT | ollama.com |
 | httpx | Python library | talks to Ollama on 127.0.0.1 | BSD-3-Clause | PyPI |
+| Noto Sans (`NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`) | font | UI, headings, captions (Latin) | SIL Open Font License 1.1 (`frontend/public/fonts/OFL.txt`) | github.com/notofonts/notofonts.github.io (hinted TTF) |
+| Noto Sans Mono (`NotoSansMono-Regular.ttf`) | font | code in `code_walkthrough` scenes | SIL Open Font License 1.1 | github.com/notofonts/notofonts.github.io (hinted TTF) |

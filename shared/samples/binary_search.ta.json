@@ -1,0 +1,40 @@
+{
+  "title": "Binary search எப்படி வேலை செய்கிறது",
+  "level": "beginner",
+  "language": "ta",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "Binary search எப்படி வேலை செய்கிறது",
+      "subheading": "sorted list-இல் வேகமாகத் தேடுதல்",
+      "narration": "வணக்கம்! இன்று binary search கற்றுக்கொள்வோம். இது ஒரு sorted list-இல் ஒரு item-ஐ மிக வேகமாகக் கண்டுபிடிக்கும்."
+    },
+    {
+      "type": "diagram",
+      "heading": "ஒவ்வொரு முறையும் பாதியாக்கு",
+      "layout": "stack",
+      "items": ["16 sorted எண்கள்", "8 மீதம்", "4 மீதம்", "2 மீதம்", "கிடைத்தது!"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "பாதி" },
+        { "from": 1, "to": 2, "label": "பாதி" },
+        { "from": 2, "to": 3, "label": "பாதி" },
+        { "from": 3, "to": 4, "label": "சரிபார்" }
+      ],
+      "narration": "16 sorted எண்களிலிருந்து தொடங்குங்கள். ஒவ்வொரு சரிபார்ப்பும் நடுவில் உள்ள எண்ணைப் பார்த்து, நம் எண் இருக்க முடியாத பாதியை நீக்குகிறது. எனவே 16 என்பது 8, பிறகு 4, பிறகு 2 ஆகி, நம் எண் கிடைக்கிறது!"
+    },
+    {
+      "type": "code_walkthrough",
+      "heading": "Python-இல் binary search",
+      "code": "def binary_search(items, target):\n    low, high = 0, len(items) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if items[mid] == target:\n            return mid\n        if items[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1",
+      "language_hint": "python",
+      "highlight_lines": [4, 6, 8],
+      "narration": "முதலில் மீதமுள்ள பகுதியின் நடுவான mid-ஐக் கணக்கிடுகிறோம். mid-இல் உள்ள item, target-க்குச் சமமாக இருந்தால், mid-ஐ return செய்கிறோம். அது சிறியதாக இருந்தால், low-ஐ mid-க்கு அப்பால் நகர்த்தி loop மீண்டும் ஓடுகிறது."
+    },
+    {
+      "type": "title_card",
+      "heading": "சுருக்கம்",
+      "subheading": "நடுவைப் பார், பாதியை நீக்கு, மீண்டும் செய்",
+      "narration": "சுருக்கமாக, binary search நடுவைச் சரிபார்த்து ஒவ்வொரு முறையும் பாதியை நீக்குகிறது. பத்து லட்சம் items உள்ள list-க்கும் சுமார் இருபது சரிபார்ப்புகளே போதும். list முதலில் sorted ஆக இருக்க வேண்டும் என்பதை நினைவில் கொள்ளுங்கள்!"
+    }
+  ]
+}

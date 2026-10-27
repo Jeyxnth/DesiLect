@@ -4,8 +4,14 @@ import type { Beat, Cue, Scene, Timeline, TimelineScene } from "../types/lesson"
 /** Fade/slide length used by the scenes. Exporters capture at keyframe + SETTLE_S for a settled picture. */
 export const FADE_S = 0.5;
 
-/** Longest time any scene animation needs to finish after a keyframe (title subheading: 0.5 + 0.6 s). */
-export const SETTLE_S = 1.2;
+/** Diagram item scale-in, arrow draw-on (and its delay after both ends are visible), code highlight glide. */
+export const ITEM_IN_S = 0.3;
+export const ARROW_DELAY_S = 0.1;
+export const ARROW_DRAW_S = 0.5;
+export const GLIDE_S = 0.35;
+
+/** Longest time any scene animation needs to finish after a keyframe (title icon: starts 0.4 s, lasts 0.5 s). */
+export const SETTLE_S = 0.9;
 
 export const clamp01 = (x: number): number => Math.min(1, Math.max(0, x));
 
@@ -16,10 +22,14 @@ export function fadeIn(localT: number, at: number, dur = FADE_S): number {
   return easeOutCubic((localT - at) / dur);
 }
 
-/** Largest font size (<= max, >= min) so `text` fits in `width` px; em = average glyph width in em. */
-export function fitFontSize(text: string, max: number, min: number, width: number, em = 0.6): number {
-  const chars = Math.max(1, [...text].length);
-  return Math.max(min, Math.min(max, width / (chars * em)));
+/** Progress 0..1 of an animation that starts at `at` and lasts `dur`, linear (for stroke draw-on). */
+export function progress(localT: number, at: number, dur: number): number {
+  return clamp01((localT - at) / dur);
+}
+
+/** Smooth move between two values: from `a` toward `b`, starting at `at`, over `dur` seconds. */
+export function glide(a: number, b: number, localT: number, at: number, dur: number): number {
+  return a + (b - a) * easeOutCubic((localT - at) / dur);
 }
 
 /** Beats shifted from absolute lesson time to scene-local time. */
@@ -54,17 +64,26 @@ export function sceneAt(scenes: TimelineScene[], t: number): TimelineScene | nul
   return scenes.find((s) => t >= s.start && t < s.end) ?? scenes[0] ?? null;
 }
 
+/** The previous highlight beat before `beat` (where the highlight glides from), or null. */
+export function previousHighlight(beats: Beat[], beat: Beat): Beat | null {
+  let best: Beat | null = null;
+  for (const b of beats) if (b.action === "highlight" && b.t < beat.t && (!best || b.t >= best.t)) best = b;
+  return best;
+}
+
 /**
  * Every time the picture changes: scene starts, beats, cue starts and cue ends (caption goes blank),
- * plus a progress-bar tick every `tick` seconds so the bar never lags more than that in keyframe export.
+ * every animation start the scenes report (absolute times), plus a progress-bar tick every `tick`
+ * seconds so the bar never lags more than that in keyframe export.
  */
-export function keyframes(timeline: Timeline, tick = 1): number[] {
+export function keyframes(timeline: Timeline, animationStarts: (scene: TimelineScene) => number[] = () => [], tick = 1): number[] {
   const times = new Set<number>([0]);
   for (let t = tick; t < timeline.total_seconds; t += tick) times.add(t);
   for (const s of timeline.scenes) {
     times.add(s.start);
     s.beats.forEach((b) => times.add(b.t));
     s.cues.forEach((c) => { times.add(c.start); times.add(c.end); });
+    animationStarts(s).forEach((t) => times.add(t));
   }
   return [...times]
     .map((t) => Math.round(t * 1000) / 1000)

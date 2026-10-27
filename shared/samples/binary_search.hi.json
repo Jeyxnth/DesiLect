@@ -1,0 +1,40 @@
+{
+  "title": "Binary search कैसे काम करता है",
+  "level": "beginner",
+  "language": "hi",
+  "scenes": [
+    {
+      "type": "title_card",
+      "heading": "Binary search कैसे काम करता है",
+      "subheading": "sorted list में तेज़ी से खोजें",
+      "narration": "नमस्ते! आज हम binary search सीखेंगे। यह sorted list में किसी item को बहुत जल्दी ढूँढ लेता है।"
+    },
+    {
+      "type": "diagram",
+      "heading": "हर बार list को आधा करें",
+      "layout": "stack",
+      "items": ["16 sorted संख्याएँ", "8 बचीं", "4 बचीं", "2 बचीं", "मिल गया!"],
+      "arrows": [
+        { "from": 0, "to": 1, "label": "आधा" },
+        { "from": 1, "to": 2, "label": "आधा" },
+        { "from": 2, "to": 3, "label": "आधा" },
+        { "from": 3, "to": 4, "label": "जाँच" }
+      ],
+      "narration": "16 sorted संख्याओं से शुरू करें। हर जाँच बीच की संख्या देखती है और वह आधा हिस्सा हटा देती है जिसमें हमारी संख्या नहीं हो सकती। तो 16 से 8, फिर 4, फिर 2, और फिर हमें संख्या मिल जाती है!"
+    },
+    {
+      "type": "code_walkthrough",
+      "heading": "Python में binary search",
+      "code": "def binary_search(items, target):\n    low, high = 0, len(items) - 1\n    while low <= high:\n        mid = (low + high) // 2\n        if items[mid] == target:\n            return mid\n        if items[mid] < target:\n            low = mid + 1\n        else:\n            high = mid - 1\n    return -1",
+      "language_hint": "python",
+      "highlight_lines": [4, 6, 8],
+      "narration": "पहले हम mid निकालते हैं, यानी बचे हुए हिस्से का बीच। अगर mid वाला item target के बराबर है, तो हम mid को return करते हैं। अगर वह छोटा है, तो हम low को mid से आगे ले जाते हैं और loop फिर चलता है।"
+    },
+    {
+      "type": "title_card",
+      "heading": "सारांश",
+      "subheading": "बीच देखें, आधा हटाएँ, दोहराएँ",
+      "narration": "संक्षेप में, binary search बीच को जाँचता है और हर बार आधा हिस्सा हटा देता है। दस लाख items की list में भी लगभग बीस जाँच ही लगती हैं। बस याद रखें, list पहले से sorted होनी चाहिए!"
+    }
+  ]
+}

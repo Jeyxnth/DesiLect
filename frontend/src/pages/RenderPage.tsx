@@ -3,6 +3,7 @@ import { ManualClock, useClock } from "../player/clock";
 import { loadTimeline } from "../player/loadTimeline";
 import { Stage } from "../player/Player";
 import { SETTLE_S, keyframes } from "../scenes/anim";
+import { animationStarts } from "../scenes/registry";
 import type { Timeline } from "../types/lesson";
 
 declare global {
@@ -11,7 +12,7 @@ declare global {
     __seek?: (t: number) => Promise<void>;
     /** True once the timeline is loaded, fonts are ready and the first frame is painted. */
     __ready?: boolean;
-    /** Every time (seconds) at which the picture changes (incl. 1 s progress ticks), ascending. */
+    /** Every time (seconds) at which the picture changes or an animation starts (incl. 1 s progress ticks), ascending. */
     __keyframes?: () => number[];
     /** Seconds scene animations need to finish after a keyframe (capture at keyframe + this, before the next keyframe). */
     __settle?: number;
@@ -39,14 +40,14 @@ export default function RenderPage({ id }: { id: string }) {
   useEffect(() => {
     if (!timeline) return;
     const seek = async (x: number) => {
-      await Promise.resolve(); // leave React's effect phase so flushSync is allowed
+      await document.fonts.ready; // also leaves React's effect phase, so flushSync is allowed
       clock.seek(x);
       refresh();
-      await document.fonts.ready;
+      await document.fonts.ready; // a newly drawn glyph may start another font load
       await nextPaint();
     };
     window.__seek = seek;
-    window.__keyframes = () => keyframes(timeline);
+    window.__keyframes = () => keyframes(timeline, animationStarts);
     window.__settle = SETTLE_S;
     const start = Number(new URLSearchParams(window.location.search).get("t") ?? 0);
     void seek(Number.isFinite(start) ? start : 0).then(() => { window.__ready = true; });

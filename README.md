@@ -22,8 +22,11 @@ make dev       # backend :8000, frontend :5173; play at /lesson/sample-en
 Other bundled samples render to their own folder, e.g.
 `python scripts/render_sample.py --sample photosynthesis --lang hi` writes `outputs/lessons/sample-photosynthesis-hi/`.
 
-Built-in samples (the G2 fallback when the planner fails): `python_loop` (programming), `photosynthesis` (science),
-`pythagorean_theorem` (maths), each in en/hi/ta. The closest one to the requested topic is used, and the UI says so.
+Built-in samples (the G2 fallback when the planner fails), each in en/hi/ta: `python_loop` (code + row diagram),
+`binary_search` (stack diagram + code), `photosynthesis` (row + cycle diagrams), `pythagorean_theorem` (maths).
+The closest one to the requested topic is used, and the UI says so.
+
+Player keys: Space play/pause, ← → previous/next scene, R replay.
 
 The planner takes about 35 s per plan on a CPU-only laptop (about 65 s when the first plan is rejected and retried);
 with a GPU Ollama is about 4x faster. Set `OLLAMA_NUM_GPU=0` in `.env` to measure the CPU-only time on a GPU laptop.
@@ -36,6 +39,7 @@ with a GPU Ollama is about 4x faster. Set `OLLAMA_NUM_GPU=0` in `.env` to measur
 | Llama 3.2 3B Instruct via Ollama (`llama3.2:3b`) | lesson planner. **Built with Llama.** | Llama 3.2 Community License |
 | eSpeak NG (via espeakng-loader) | phonemes | GPL-3.0-or-later |
 | ONNX Runtime, NumPy, soundfile | CPU inference, audio | MIT / BSD-3-Clause |
+| Noto Sans, Noto Sans Mono (bundled in `frontend/public/fonts`) | UI, captions, code | SIL Open Font License 1.1 |
 
 Full list: `LICENSES.md`.
 

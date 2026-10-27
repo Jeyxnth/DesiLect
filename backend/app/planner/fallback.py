@@ -30,6 +30,11 @@ SAMPLES: tuple[FallbackSample, ...] = (
         related=frozenset({"python", "for", "repeat", "code", "coding", "programming", "program", "computer", "javascript", "java"}),
     ),
     FallbackSample(
+        "binary_search", "programming",
+        keywords=frozenset({"binary", "bisect", "bisection"}),
+        related=frozenset({"search", "searching", "sorted", "algorithm", "algorithms", "find", "array", "list", "lists", "middle", "halve"}),
+    ),
+    FallbackSample(
         "photosynthesis", "science",
         keywords=frozenset({"photosynthesis", "chlorophyll", "glucose", "stomata"}),
         related=frozenset({"plant", "plants", "leaf", "leaves", "sunlight", "oxygen", "biology", "science", "nature", "cell", "cells", "food", "energy"}),
