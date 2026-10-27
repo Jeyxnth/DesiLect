@@ -15,7 +15,9 @@ from ..cache.store import load_cached_audio, read_json, save_cached_audio, tts_c
 from ..config import SAMPLES_DIR, get_settings
 from ..export.ffmpeg import write_srt
 from ..planner.validate import validate_timeline
+from ..tts.audio import POSTPROCESS_VERSION, finalize_sentence
 from ..tts.base import SAMPLE_RATE
+from ..tts.prep import prepare_tts_text
 from ..tts.registry import get_engine, release_all
 from .sentences import split_sentences
 
@@ -25,8 +27,13 @@ SENTENCE_GAP_S = 0.15  # silence between sentences inside a scene
 SCENE_PAUSE_S = 0.6  # tail pause after the last sentence of a scene
 
 
-class _Synth:
-    """Cached per-sentence synthesis. The model is only loaded on the first cache miss."""
+class SentenceSynth:
+    """Cached per-sentence synthesis. The model is only loaded on the first cache miss.
+
+    A sentence is spoken from prepare_tts_text(text) (English terms transliterated for hi/ta) while the
+    caller keeps the original text for captions. Each result is peak-normalised and trimmed before it is
+    cached, so the cached length is the final length the timeline uses.
+    """
 
     def __init__(self, lang: str, voice: str | None, speed: float, use_cache: bool) -> None:
         self.lang, self.speed, self.use_cache = lang, speed, use_cache
@@ -37,20 +44,26 @@ class _Synth:
         self.synth_seconds = 0.0  # wall time spent in the model
         self.audio_seconds = 0.0  # audio produced by the model (cache misses only)
         self.hits = self.misses = 0
+        self.cache_paths: list[Path] = []  # every entry used, in order (scripts/pregen_audio.py bundles them)
+
+    def cache_path(self, text: str) -> Path:
+        spoken = prepare_tts_text(text, self.lang)
+        return tts_cache_path(self.engine.name, self.voice, self.lang, self.speed, spoken, POSTPROCESS_VERSION)
 
     def __call__(self, text: str) -> np.ndarray:
-        path = tts_cache_path(self.engine.name, self.voice, self.lang, self.speed, text)
+        path = self.cache_path(text)
+        self.cache_paths.append(path)
         cached = load_cached_audio(path) if self.use_cache else None
         if cached is not None and cached[1] == SAMPLE_RATE:
             self.hits += 1
             return np.asarray(cached[0], dtype=np.float32)
         self.misses += 1
         start = time.perf_counter()
-        samples, sr = self.engine.synth(text, self.lang, self.voice, self.speed)
+        samples, sr = self.engine.synth(prepare_tts_text(text, self.lang), self.lang, self.voice, self.speed)
         self.synth_seconds += time.perf_counter() - start
         if sr != SAMPLE_RATE:
             raise RuntimeError(f"engine returned {sr} Hz, expected {SAMPLE_RATE}")
-        samples = np.asarray(samples, dtype=np.float32)
+        samples = finalize_sentence(np.asarray(samples, dtype=np.float32), sr)
         self.audio_seconds += len(samples) / sr
         save_cached_audio(path, samples, sr)
         return samples
@@ -106,7 +119,7 @@ def build_timeline(
     gap = round(SENTENCE_GAP_S * SAMPLE_RATE)
     pause = round(SCENE_PAUSE_S * SAMPLE_RATE)
     wall = time.perf_counter()
-    synth = _Synth(lang, voice, speed, use_cache)
+    synth = SentenceSynth(lang, voice, speed, use_cache)
 
     try:
         # Plan everything in integer samples so lesson.wav length matches total_seconds exactly.
@@ -171,6 +184,8 @@ def build_timeline(
         "tts_synth_s": round(synth.synth_seconds, 3),
         "tts_audio_s": round(synth.audio_seconds, 3),
         "tts_rtf": round(rtf, 3) if rtf is not None else None,
+        "tts_engine": synth.engine.name,
+        "tts_voice": synth.voice,
         "cache_hits": synth.hits,
         "cache_misses": synth.misses,
         "total_seconds": timeline["total_seconds"],
@@ -196,7 +211,7 @@ def main(argv: list[str] | None = None) -> int:
     out = args.out or get_settings().outputs_dir / "lessons" / f"sample-{args.lang}"
     try:
         tl = build_timeline(lesson, args.lang, out, voice=args.voice, speed=args.speed, use_cache=not args.no_cache)
-    except (NotImplementedError, FileNotFoundError) as exc:
+    except (NotImplementedError, FileNotFoundError, ImportError) as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 2
     t = read_json(out / "timings.json")["timeline"]

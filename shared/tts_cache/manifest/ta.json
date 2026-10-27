@@ -1,0 +1,324 @@
+{
+  "ce2a3a6af8c4a16df0e8472ea0ad9924914a8312": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "வணக்கம்!",
+    "spoken": "வணக்கம்!"
+  },
+  "9cad247f2cbf74ecc7db300c87f56fe9740e1186": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இன்று Python-இல் loop எப்படி வேலை செய்கிறது என்று கற்றுக்கொள்வோம்.",
+    "spoken": "இன்று பைதான்-இல் லூப் எப்படி வேலை செய்கிறது என்று கற்றுக்கொள்வோம்."
+  },
+  "57cb6bb9bcd5ae9ff5e34639ef41dbc7430fa96f": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "ஒரே வேலையை மீண்டும் மீண்டும் செய்ய loop உதவுகிறது, அதனால் ஒரே code-ஐ பலமுறை எழுத வேண்டியதில்லை.",
+    "spoken": "ஒரே வேலையை மீண்டும் மீண்டும் செய்ய லூப் உதவுகிறது, அதனால் ஒரே கோட்-ஐ பலமுறை எழுத வேண்டியதில்லை."
+  },
+  "f944c3d7e5a19a1523ec54e89d00f5087eca3476": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இது ஒரு எளிய for loop.",
+    "spoken": "இது ஒரு எளிய ஃபார் லூப்."
+  },
+  "fbb7da43b730b61582c77ed5e15625d393476709": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "range(3) நமக்கு 0, 1, 2 ஆகிய எண்களைத் தருகிறது.",
+    "spoken": "ரேஞ்ச் 3 நமக்கு 0, 1, 2 ஆகிய எண்களைத் தருகிறது."
+  },
+  "f3531b21e497559bf64dd7ee3d60c8f77514bf28": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "ஒவ்வொரு எண்ணுக்கும் variable i அந்த மதிப்பை எடுத்துக்கொள்கிறது, print அதைத் திரையில் காட்டுகிறது.",
+    "spoken": "ஒவ்வொரு எண்ணுக்கும் வேரியபிள் ஐ அந்த மதிப்பை எடுத்துக்கொள்கிறது, பிரிண்ட் அதைத் திரையில் காட்டுகிறது."
+  },
+  "fc845564ba3eb2467fa1db946fe55134ffc2e02f": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "Loop எப்படி ஓடுகிறது என்று பாருங்கள்.",
+    "spoken": "லூப் எப்படி ஓடுகிறது என்று பாருங்கள்."
+  },
+  "5260ae0f03b225f25efbefaed5e51790102e73e4": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "முதலில் i என்பது 0, print 0 என்று காட்டுகிறது.",
+    "spoken": "முதலில் ஐ என்பது 0, பிரிண்ட் 0 என்று காட்டுகிறது."
+  },
+  "7d854ef4a0eb7ae2b9305d8618b0f492350ce390": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "பிறகு i 1 ஆகிறது, அடுத்து 2 ஆகிறது, அதன் பிறகு loop நின்றுவிடுகிறது.",
+    "spoken": "பிறகு ஐ 1 ஆகிறது, அடுத்து 2 ஆகிறது, அதன் பிறகு லூப் நின்றுவிடுகிறது."
+  },
+  "73af514234dc7517c70a037cb727986c3b7e4201": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "சுருக்கமாக, loop ஒவ்வொரு மதிப்புக்கும் அதே code-ஐ மீண்டும் செய்கிறது.",
+    "spoken": "சுருக்கமாக, லூப் ஒவ்வொரு மதிப்புக்கும் அதே கோட்-ஐ மீண்டும் செய்கிறது."
+  },
+  "7e9943f19f3973023e93eeab692fbc7b9cfd1008": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "எத்தனை முறை என்பதை range தீர்மானிக்கிறது, print ஒவ்வொரு முடிவையும் காட்டுகிறது.",
+    "spoken": "எத்தனை முறை என்பதை ரேஞ்ச் தீர்மானிக்கிறது, பிரிண்ட் ஒவ்வொரு முடிவையும் காட்டுகிறது."
+  },
+  "7bb5385ef32d1f66c0ef54522544365da1576e37": {
+    "sample": "python_loop",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இப்போது range உள்ளே உள்ள எண்ணை மாற்றி நீங்களே முயற்சி செய்யுங்கள்!",
+    "spoken": "இப்போது ரேஞ்ச் உள்ளே உள்ள எண்ணை மாற்றி நீங்களே முயற்சி செய்யுங்கள்!"
+  },
+  "d9700fef270e9e6f480dcbeba2dec0b9b0d3f1d3": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "வரவேற்கிறேன்!",
+    "spoken": "வரவேற்கிறேன்!"
+  },
+  "b1037dcf109947de3b7810c7f93daa2e4856bece": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இன்று நாம் binary search ஐக் கற்றுக்கொள்வோம்.",
+    "spoken": "இன்று நாம் பைனரி சர்ச் ஐக் கற்றுக்கொள்வோம்."
+  },
+  "43d0e1aadb89be8bce695f779d7e5c573c04ee53": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இது ஒரு sorted list இல் ஒரு item ஐ மிக விரைவாகக் காண்கிறது.",
+    "spoken": "இது ஒரு சார்ட்டெட் லிஸ்ட் இல் ஒரு ஐட்டம் ஐ மிக விரைவாகக் காண்கிறது."
+  },
+  "946cc775c40de72ef9f1ca04d88f4613b105f04a": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "16 sorted எண்களுடன் தொடங்குங்கள்.",
+    "spoken": "16 சார்ட்டெட் எண்களுடன் தொடங்குங்கள்."
+  },
+  "d3aa861ebe0fcf27dd9579119c79706975b6684c": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "ஒவ்வொரு காசோலையும் நடுவில் பார்த்து, நம் எண்ணை வைத்திருக்க முடியாத பாதியைக் குறைக்கிறது.",
+    "spoken": "ஒவ்வொரு காசோலையும் நடுவில் பார்த்து, நம் எண்ணை வைத்திருக்க முடியாத பாதியைக் குறைக்கிறது."
+  },
+  "82e36d7fa0e5ec6f6d94becb71df264c941012d7": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "எனவே 16 என்பது 8 ஆகி, பின்னர் 4 ஆகி, பின்னர் 2 ஆகி, பின்னர் அதைக் கண்டுபிடிப்போம்!",
+    "spoken": "எனவே 16 என்பது 8 ஆகி, பின்னர் 4 ஆகி, பின்னர் 2 ஆகி, பின்னர் அதைக் கண்டுபிடிப்போம்!"
+  },
+  "821b54dbc17fbe5d2262b671e5b95d88bc70cae2": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "முதலில் நாம் mid ஐ உருவாக்குகிறோம், நாம் இன்னும் தேடும் பகுதியின் நடுவில்.",
+    "spoken": "முதலில் நாம் மிட் ஐ உருவாக்குகிறோம், நாம் இன்னும் தேடும் பகுதியின் நடுவில்."
+  },
+  "34a3d87635331bc24ab7cf59b5415951de1d3fa1": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "mid இல் உள்ள item என்பது target க்கு சமமாக இருந்தால், நாம் mid ஐத் திருப்பித் தருகிறோம்.",
+    "spoken": "மிட் இல் உள்ள ஐட்டம் என்பது டார்கெட் க்கு சமமாக இருந்தால், நாம் மிட் ஐத் திருப்பித் தருகிறோம்."
+  },
+  "2ddd35997567d97092a5472a79e33e068700cb83": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இது மிகவும் சிறியதாக இருந்தால், நாம் மீண்டும் குறைந்த கடந்த mid மற்றும் loop ஐ நகர்த்துகிறோம்.",
+    "spoken": "இது மிகவும் சிறியதாக இருந்தால், நாம் மீண்டும் குறைந்த கடந்த மிட் மற்றும் லூப் ஐ நகர்த்துகிறோம்."
+  },
+  "0c26e0decd93064c974702cebc54967c7b0f767a": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "மறுபரிசீலனை செய்ய, binary search நடுத்தரத்தை சரிபார்த்து ஒவ்வொரு முறையும் பாதியை எறிகிறார்.",
+    "spoken": "மறுபரிசீலனை செய்ய, பைனரி சர்ச் நடுத்தரத்தை சரிபார்த்து ஒவ்வொரு முறையும் பாதியை எறிகிறார்."
+  },
+  "2d7f8ca69a7130ba904323c4513ad6eddc8b28f9": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "ஒரு மில்லியன் items இல் ஒரு list க்கு கூட சுமார் இருபது காசோலைகள் மட்டுமே தேவைப்படுகின்றன.",
+    "spoken": "ஒரு மில்லியன் ஐட்டம்கள் இல் ஒரு லிஸ்ட் க்கு கூட சுமார் இருபது காசோலைகள் மட்டுமே தேவைப்படுகின்றன."
+  },
+  "f187a574b8f1e0411ac1933dab54a9e905bab8b7": {
+    "sample": "binary_search",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "நினைவில் கொள்ளுங்கள், list முதலில் sorted ஆக இருக்க வேண்டும்!",
+    "spoken": "நினைவில் கொள்ளுங்கள், லிஸ்ட் முதலில் சார்ட்டெட் ஆக இருக்க வேண்டும்!"
+  },
+  "d1e7224951654a92e20b532c8b6cd548b386f11f": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இன்று நாம் photosynthesis எவ்வாறு செயல்படுகிறது என்பதைக் கற்றுக்கொள்வோம்.",
+    "spoken": "இன்று நாம் போட்டோசிந்தசிஸ் எவ்வாறு செயல்படுகிறது என்பதைக் கற்றுக்கொள்வோம்."
+  },
+  "edb91cbd1fc9554e8cae4b51d314b89f0a80ec4c": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "பச்சை தாவரங்கள் சூரிய ஒளியிலிருந்து தங்கள் சொந்த உணவை உருவாக்குவது இப்படித்தான்.",
+    "spoken": "பச்சை தாவரங்கள் சூரிய ஒளியிலிருந்து தங்கள் சொந்த உணவை உருவாக்குவது இப்படித்தான்."
+  },
+  "fff0be579a4fbc33d4d574e43cf0fa72a7b9dc84": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "ஒரு தாவரத்திற்கு மூன்று பொருட்கள் தேவை.",
+    "spoken": "ஒரு தாவரத்திற்கு மூன்று பொருட்கள் தேவை."
+  },
+  "2f05023e07fa25ba37daf78dcd3beff8cfee14e5": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "முதலாவதாக, சூரியனில் இருந்து வரும் ஒளி.",
+    "spoken": "முதலாவதாக, சூரியனில் இருந்து வரும் ஒளி."
+  },
+  "b22f70a5fd10a986863a5fbfca8b6206369c40b3": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இரண்டாவதாக, மண்ணில் இருந்து தண்ணீர், மூன்றாவதாக, காற்றில் இருந்து carbon dioxide.",
+    "spoken": "இரண்டாவதாக, மண்ணில் இருந்து தண்ணீர், மூன்றாவதாக, காற்றில் இருந்து கார்பன் டையாக்சைடு."
+  },
+  "fe514a0c96689730cd19bca51376466c06f16540": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இலைக்குள், பச்சை chlorophyll சூரிய ஒளியைப் பயன்படுத்தி carbon dioxide ஐ தாவரத்தின் உணவாக glucose ஆக மாற்றுகிறது.",
+    "spoken": "இலைக்குள், பச்சை குளோரோஃபில் சூரிய ஒளியைப் பயன்படுத்தி கார்பன் டையாக்சைடு ஐ தாவரத்தின் உணவாக குளுக்கோஸ் ஆக மாற்றுகிறது."
+  },
+  "5b2a354babf0b9e9e5263941aea0d03854314ad3": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இது விலங்குகள் மற்றும் மக்கள் சுவாசிக்கும் oxygen ஐ உருவாக்குகிறது.",
+    "spoken": "இது விலங்குகள் மற்றும் மக்கள் சுவாசிக்கும் ஆக்சிஜன் ஐ உருவாக்குகிறது."
+  },
+  "b738b37a8c0456d49a76ce404db8cfe8f0efd572": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "நாம் carbon dioxide ஐ சுவாசிக்கிறோம், தாவரங்கள் அதை மீண்டும் எடுத்துக்கொள்கின்றன, எனவே சுழற்சி தொடர்கிறது.",
+    "spoken": "நாம் கார்பன் டையாக்சைடு ஐ சுவாசிக்கிறோம், தாவரங்கள் அதை மீண்டும் எடுத்துக்கொள்கின்றன, எனவே சுழற்சி தொடர்கிறது."
+  },
+  "ab5ed2efff4a6ced5061ddfcbd9aa26f64273278": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "மறுபரிசீலனை செய்ய, தாவரங்கள் சூரிய ஒளி, நீர் மற்றும் glucose ஐ உருவாக்க carbon dioxide ஐப் பயன்படுத்துகின்றன.",
+    "spoken": "மறுபரிசீலனை செய்ய, தாவரங்கள் சூரிய ஒளி, நீர் மற்றும் குளுக்கோஸ் ஐ உருவாக்க கார்பன் டையாக்சைடு ஐப் பயன்படுத்துகின்றன."
+  },
+  "88a36c7c43ad58a886c473ff47e5f97905bfaa81": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "நாம் சுவாசிக்கும் oxygen ஐ அவை நமக்கு வழங்குகின்றன.",
+    "spoken": "நாம் சுவாசிக்கும் ஆக்சிஜன் ஐ அவை நமக்கு வழங்குகின்றன."
+  },
+  "ef8b620463672dd824b60bbd7eeada7cbd6e1fa8": {
+    "sample": "photosynthesis",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "அடுத்த முறை நீங்கள் ஒரு பச்சை இலையைப் பார்க்கும்போது, photosynthesis ஐ நினைவில் கொள்ளுங்கள்!",
+    "spoken": "அடுத்த முறை நீங்கள் ஒரு பச்சை இலையைப் பார்க்கும்போது, போட்டோசிந்தசிஸ் ஐ நினைவில் கொள்ளுங்கள்!"
+  },
+  "051f8de6165af1ff21365af3fdacb83621a7c8a0": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இன்று Pythagorean theorem பற்றி கற்றுக்கொள்வோம்.",
+    "spoken": "இன்று பித்தகோரஸ் தேற்றம் பற்றி கற்றுக்கொள்வோம்."
+  },
+  "ec393e88a24b6bcbc3e590ccd4e35409ef1d090d": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "செங்கோண முக்கோணத்தின் பக்கங்கள் ஒன்றுக்கொன்று எப்படித் தொடர்புடையவை என்பதை இது சொல்கிறது.",
+    "spoken": "செங்கோண முக்கோணத்தின் பக்கங்கள் ஒன்றுக்கொன்று எப்படித் தொடர்புடையவை என்பதை இது சொல்கிறது."
+  },
+  "96a56314dba4456fae7e9965f82cf1a12c0bdc77": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "செங்கோண முக்கோணத்தில் ஒரு மூலை நேராக இருக்கும், மூன்று பக்கங்கள் இருக்கும்.",
+    "spoken": "செங்கோண முக்கோணத்தில் ஒரு மூலை நேராக இருக்கும், மூன்று பக்கங்கள் இருக்கும்."
+  },
+  "8f1ee7a0d3e1ae5ab7d97f6944eb774a12e451b9": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இரண்டு சிறிய பக்கங்களை a மற்றும் b என்கிறோம்.",
+    "spoken": "இரண்டு சிறிய பக்கங்களை ஏ மற்றும் பி என்கிறோம்."
+  },
+  "d0d4c860c6e9b13d8e40b9015aa0d689cb862ce4": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "நேர் மூலைக்கு எதிரே உள்ள மிக நீளமான பக்கம் கர்ணம் c ஆகும்.",
+    "spoken": "நேர் மூலைக்கு எதிரே உள்ள மிக நீளமான பக்கம் கர்ணம் சி ஆகும்."
+  },
+  "ba950882ef7438506309f2eac9fa82422c461a79": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "விதி மிக எளிது.",
+    "spoken": "விதி மிக எளிது."
+  },
+  "ab62b877a090d4b81bd77bc7774b2bdd6ddb34a1": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "பக்கம் a-யின் வர்க்கத்தையும், பக்கம் b-யின் வர்க்கத்தையும் எடுத்துக் கூட்டுங்கள்.",
+    "spoken": "பக்கம் ஏ-யின் வர்க்கத்தையும், பக்கம் பி-யின் வர்க்கத்தையும் எடுத்துக் கூட்டுங்கள்."
+  },
+  "4a8c9ee6d7a8a358ae4b8278b98b4594dcf9d7b4": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "விடை c-யின் வர்க்கத்திற்குச் சமம்.",
+    "spoken": "விடை சி-யின் வர்க்கத்திற்குச் சமம்."
+  },
+  "fbe34f3da978e2ba3df617c10e38308d4cc8f44a": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "3 மற்றும் 4 பக்கங்கள் கொண்ட முக்கோணத்தை எடுங்கள்.",
+    "spoken": "3 மற்றும் 4 பக்கங்கள் கொண்ட முக்கோணத்தை எடுங்கள்."
+  },
+  "c50bc7941ce136f7ae62ea712ff2a4ca416f70c8": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "9 கூட்டல் 16 என்பது 25, எனவே c என்பது 5.",
+    "spoken": "9 கூட்டல் 16 என்பது 25, எனவே சி என்பது 5."
+  },
+  "2c03b99cc5363236b42251213073645f0396a808": {
+    "sample": "pythagorean_theorem",
+    "engine": "parler",
+    "voice": "jaya",
+    "caption": "இப்போது எந்த செங்கோண முக்கோணத்திலும் விடுபட்ட பக்கத்தைக் கண்டுபிடிக்கலாம்!",
+    "spoken": "இப்போது எந்த செங்கோண முக்கோணத்திலும் விடுபட்ட பக்கத்தைக் கண்டுபிடிக்கலாம்!"
+  }
+}

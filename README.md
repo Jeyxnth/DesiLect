@@ -6,8 +6,8 @@
 make setup
 .venv/Scripts/python -m pip install torch --index-url https://download.pytorch.org/whl/cpu   # CPU-only build
 .venv/Scripts/python -m pip install -r backend/requirements-models.txt
-.venv/Scripts/hf auth login            # once: IndicTrans2 is gated (accept its terms on huggingface.co first)
-.venv/Scripts/python scripts/download_models.py kokoro ollama indictrans2   # one-time, needs network (H2 exception)
+.venv/Scripts/hf auth login            # once: IndicTrans2 and Indic Parler-TTS are gated (accept their terms on huggingface.co first)
+.venv/Scripts/python scripts/download_models.py kokoro ollama indictrans2 indic-parler-tts   # one-time, needs network (H2 exception)
 python scripts/doctor.py --smoke                         # preflight: checks every dependency, prints the fix for each gap
 ```
 
@@ -49,6 +49,7 @@ with a GPU Ollama is about 4x faster. Set `OLLAMA_NUM_GPU=0` in `.env` to measur
 | eSpeak NG (via espeakng-loader) | phonemes | GPL-3.0-or-later |
 | ONNX Runtime, NumPy, soundfile | CPU inference, audio | MIT / BSD-3-Clause |
 | IndicTrans2 en-indic dist-200M + IndicTransToolkit (PyTorch CPU) | English -> Hindi / Tamil translation | MIT |
+| Indic Parler-TTS (`ai4bharat/indic-parler-tts`) + parler-tts | Tamil TTS (voice `jaya`) | Apache-2.0 |
 | Noto Sans, Noto Sans Mono (bundled in `frontend/public/fonts`) | UI, captions, code | SIL Open Font License 1.1 |
 
 Full list: `LICENSES.md`.
@@ -57,6 +58,56 @@ Full list: `LICENSES.md`.
 > Made by the IndicTrans2 pipeline (step 8): `shared/samples/photosynthesis.{hi,ta}.json`, `shared/samples/binary_search.{hi,ta}.json`.
 > Earlier machine-assisted drafts: `shared/samples/python_loop.{hi,ta}.json`, `shared/samples/pythagorean_theorem.{hi,ta}.json`.
 > Things to look at: word order around English terms kept by the glossary (e.g. "oxygen", "sorted list"), and diagram labels.
+
+## Voices (step 9)
+
+| Language | Engine | Voice | Notes |
+|---|---|---|---|
+| en | Kokoro (kokoro-onnx) | `hf_alpha` (female), `hm_omega` (male) | Indian-accented English: these Hindi voices speak en-us phonemes |
+| hi | Kokoro | `hf_alpha` (female), `hm_omega` (male) | Hindi phonemes; Latin words switch to English phonemes |
+| ta | Indic Parler-TTS | `jaya` (female) | `backend/app/tts/parler_engine.py`: CPU, float32, `local_files_only`, threads = physical cores, seed 0, one fixed speaker description per voice and speed |
+
+The registry (`backend/app/tts/registry.py`) keeps one engine loaded and `release_all()` unloads it after the voice stage. `list_voices(lang)`
+and the `voice` / `speed` arguments of `build_timeline` are what step 11 uses. Parler has no speed control, so speed changes its description
+("slowly", "a little fast"), which is a coarse effect; Kokoro takes a real speed value.
+
+**Spoken text vs captions.** Narration is spoken from `prepare_tts_text` (`backend/app/tts/prep.py`): in hi and ta, English terms are replaced by their
+Devanagari / Tamil spelling from `shared/glossary.json` -> `tts_translit` (e.g. loop -> लूप), backticks are dropped and `range(3)` is read "range 3".
+The caption always keeps the original text. Set `TTS_TRANSLIT=0` to speak the Latin words instead. Without the table Kokoro does not spell letters out
+(espeak switches to English phonemes), but the English words are then said in an English accent inside a Hindi sentence; compare the two with the
+A/B clips from step 9 and keep whichever sounds better to a Hindi speaker.
+
+**Per sentence audio.** Each sentence is synthesised alone, peak-normalised to -1 dBFS, trimmed of leading/trailing silence (30 ms kept, 4 ms fades) and
+cached in `outputs/cache/tts/` before it is timed, so cue starts are sentence starts and a scene ends at its last sentence's end plus the 0.6 s pause
+(`backend/tests/test_voice.py` checks this for every sample in en, hi and ta).
+
+**Fallback audio.** `python scripts/pregen_audio.py` writes the narration of the four bundled samples into `shared/tts_cache/` (16-bit FLAC, committed;
+manifest in `shared/tts_cache/manifest/<lang>.json`). Lookup order is `outputs/cache/tts`, then `shared/tts_cache`, then the engine, so a sample lesson
+needs no TTS at demo time. Re-run it after editing a sample, the transliteration table or `backend/app/tts/audio.py` (bump `POSTPROCESS_VERSION`).
+
+### Speed on this laptop (14 cores, 20 threads; not the weakest laptop)
+
+| Stage | Real-time factor (synthesis time / audio time) | Whole sample (4 scenes) |
+|---|---|---|
+| English, Kokoro | 0.25 | about 30 s for 154 s of audio over all four samples |
+| Hindi, Kokoro | 0.27 | about 54 s for 200 s of audio over all four samples |
+| Tamil, Indic Parler-TTS (14 threads, float32) | **5.36** | 262 s to voice the 52.5 s `python_loop` sample (12 sentences, about 22 s each); a 60 s lesson takes about 5.5 min. A second run over the other three samples (34 sentences, 22 min wall) measured **8.6**, so budget 5-9x |
+
+### Tamil voice: Plan B decision
+
+Rule: if Indic Parler-TTS is slower than 3x real time on the weakest laptop, add a second engine behind the same `TTSEngine` interface
+(AI4Bharat Indic-TTS FastPitch + HiFi-GAN) and select it with `TAMIL_TTS` in `.env`.
+
+**Measured (step 9):** Parler runs at **5.4x to 8.6x real time** on this 14-core development laptop, which is *not* the weakest one. Run
+`python -m app.timing.timeline --lang ta --no-cache` (from `backend/`) to repeat it; the result is in `outputs/lessons/<id>/timings.json`.
+**Decision: Plan B is needed for live Tamil generation.** The 3x limit is already broken here, and a smaller laptop will be slower still.
+
+Until Plan B exists:
+- The four bundled samples play in Tamil instantly from `shared/tts_cache/` (no engine loaded).
+- A new Tamil topic still works but is slow: budget 5.5 to 9 minutes of voicing for a 60 s lesson on this laptop. Tell the user before starting; do not demo it live.
+- `TAMIL_TTS` accepts only `parler`; other values raise a clear error rather than falling back silently.
+
+Plan B status: **not built.** Indic-TTS is run with the Coqui TTS toolkit, which as far as I know does not support this venv's Python 3.13 (not tried), so it is a task of its own.
 
 ## Tested laptops
 

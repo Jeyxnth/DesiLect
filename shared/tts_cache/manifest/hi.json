@@ -1,0 +1,324 @@
+{
+  "ffdc7642704216331b81c92a23e47f30ebf1dce4": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "नमस्ते!",
+    "spoken": "नमस्ते!"
+  },
+  "481c27da901624e805e84f3d4da5d5d13fde63c9": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "आज हम सीखेंगे कि Python में loop कैसे काम करता है।",
+    "spoken": "आज हम सीखेंगे कि पाइथन में लूप कैसे काम करता है।"
+  },
+  "a817b4ad445c092c492d471644e858b80e57a058": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Loop की मदद से प्रोग्राम एक ही काम को बार-बार करता है, और हमें वही कोड बार-बार नहीं लिखना पड़ता।",
+    "spoken": "लूप की मदद से प्रोग्राम एक ही काम को बार-बार करता है, और हमें वही कोड बार-बार नहीं लिखना पड़ता।"
+  },
+  "61eaee5da592e3914958868a73591f11bcdadb9f": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "यह एक सरल for loop है।",
+    "spoken": "यह एक सरल फॉर लूप है।"
+  },
+  "b434e3be27431f2d6b26fe2b57609e811fd934ef": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "range(3) हमें 0, 1 और 2 नंबर देता है।",
+    "spoken": "रेंज 3 हमें 0, 1 और 2 नंबर देता है।"
+  },
+  "1123676ad392a31538a4b82c83a6dcb05d542daa": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "हर नंबर के लिए variable i वही मान ले लेता है, और print उसे स्क्रीन पर दिखाता है।",
+    "spoken": "हर नंबर के लिए वेरिएबल आई वही मान ले लेता है, और प्रिंट उसे स्क्रीन पर दिखाता है।"
+  },
+  "7736d2e85ab44aa6d8315a2c568e15937b24b71c": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "देखिए loop कैसे चलता है।",
+    "spoken": "देखिए लूप कैसे चलता है।"
+  },
+  "95e0d8e18bc30992e24408f8f801239712851d6a": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "पहले i का मान 0 है, और print 0 दिखाता है।",
+    "spoken": "पहले आई का मान 0 है, और प्रिंट 0 दिखाता है।"
+  },
+  "b4dd40a6198be62b71b1c7ebbbf1b75b6ff4adeb": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "फिर i बनता है 1, फिर 2, और उसके बाद loop रुक जाता है।",
+    "spoken": "फिर आई बनता है 1, फिर 2, और उसके बाद लूप रुक जाता है।"
+  },
+  "d6afffe790d1863173a0552fd0d9ae857890e05a": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "संक्षेप में, loop हर मान के लिए एक ही कोड दोहराता है।",
+    "spoken": "संक्षेप में, लूप हर मान के लिए एक ही कोड दोहराता है।"
+  },
+  "c6dbad4967ad44f2e908593c8ed95261ad68e01c": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "कितनी बार चलाना है, यह range से तय होता है, और print से हर नतीजा दिखता है।",
+    "spoken": "कितनी बार चलाना है, यह रेंज से तय होता है, और प्रिंट से हर नतीजा दिखता है।"
+  },
+  "575f13d68603ffa02679f217305b74142d147463": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "अब range के अंदर की संख्या बदलकर खुद आज़माइए!",
+    "spoken": "अब रेंज के अंदर की संख्या बदलकर खुद आज़माइए!"
+  },
+  "2448dfe090c652c0f478602eaf0406c8208b1fd3": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "आपका स्वागत है!",
+    "spoken": "आपका स्वागत है!"
+  },
+  "83a918353c96d44a94d524d03adf712c6adf205f": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "आज हम binary search सीखेंगे।",
+    "spoken": "आज हम बाइनरी सर्च सीखेंगे।"
+  },
+  "ff76930026421021a671443b2131c0d53bc86add": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "यह बहुत जल्दी एक sorted list में एक item पाता है।",
+    "spoken": "यह बहुत जल्दी एक सॉर्टेड लिस्ट में एक आइटम पाता है।"
+  },
+  "42ce389971b1e7444b35ed58bbba48df8130ead7": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "16 sorted नंबरों से शुरू करें।",
+    "spoken": "16 सॉर्टेड नंबरों से शुरू करें।"
+  },
+  "a31934cfdb22d3542c5f17c09c50d6f24e41f8a1": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "प्रत्येक चेक बीच में देखता है और आधे हिस्से को गिरा देता है जो हमारी संख्या को नहीं पकड़ सकता है।",
+    "spoken": "प्रत्येक चेक बीच में देखता है और आधे हिस्से को गिरा देता है जो हमारी संख्या को नहीं पकड़ सकता है।"
+  },
+  "4e0f7621306e5c4c9621afba8495d1c0e2c1cc29": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "तो 16 बन जाता है 8, फिर 4, फिर 2, और फिर हम इसे पाते हैं!",
+    "spoken": "तो 16 बन जाता है 8, फिर 4, फिर 2, और फिर हम इसे पाते हैं!"
+  },
+  "65be2aa99ca60e910d35d105d1ddf7e253aef3a1": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "पहले हम mid पर काम करते हैं, उस हिस्से के बीच में जिसे हम अभी भी खोजते हैं।",
+    "spoken": "पहले हम मिड पर काम करते हैं, उस हिस्से के बीच में जिसे हम अभी भी खोजते हैं।"
+  },
+  "bae11657e51f3735d815226f0f1cf1e5227874e6": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "यदि mid पर item, target के बराबर है, तो हम mid लौटाते हैं।",
+    "spoken": "यदि मिड पर आइटम, टारगेट के बराबर है, तो हम मिड लौटाते हैं।"
+  },
+  "f55d47373cfb27f4b956f37898dd3e279fb391d3": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "यदि यह बहुत छोटा है, तो हम फिर से mid और loop को नीचे ले जाते हैं।",
+    "spoken": "यदि यह बहुत छोटा है, तो हम फिर से मिड और लूप को नीचे ले जाते हैं।"
+  },
+  "5f192ee00a445e95d374014126d05107cf6f1cd5": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "रीकैप करने के लिए, binary search बीच की जाँच करता है और हर बार आधा फेंक देता है।",
+    "spoken": "रीकैप करने के लिए, बाइनरी सर्च बीच की जाँच करता है और हर बार आधा फेंक देता है।"
+  },
+  "e3d7531e5ba847669f6e98b48c92dcce3f8e3870": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "यहाँ तक कि दस लाख items में से एक list को भी केवल लगभग बीस चेक की आवश्यकता होती है।",
+    "spoken": "यहाँ तक कि दस लाख आइटम्स में से एक लिस्ट को भी केवल लगभग बीस चेक की आवश्यकता होती है।"
+  },
+  "9c67f613524ffaae5c0c7fbac066da11adec2f16": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "बस याद रखें, list पहले sorted होना चाहिए!",
+    "spoken": "बस याद रखें, लिस्ट पहले सॉर्टेड होना चाहिए!"
+  },
+  "87a66b4948309201f551d4da532ea4f79317dedc": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "आज हम सीखेंगे कि photosynthesis कैसे काम करता है।",
+    "spoken": "आज हम सीखेंगे कि फोटोसिंथेसिस कैसे काम करता है।"
+  },
+  "f315b889fe30a1046b0d0338d5a8db74292487cc": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "इस तरह हरे पौधे सूरज की रोशनी से अपना भोजन खुद बनाते हैं।",
+    "spoken": "इस तरह हरे पौधे सूरज की रोशनी से अपना भोजन खुद बनाते हैं।"
+  },
+  "a2675cb22b943a52e423cd97ec7fe7df32a51c95": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "एक पौधे को तीन चीजों की आवश्यकता होती है।",
+    "spoken": "एक पौधे को तीन चीजों की आवश्यकता होती है।"
+  },
+  "0e109ac3aa3ea35139f8567666c6b66d2b79fa52": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "सबसे पहले, सूर्य से प्रकाश।",
+    "spoken": "सबसे पहले, सूर्य से प्रकाश।"
+  },
+  "3484d544907225fd1bd6d65afd7840946a4639fb": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "दूसरा, मिट्टी से पानी, और तीसरा, हवा से carbon dioxide।",
+    "spoken": "दूसरा, मिट्टी से पानी, और तीसरा, हवा से कार्बन डाइऑक्साइड।"
+  },
+  "4901485153ade4993b3bc088910647fb93c9eb2d": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "पत्ते के अंदर, हरा chlorophyll सूरज की रोशनी का उपयोग करके carbon dioxide को glucose में बदल देता है, जो पौधे का भोजन है।",
+    "spoken": "पत्ते के अंदर, हरा क्लोरोफिल सूरज की रोशनी का उपयोग करके कार्बन डाइऑक्साइड को ग्लूकोज़ में बदल देता है, जो पौधे का भोजन है।"
+  },
+  "9ed8320155d3ed70207d93ffaba4f06fafc3f264": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "यह oxygen भी बनाता है, जिसमें जानवर और लोग सांस लेते हैं।",
+    "spoken": "यह ऑक्सीजन भी बनाता है, जिसमें जानवर और लोग सांस लेते हैं।"
+  },
+  "d6554747d71d1180280074effeb2cf099c3b034e": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "हम carbon dioxide सांस छोड़ते हैं, और पौधे इसे फिर से अंदर ले जाते हैं, इसलिए चक्र चलता रहता है।",
+    "spoken": "हम कार्बन डाइऑक्साइड सांस छोड़ते हैं, और पौधे इसे फिर से अंदर ले जाते हैं, इसलिए चक्र चलता रहता है।"
+  },
+  "d457e9b5dee16af555477e3f74d7ed85cd4bded8": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "पुनर्कथन के लिए, पौधे सूर्य के प्रकाश, पानी और glucose बनाने के लिए carbon dioxide का उपयोग करते हैं।",
+    "spoken": "पुनर्कथन के लिए, पौधे सूर्य के प्रकाश, पानी और ग्लूकोज़ बनाने के लिए कार्बन डाइऑक्साइड का उपयोग करते हैं।"
+  },
+  "cc0008cb4ac008f878ecebb739df65169932472c": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "वे हमें वह oxygen भी देते हैं जिसमें हम सांस लेते हैं।",
+    "spoken": "वे हमें वह ऑक्सीजन भी देते हैं जिसमें हम सांस लेते हैं।"
+  },
+  "33a13a76b0e0969c950a167b2ebbb57797b5089f": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "अगली बार जब आप कोई हरा पत्ता देखें, तो याद रखें photosynthesis!",
+    "spoken": "अगली बार जब आप कोई हरा पत्ता देखें, तो याद रखें फोटोसिंथेसिस!"
+  },
+  "0f40e019dbb07b909a6cfe5dd0389f49452e3574": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "आज हम Pythagorean theorem सीखेंगे।",
+    "spoken": "आज हम पाइथागोरस प्रमेय सीखेंगे।"
+  },
+  "33a340f13677f2f828b44515978983069eaf0fd7": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "यह बताता है कि समकोण त्रिभुज की भुजाएँ आपस में कैसे जुड़ी हैं।",
+    "spoken": "यह बताता है कि समकोण त्रिभुज की भुजाएँ आपस में कैसे जुड़ी हैं।"
+  },
+  "57c57c470f94183882bd8a73a11790f5a916b695": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "समकोण त्रिभुज में एक कोना सीधा होता है और तीन भुजाएँ होती हैं।",
+    "spoken": "समकोण त्रिभुज में एक कोना सीधा होता है और तीन भुजाएँ होती हैं।"
+  },
+  "4316d38d10139c0867674789fe7562814e158d3b": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "दो छोटी भुजाओं को a और b कहते हैं।",
+    "spoken": "दो छोटी भुजाओं को ए और बी कहते हैं।"
+  },
+  "f7021a26f2395c3458762a1982ed5fc314e451e5": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "सबसे लंबी भुजा, जो सीधे कोने के सामने होती है, कर्ण c कहलाती है।",
+    "spoken": "सबसे लंबी भुजा, जो सीधे कोने के सामने होती है, कर्ण सी कहलाती है।"
+  },
+  "34918ab853ece2ecbe3159420eecea58df0dabd4": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "नियम बहुत सरल है।",
+    "spoken": "नियम बहुत सरल है।"
+  },
+  "dc6062735d9ccf1363d0f0ba4c7d97da6c8ddcfb": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "भुजा a का वर्ग लें, भुजा b का वर्ग लें और दोनों को जोड़ें।",
+    "spoken": "भुजा ए का वर्ग लें, भुजा बी का वर्ग लें और दोनों को जोड़ें।"
+  },
+  "6a0a2eed0c2ad1d12e9adfbfe286e5d7b0ea0d35": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "जवाब c के वर्ग के बराबर होता है।",
+    "spoken": "जवाब सी के वर्ग के बराबर होता है।"
+  },
+  "676f6c5208d3772b70b19438b0ee5ecb9a034f38": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "3 और 4 भुजाओं वाला त्रिभुज लें।",
+    "spoken": "3 और 4 भुजाओं वाला त्रिभुज लें।"
+  },
+  "9a9c8bb63b8c089788ef7c870bdaf42f9f8b14a6": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "तब 9 जोड़ 16 बराबर 25 है, इसलिए c का मान 5 है।",
+    "spoken": "तब 9 जोड़ 16 बराबर 25 है, इसलिए सी का मान 5 है।"
+  },
+  "89f201c47b9f20bc3778130559e987fc22bb01ca": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "अब आप किसी भी समकोण त्रिभुज की छूटी हुई भुजा निकाल सकते हैं!",
+    "spoken": "अब आप किसी भी समकोण त्रिभुज की छूटी हुई भुजा निकाल सकते हैं!"
+  }
+}

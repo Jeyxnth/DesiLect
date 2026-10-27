@@ -41,6 +41,23 @@ def download_kokoro(target: Path) -> None:
         tmp.replace(dest)
 
 
+def download_parler_description_tokenizer(target: Path) -> None:
+    """Indic Parler-TTS encodes its speaker description with its text encoder's tokenizer (tokenizer files
+    only, a few MB). Without a local copy the model would try to fetch it from the Hub at runtime (H2)."""
+    import json
+
+    from huggingface_hub import snapshot_download
+
+    origin = json.loads((target / "config.json").read_text(encoding="utf-8"))["text_encoder"]["_name_or_path"]
+    dest = target / "description_tokenizer"
+    print(f"  description tokenizer: {origin} -> {dest}")
+    snapshot_download(
+        repo_id=origin,
+        local_dir=dest,
+        allow_patterns=["tokenizer*", "spiece.model", "special_tokens_map.json", "added_tokens.json", "LICENSE*"],
+    )
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("models", nargs="*", help=f"subset of {', '.join(MODELS)} (default: all)")
@@ -81,6 +98,8 @@ def main() -> int:
             return 1
         try:
             snapshot_download(repo_id=repo, local_dir=target)
+            if name == "indic-parler-tts":
+                download_parler_description_tokenizer(target)
         except GatedRepoError:
             print(
                 f"\n{repo} is gated on Hugging Face. Once per machine:\n"

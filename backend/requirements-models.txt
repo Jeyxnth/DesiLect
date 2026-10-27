@@ -13,4 +13,8 @@ huggingface_hub>=0.23
 # the PyPI package must be compiled with a C compiler on Windows. These are its runtime dependencies.
 indic-nlp-library-itt>=0.1
 regex>=2024.0
-# TODO(step 9): parler-tts
+
+# step 9: Indic Parler-TTS (Tamil). parler-tts is not on PyPI; install it from source (Apache-2.0), after torch/transformers above:
+#   pip install git+https://github.com/huggingface/parler-tts.git
+# It must not replace transformers==4.46.3 or pull a CUDA torch (check `pip list` afterwards).
+psutil>=5.9   # physical core count for torch.set_num_threads

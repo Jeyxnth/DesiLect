@@ -158,7 +158,8 @@ def test_no_cache_flag_resynthesises(env, tmp_path):
     assert FakeEngine.calls == 2 * n
 
 
-def test_tamil_not_wired_yet():
-    from app.tts.registry import get_engine
-    with pytest.raises(NotImplementedError, match="step 9"):
-        get_engine("ta")
+def test_tamil_engine_is_parler():
+    from app.tts.registry import get_engine, release_all
+    engine, voice = get_engine("ta")
+    assert (engine.name, voice) == ("parler", "jaya")  # object only; the model loads on the first cache miss
+    release_all()

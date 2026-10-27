@@ -20,3 +20,8 @@ Every model, voice, font and asset must be listed here (and in README) before it
 | SentencePiece / sacremoses / huggingface_hub | libraries | tokenisation; model download (download script only) | Apache-2.0 / MIT / Apache-2.0 | PyPI |
 | Noto Sans (`NotoSans-Regular.ttf`, `NotoSans-Bold.ttf`) | font | UI, headings, captions (Latin) | SIL Open Font License 1.1 (`frontend/public/fonts/OFL.txt`) | github.com/notofonts/notofonts.github.io (hinted TTF) |
 | Noto Sans Mono (`NotoSansMono-Regular.ttf`) | font | code in `code_walkthrough` scenes | SIL Open Font License 1.1 | github.com/notofonts/notofonts.github.io (hinted TTF) |
+| Indic Parler-TTS (`ai4bharat/indic-parler-tts`) | TTS model | Tamil narration (voice `jaya`) | Apache-2.0 (confirm on the model card when downloading) | Hugging Face `ai4bharat/indic-parler-tts` (AI4Bharat), gated, saved in `models/indic-parler-tts/` |
+| parler-tts | Python library | runs Indic Parler-TTS on CPU | Apache-2.0 | github.com/huggingface/parler-tts |
+| Description tokenizer of Indic Parler-TTS (its text encoder, `models/indic-parler-tts/description_tokenizer/`) | tokenizer files | encodes the fixed speaker description | Apache-2.0 | Hugging Face, repo named in the model's `config.json` (`text_encoder._name_or_path`) |
+| psutil | Python library | physical core count for `torch.set_num_threads` | BSD-3-Clause | PyPI |
+| Pre-generated fallback narration (`shared/tts_cache/*.flac`) | generated audio | sample lessons play with no TTS at demo time | output of the Kokoro (Apache-2.0) and Indic Parler-TTS models above; our own text | `scripts/pregen_audio.py` |

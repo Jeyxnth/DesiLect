@@ -17,5 +17,32 @@
   "preferred": {
     "hi": { "program": "प्रोग्राम", "screen": "स्क्रीन" },
     "ta": { "program": "program", "screen": "திரை" }
+  },
+  "tts_translit": {
+    "_comment": "Spoken form of English terms, used for the TTS text only (step 9); captions keep the original. Whole-word, case-insensitive, longer keys win. Single letters are variable names such as i, a, b, c.",
+    "hi": {
+      "Python": "पाइथन", "JavaScript": "जावास्क्रिप्ट", "for loop": "फॉर लूप", "while loop": "वाइल लूप",
+      "if statement": "इफ स्टेटमेंट", "binary search": "बाइनरी सर्च", "Pythagorean theorem": "पाइथागोरस प्रमेय",
+      "carbon dioxide": "कार्बन डाइऑक्साइड", "loops": "लूप्स", "loop": "लूप", "range": "रेंज", "print": "प्रिंट",
+      "variables": "वेरिएबल्स", "variable": "वेरिएबल", "function": "फंक्शन", "lists": "लिस्ट्स", "list": "लिस्ट",
+      "string": "स्ट्रिंग", "code": "कोड", "True": "ट्रू", "False": "फॉल्स", "None": "नन", "len": "लेन",
+      "append": "अपेंड", "array": "ऐरे", "items": "आइटम्स", "item": "आइटम", "index": "इंडेक्स", "target": "टारगेट",
+      "mid": "मिड", "sorted": "सॉर्टेड", "for": "फॉर", "algorithm": "एल्गोरिद्म", "photosynthesis": "फोटोसिंथेसिस",
+      "chlorophyll": "क्लोरोफिल", "glucose": "ग्लूकोज़", "oxygen": "ऑक्सीजन", "CO2": "सी ओ टू",
+      "hypotenuse": "हाइपोटेन्यूज़", "theorem": "थ्योरम", "carbon": "कार्बन", "dioxide": "डाइऑक्साइड",
+      "a": "ए", "b": "बी", "c": "सी", "i": "आई", "j": "जे", "k": "के", "n": "एन", "x": "एक्स", "y": "वाई"
+    },
+    "ta": {
+      "Python": "பைதான்", "JavaScript": "ஜாவாஸ்கிரிப்ட்", "for loop": "ஃபார் லூப்", "while loop": "வொயில் லூப்",
+      "if statement": "இஃப் ஸ்டேட்மென்ட்", "binary search": "பைனரி சர்ச்", "Pythagorean theorem": "பித்தகோரஸ் தேற்றம்",
+      "carbon dioxide": "கார்பன் டையாக்சைடு", "loops": "லூப்கள்", "loop": "லூப்", "range": "ரேஞ்ச்", "print": "பிரிண்ட்",
+      "variables": "வேரியபிள்கள்", "variable": "வேரியபிள்", "function": "ஃபங்ஷன்", "lists": "லிஸ்ட்கள்", "list": "லிஸ்ட்",
+      "string": "ஸ்ட்ரிங்", "code": "கோட்", "True": "ட்ரூ", "False": "ஃபால்ஸ்", "None": "நன்", "len": "லென்",
+      "append": "அபெண்ட்", "array": "அரே", "items": "ஐட்டம்கள்", "item": "ஐட்டம்", "index": "இண்டெக்ஸ்", "target": "டார்கெட்",
+      "mid": "மிட்", "sorted": "சார்ட்டெட்", "for": "ஃபார்", "algorithm": "அல்காரிதம்", "photosynthesis": "போட்டோசிந்தசிஸ்",
+      "chlorophyll": "குளோரோஃபில்", "glucose": "குளுக்கோஸ்", "oxygen": "ஆக்சிஜன்", "CO2": "சி ஓ டூ",
+      "hypotenuse": "ஹைப்போடென்யூஸ்", "theorem": "தேற்றம்", "carbon": "கார்பன்", "dioxide": "டையாக்சைடு",
+      "a": "ஏ", "b": "பி", "c": "சி", "i": "ஐ", "j": "ஜே", "k": "கே", "n": "என்", "x": "எக்ஸ்", "y": "வை"
+    }
   }
 }

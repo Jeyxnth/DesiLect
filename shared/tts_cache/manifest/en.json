@@ -1,0 +1,317 @@
+{
+  "0c263f0106da80d033414de024a211f72761985f": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Welcome!",
+    "spoken": "Welcome!"
+  },
+  "4a56295016f2f850ab2952387dc2d760939bba3c": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Today we will learn how a Python loop works.",
+    "spoken": "Today we will learn how a Python loop works."
+  },
+  "4168c1b5c8152a980326296f47232821609ed8ba": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "A loop lets your program repeat a task again and again, without writing the same code many times.",
+    "spoken": "A loop lets your program repeat a task again and again, without writing the same code many times."
+  },
+  "068668863b17b08b1b25c6c9c8a5cdfde9ef2b70": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Here is a simple for loop.",
+    "spoken": "Here is a simple for loop."
+  },
+  "8d6e99700eab24e5618858eb1deb03e2a5f5b39b": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "The range(3) call gives us the numbers 0, 1 and 2.",
+    "spoken": "The range 3 call gives us the numbers 0, 1 and 2."
+  },
+  "c585b44ce4cb9a5ad6075b4e9e5abcd945730516": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "For each number, the variable i takes that value, and print shows it on the screen.",
+    "spoken": "For each number, the variable i takes that value, and print shows it on the screen."
+  },
+  "fd124f7eafb35a1057ed93d65aa537a0a6854f2d": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Watch how the loop runs.",
+    "spoken": "Watch how the loop runs."
+  },
+  "b8405c759f334195ebbb07a130f94e643e4de93a": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "First, i is 0, and print shows 0.",
+    "spoken": "First, i is 0, and print shows 0."
+  },
+  "e881877d188ebc5ee534af764e0f73ac6ef12a7a": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Then i becomes 1, then 2, and after that the loop stops.",
+    "spoken": "Then i becomes 1, then 2, and after that the loop stops."
+  },
+  "f1df8d5e8dcd325d662e66eeec54824ff28c3c5e": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "To recap, a loop repeats the same code for every value.",
+    "spoken": "To recap, a loop repeats the same code for every value."
+  },
+  "fca4c68a688a64e8aa8e18fa7dbb8f8efb59b5c7": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Use range to say how many times, and print to see each result.",
+    "spoken": "Use range to say how many times, and print to see each result."
+  },
+  "5a414321a957604874a9cd4105a7d51013b360c2": {
+    "sample": "python_loop",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Now try changing the number inside range yourself!",
+    "spoken": "Now try changing the number inside range yourself!"
+  },
+  "671a636178e596f7a838b06fb534ffbae84a2776": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Today we will learn binary search.",
+    "spoken": "Today we will learn binary search."
+  },
+  "2dbd6109d40a59d56358b1f1e0799342704ace43": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "It finds an item in a sorted list very quickly.",
+    "spoken": "It finds an item in a sorted list very quickly."
+  },
+  "e093530cd9ab33b1939c4d5791cc8c68270b44bc": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Start with 16 sorted numbers.",
+    "spoken": "Start with 16 sorted numbers."
+  },
+  "fe0383094a47efee5fc0c43097562df2e5806dd2": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Each check looks at the middle and drops the half that cannot hold our number.",
+    "spoken": "Each check looks at the middle and drops the half that cannot hold our number."
+  },
+  "e9f3c41e0edfff4b78e0d5b593a7162a3ad3bff9": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "So 16 becomes 8, then 4, then 2, and then we find it!",
+    "spoken": "So 16 becomes 8, then 4, then 2, and then we find it!"
+  },
+  "4a99275509d1055de3ac4a50cf408e1692524323": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "First we work out mid, the middle of the part we still search.",
+    "spoken": "First we work out mid, the middle of the part we still search."
+  },
+  "0525e8096211a284ff703384d93c41e5ad096002": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "If the item at mid equals the target, we return mid.",
+    "spoken": "If the item at mid equals the target, we return mid."
+  },
+  "b9a02598766d66b9c6266d6b005b83138590044d": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "If it is too small, we move low past mid and loop again.",
+    "spoken": "If it is too small, we move low past mid and loop again."
+  },
+  "a6a994123d574bbc3667576e5f05c5d7d54ad6c0": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "To recap, binary search checks the middle and throws away half each time.",
+    "spoken": "To recap, binary search checks the middle and throws away half each time."
+  },
+  "dce85f9eb8d31c9b9c28294daae946f440443fc8": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Even a list of one million items needs only about twenty checks.",
+    "spoken": "Even a list of one million items needs only about twenty checks."
+  },
+  "25bc92d18dbaa891f407f9d940f70d4b90ece196": {
+    "sample": "binary_search",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Just remember, the list must be sorted first!",
+    "spoken": "Just remember, the list must be sorted first!"
+  },
+  "cdcc97fc5555268ee8a2c184a296347c206013c6": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Today we will learn how photosynthesis works.",
+    "spoken": "Today we will learn how photosynthesis works."
+  },
+  "2c7a233c75682f80f26abc7d86bac1556aac9c9b": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "It is how green plants make their own food from sunlight.",
+    "spoken": "It is how green plants make their own food from sunlight."
+  },
+  "a908e665fd9260a9deac283a0837b1b314331c9b": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "A plant needs three things.",
+    "spoken": "A plant needs three things."
+  },
+  "cfdea35dd41ea4486b68177ef877aa708714e595": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "First, light from the sun.",
+    "spoken": "First, light from the sun."
+  },
+  "c61d53eb807c491013e30a61d9c18968a20d6fe1": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Second, water from the soil, and third, carbon dioxide from the air.",
+    "spoken": "Second, water from the soil, and third, carbon dioxide from the air."
+  },
+  "bb7e0d06c8227750bb09cc26a350730056b4a1e5": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Inside the leaf, green chlorophyll uses sunlight to turn carbon dioxide into glucose, the plant's food.",
+    "spoken": "Inside the leaf, green chlorophyll uses sunlight to turn carbon dioxide into glucose, the plant's food."
+  },
+  "fbdbb1f10eea69a87be384c2f26468fa0297b1f5": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "This also makes oxygen, which animals and people breathe in.",
+    "spoken": "This also makes oxygen, which animals and people breathe in."
+  },
+  "cede605596ddcc4ac00236ac760c19ed41efb9f1": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "We breathe out carbon dioxide, and plants take it in again, so the cycle goes on.",
+    "spoken": "We breathe out carbon dioxide, and plants take it in again, so the cycle goes on."
+  },
+  "11afc148692a9f9949cc2f9072f3fd93d79c4ba6": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "To recap, plants use sunlight, water and carbon dioxide to make glucose.",
+    "spoken": "To recap, plants use sunlight, water and carbon dioxide to make glucose."
+  },
+  "09ced3feb62bc0a7302e612221580ccb3dd52000": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "They also give us the oxygen we breathe.",
+    "spoken": "They also give us the oxygen we breathe."
+  },
+  "ae2283cf1e31b8cd07c7e5a18a941c39f04fee8c": {
+    "sample": "photosynthesis",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Next time you see a green leaf, remember photosynthesis!",
+    "spoken": "Next time you see a green leaf, remember photosynthesis!"
+  },
+  "1684d36980160d4791647650af10cdc687bd36cb": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Today we will learn the Pythagorean theorem.",
+    "spoken": "Today we will learn the Pythagorean theorem."
+  },
+  "dda4554dfbcac1af1ae959d6e79ed0693455d480": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "It tells us how the sides of a right triangle are related.",
+    "spoken": "It tells us how the sides of a right triangle are related."
+  },
+  "ce9c5325e7993a3747c100314bd99bd71a01a9c7": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "A right triangle has one square corner and three sides.",
+    "spoken": "A right triangle has one square corner and three sides."
+  },
+  "5617a99ebf3e4eaa2b4b79296ed22eb081937424": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "The two shorter sides are called a and b.",
+    "spoken": "The two shorter sides are called a and b."
+  },
+  "7f9fe09c24945472a57acbfe26a84a1870ce770b": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "The longest side, opposite the square corner, is called c, the hypotenuse.",
+    "spoken": "The longest side, opposite the square corner, is called c, the hypotenuse."
+  },
+  "a1e0db9bb857cb24eea87aa99fee32c29f376535": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "The rule is simple.",
+    "spoken": "The rule is simple."
+  },
+  "4fcaced91b3355eab2a43dfb06985a10521b66de": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Square side a, square side b, and add them together.",
+    "spoken": "Square side a, square side b, and add them together."
+  },
+  "ffb7722faac370f7f95b282e4044c5b4e19f0626": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "The result equals c squared.",
+    "spoken": "The result equals c squared."
+  },
+  "ccb4b3d69d02079518f00ee2af5599788004c0c6": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Try a triangle with sides 3 and 4.",
+    "spoken": "Try a triangle with sides 3 and 4."
+  },
+  "5bdd032b538e2700aff5bb5675f3cc4aed196cbb": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Then 9 plus 16 is 25, so c is 5.",
+    "spoken": "Then 9 plus 16 is 25, so c is 5."
+  },
+  "34c3c177ea13efb3109b04c4f33200595c44993a": {
+    "sample": "pythagorean_theorem",
+    "engine": "kokoro",
+    "voice": "hf_alpha",
+    "caption": "Now you can find a missing side of any right triangle!",
+    "spoken": "Now you can find a missing side of any right triangle!"
+  }
+}

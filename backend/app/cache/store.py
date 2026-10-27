@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, Iterator
 
-from ..config import get_settings
+from ..config import SHARED_DIR, get_settings
 
 log = logging.getLogger("blu.store")
 
@@ -69,9 +69,13 @@ def cache_key(*parts: str) -> str:
     return hashlib.sha256("\x1f".join(parts).encode("utf-8")).hexdigest()[:24]
 
 
-def tts_cache_path(engine: str, voice: str, lang: str, speed: float, text: str) -> Path:
-    """Cache file for one sentence: outputs/cache/tts/<sha1(engine, voice, lang, speed, text)>.wav."""
-    key = hashlib.sha1("\x1f".join([engine, voice, lang, f"{speed:.3f}", text]).encode("utf-8")).hexdigest()
+def tts_cache_path(engine: str, voice: str, lang: str, speed: float, text: str, variant: str = "") -> Path:
+    """Cache file for one sentence: outputs/cache/tts/<sha1(engine, voice, lang, speed, text[, variant])>.wav.
+
+    text is the spoken text. variant versions the audio processing so old entries become misses.
+    """
+    parts = [engine, voice, lang, f"{speed:.3f}", text] + ([variant] if variant else [])
+    key = hashlib.sha1("\x1f".join(parts).encode("utf-8")).hexdigest()
     root = get_settings().outputs_dir / "cache" / "tts"
     root.mkdir(parents=True, exist_ok=True)
     return root / f"{key}.wav"
@@ -98,17 +102,37 @@ def save_cached_text(path: Path, source: str, text: str) -> None:
     tmp.replace(path)
 
 
+BUNDLED_TTS_DIR = SHARED_DIR / "tts_cache"  # committed audio for the fallback samples (G2), read-only
+
+
+def bundled_tts_path(cache_path: Path) -> Path:
+    """The committed copy (FLAC) of a cache entry, same key as outputs/cache/tts/<key>.wav."""
+    return BUNDLED_TTS_DIR / f"{cache_path.stem}.flac"
+
+
 def load_cached_audio(path: Path) -> tuple[Any, int] | None:
-    """Return (float32 samples, sample_rate) if the cache file exists and reads cleanly."""
-    if not path.is_file():
-        return None
+    """Return (float32 samples, sample_rate) from outputs/cache/tts, else from the committed bundle."""
     import soundfile as sf
 
-    try:
-        data, sr = sf.read(path, dtype="float32")
-    except Exception:  # noqa: BLE001 - a corrupt cache entry is just a miss
-        return None
-    return data, int(sr)
+    for candidate in (path, bundled_tts_path(path)):
+        if not candidate.is_file():
+            continue
+        try:
+            data, sr = sf.read(candidate, dtype="float32")
+        except Exception:  # noqa: BLE001 - a corrupt cache entry is just a miss
+            continue
+        return data, int(sr)
+    return None
+
+
+def save_bundled_audio(cache_path: Path, samples: Any, sample_rate: int) -> Path:
+    """Write a cache entry into the committed bundle (lossless 16-bit FLAC). Used by scripts/pregen_audio.py."""
+    import soundfile as sf
+
+    dest = bundled_tts_path(cache_path)
+    dest.parent.mkdir(parents=True, exist_ok=True)
+    sf.write(dest, samples, sample_rate, subtype="PCM_16", format="FLAC")
+    return dest
 
 
 def save_cached_audio(path: Path, samples: Any, sample_rate: int) -> None:
