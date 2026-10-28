@@ -107,10 +107,11 @@ export default function PlayerPage({ id }: { id: string }) {
 
   const goHome = () => navigate("/");
   // Generate again (fallback or short lesson): the same request, planned afresh on the input page. Neither kind of lesson
-  // is in the reuse cache, so this never returns the same lesson.
+  // is in the reuse cache, so this never returns the same lesson; this lesson's MP4 export stops so the new one does not wait.
   const againTopic = job?.request?.topic ?? lesson?.meta?.topic;
   const generateAgain = againTopic ? () => navigate("/", {
     autostart: true,
+    replaces: id,
     prefill: job?.request ?? { topic: againTopic, level: lesson?.level ?? "beginner", language: lang,
       ...(lesson?.meta?.short_of ? { target_seconds: lesson.meta.short_of.target_seconds } : {}) },
   }) : undefined;

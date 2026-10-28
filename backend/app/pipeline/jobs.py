@@ -48,6 +48,7 @@ class Job:
     export_error: str | None = None  # MP4 failed; the lesson still plays
     export_progress: float | None = None  # 0..1 while the MP4 is captured (smooth mode), None before export starts
     export_mode: str | None = None  # "smooth" or "keyframe": how the MP4 was actually made
+    stop_export: bool = False  # set by Generate again on the lesson it replaces: its export stops at the next frame
     timings: dict[str, float] = field(default_factory=dict)  # finished stages, seconds
     stage_started: float = field(default_factory=time.time)
     created_at: float = field(default_factory=time.time)

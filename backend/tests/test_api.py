@@ -434,3 +434,53 @@ def test_voice_is_passed_to_the_engine_as_a_concrete_voice(monkeypatch):
     monkeypatch.setattr(orch, "build_timeline", record)
     wait_until_finished(client.post("/api/lessons", json={"topic": "loops", "voice": "male"}).json()["job_id"])
     assert voices == [("en", "hm_omega")]
+
+
+def test_generate_again_stops_the_replaced_export_so_the_new_lesson_does_not_wait(monkeypatch):
+    """Lesson A's export runs until it is told to stop; Generate again (replaces=A) must free the worker at once."""
+    from app.cache.store import lesson_dir
+    from app.pipeline.orchestrator import EXPORT_STOPPED
+
+    exporting: list[str] = []
+
+    def slow_export(lesson_id, base_url, on_progress=None, should_stop=None):
+        if exporting:  # lesson B: a normal, quick export
+            return
+        exporting.append(lesson_id)
+        (lesson_dir(lesson_id) / "lesson.mp4").write_bytes(b"half a file")
+        deadline = time.time() + 20
+        while time.time() < deadline:  # lesson A: a long export, as on a CPU laptop
+            if should_stop and should_stop():
+                from app.export.capture import ExportCancelled
+                raise ExportCancelled("stopped")
+            time.sleep(0.02)
+        raise AssertionError("the export was never told to stop")
+
+    stub_pipeline(monkeypatch, slow_export)
+    payload = {"topic": f"Generate again {uuid.uuid4().hex[:8]}", "level": "beginner", "language": "en"}
+    a = client.post("/api/lessons", json=payload).json()["lesson_id"]
+    for _ in range(200):  # wait until A is exporting
+        if exporting:
+            break
+        time.sleep(0.02)
+    assert exporting == [a]
+
+    start = time.time()
+    b = client.post(f"/api/lessons?replaces={a}", json=payload).json()["lesson_id"]
+    done_a = wait_until_finished(a)
+    assert time.time() - start < 3  # stopped at once, not after the 20 s export
+    assert done_a["export_error"] == EXPORT_STOPPED and done_a["status"]["mp4_ready"] is False
+    assert not (lesson_dir(a) / "lesson.mp4").exists()  # a cut-off MP4 must never look ready
+    assert json.loads((lesson_dir(a) / "export.json").read_text(encoding="utf-8"))["error"] == EXPORT_STOPPED
+    assert wait_until_finished(b)["state"] == "done"
+
+
+def test_replaces_never_stops_a_finished_export(monkeypatch):
+    from app.pipeline.jobs import JOBS
+
+    payload = {"topic": f"Finished {uuid.uuid4().hex[:8]}", "level": "beginner", "language": "en"}
+    done = run_job_with_ollama_down(monkeypatch, payload)
+    assert done["status"]["mp4_ready"] is True
+    client.post(f"/api/lessons?replaces={done['lesson_id']}", json=payload)
+    assert JOBS.get(done["lesson_id"]).stop_export is False
+    client.post("/api/lessons?replaces=no-such-lesson", json=payload)  # an unknown id is ignored

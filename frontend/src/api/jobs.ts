@@ -45,8 +45,9 @@ export function finished(job: Job): boolean {
   return job.state === "done" || job.state === "failed";
 }
 
-export async function createLesson(req: ConceptRequest): Promise<Job> {
-  const res = await fetch("/api/lessons", {
+/** replaces (Generate again): the lesson this one replaces; the server stops its MP4 export so this one does not wait. */
+export async function createLesson(req: ConceptRequest, replaces?: string): Promise<Job> {
+  const res = await fetch(`/api/lessons${replaces ? `?replaces=${encodeURIComponent(replaces)}` : ""}`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),

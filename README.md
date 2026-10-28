@@ -147,7 +147,8 @@ The planner's JSON is checked against `shared/schema/lesson.schema.json` plus co
 length, short distinct diagram labels, code at most 12 x 50, no markup, English only). A rejected first plan is retried once with
 the errors listed. On that last try, narration that is too short is kept rather than replaced by a sample, as long as it is at least 30 s
 (69 words): with a 3B model on a CPU, short narration was the most common reason a real lesson fell back. A fallback or short lesson never
-goes into the reuse cache, so Generate again really plans again. Failure drills for all of this: `.venv/Scripts/python scripts/drill.py` (`make drill`; see step 12 below).
+goes into the reuse cache, so Generate again really plans again. It also stops the replaced lesson's MP4 export (`POST /api/lessons?replaces=<id>`), so the
+new lesson starts at once instead of queueing behind it; that lesson keeps "export stopped" and a Retry export button. Failure drills for all of this: `.venv/Scripts/python scripts/drill.py` (`make drill`; see step 12 below).
 
 ## How audio sets timing
 

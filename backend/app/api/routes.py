@@ -103,14 +103,18 @@ def _start(req: ConceptRequest, plan_from: str | None = None) -> dict[str, Any]:
 
 
 @router.post("/lessons", status_code=202)
-def create_lesson(req: ConceptRequest) -> dict[str, Any]:
+def create_lesson(req: ConceptRequest, replaces: str | None = None) -> dict[str, Any]:
     """Queue the pipeline for a concept (one job runs at a time). Follow it with /lessons/{id}/events.
 
     A repeat of a request whose lesson finished (same topic, level, language, length, voice and speed) returns
-    that lesson at once with "cached": true.
+    that lesson at once with "cached": true. replaces (Generate again): the lesson this one replaces; if its MP4
+    is still exporting, the export stops, so the new lesson does not wait behind it.
     """
     if req.language not in LANGUAGES:
         raise HTTPException(422, "unsupported language")
+    old = JOBS.get(replaces) if replaces else None
+    if old is not None and not old.mp4_ready:
+        JOBS.update(old.id, stop_export=True)
     return _start(req)
 
 
@@ -193,7 +197,7 @@ def retry_export(lesson_id: str) -> dict[str, Any]:
     if QUEUE.busy(lesson_id):
         raise HTTPException(409, "this lesson is already queued or running")
     JOBS.adopt(lesson_id, state="done", stage="done", progress=1.0, timeline_ready=True)
-    JOBS.update(lesson_id, state="queued", export_error=None, mp4_ready=False)
+    JOBS.update(lesson_id, state="queued", export_error=None, mp4_ready=False, stop_export=False)
     QUEUE.submit(lesson_id, lambda: export_job(lesson_id))
     return _status(lesson_id)
 

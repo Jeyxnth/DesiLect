@@ -47,6 +47,15 @@ class ExportBudgetExceeded(RuntimeError):
     """Smooth capture ran past its time budget (the keyframe export takes over)."""
 
 
+class ExportCancelled(RuntimeError):
+    """The lesson was replaced (Generate again): its export stops so the new lesson does not wait behind it."""
+
+
+def _stop_if(should_stop: Callable[[], bool] | None) -> None:
+    if should_stop is not None and should_stop():
+        raise ExportCancelled("export stopped: a new lesson was asked for instead")
+
+
 class ExportCheckFailed(RuntimeError):
     """The encoded MP4 failed the ffprobe check (resolution, codecs, pixel format or duration)."""
 
@@ -88,6 +97,7 @@ def capture_keyframes(
     lesson_id: str,
     out_dir: Path,
     base_url: str = "http://localhost:8000",
+    should_stop: Callable[[], bool] | None = None,
 ) -> list[tuple[Path, float]]:
     """Photograph the render page at every keyframe.
 
@@ -115,6 +125,7 @@ def capture_keyframes(
             settle = float(page.evaluate("window.__settle ?? 0"))
             frames: list[tuple[Path, float]] = []
             for i, (k, t) in enumerate(zip(keyframes, capture_times(keyframes, total, settle)), start=1):
+                _stop_if(should_stop)
                 page.evaluate("(t) => window.__seek(t)", t)
                 png = frames_dir / f"k_{i:04d}.png"
                 page.screenshot(path=str(png))
@@ -132,11 +143,13 @@ def capture_smooth(
     fps: int = SMOOTH_FPS,
     budget_s: float | None = None,
     on_progress: Callable[[float], None] | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> tuple[Path, int]:
     """Smooth export: seek the render page every 1/fps s and pipe JPEG frames into ffmpeg (no frame files on disk).
 
     One page is reused; unchanged frames re-send the previous image (see fresh_frames). Raises ExportBudgetExceeded
-    when capture runs past budget_s. on_progress gets the captured fraction (0..1). Returns (mp4, new photos taken).
+    when capture runs past budget_s, ExportCancelled as soon as should_stop() is true (checked every frame).
+    on_progress gets the captured fraction (0..1). Returns (mp4, new photos taken).
     """
     from playwright.sync_api import sync_playwright
 
@@ -164,6 +177,7 @@ def capture_smooth(
             plan = fresh_frames(keyframes, total, settle, fps)
             image = b""
             for i, fresh in enumerate(plan):
+                _stop_if(should_stop)
                 if fresh:
                     page.evaluate("(t) => window.__seek(t)", i / fps)
                     image = page.screenshot(type="jpeg", quality=90)
@@ -265,6 +279,7 @@ def export_lesson(
     base_url: str,
     mode: CaptureMode = "smooth",
     on_progress: Callable[[float], None] | None = None,
+    should_stop: Callable[[], bool] | None = None,
 ) -> Path:
     """Capture the render page and encode outputs/lessons/<id>/lesson.mp4, then check it with ffprobe.
 
@@ -273,6 +288,7 @@ def export_lesson(
     export.json with the mode actually used. Raises ExportCheckFailed when the final MP4 is not 1280x720
     h264/yuv420p + aac with the timeline's duration (the bad file is renamed lesson.rejected.mp4).
     Needs timeline.json, lesson.wav and captions.srt in the lesson dir, and the app served at base_url.
+    should_stop: polled during capture; when true, ExportCancelled is raised (no keyframe fallback).
     """
     out_dir = lesson_dir(lesson_id, create=False)
     timeline = read_json(out_dir / "timeline.json")
@@ -283,17 +299,20 @@ def export_lesson(
         budget = smooth_budget(total)
         try:
             with timed_stage(lesson_id, "export_smooth"):
-                _, shots = capture_smooth(lesson_id, out_dir, base_url, SMOOTH_FPS, budget, on_progress)
+                _, shots = capture_smooth(lesson_id, out_dir, base_url, SMOOTH_FPS, budget, on_progress, should_stop)
             problems = check_mp4(mp4, total)
             if problems:
                 raise ExportCheckFailed("; ".join(problems))
             write_json(out_dir / "export.json", {"mode": "smooth", "fps": SMOOTH_FPS, "photos": shots, "budget_s": round(budget, 1)})
             return mp4
+        except ExportCancelled:
+            raise
         except Exception as exc:  # noqa: BLE001 - the keyframe export is the fallback
             smooth_failed = f"{type(exc).__name__}: {exc}"[:300]
             log.warning("smooth export failed (%s); falling back to keyframe export", smooth_failed)
     with timed_stage(lesson_id, "export_capture"):
-        frames = capture_keyframes(lesson_id, out_dir, base_url)
+        frames = capture_keyframes(lesson_id, out_dir, base_url, should_stop)
+    _stop_if(should_stop)
     with timed_stage(lesson_id, "export_encode"):
         encode_keyframes(frames, wav, srt, mp4, lang=timeline.get("language", "en"))
     problems = check_mp4(mp4, total)

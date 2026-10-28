@@ -10,7 +10,7 @@ from typing import Any, Callable
 from ..cache.store import (lesson_cache_key, lesson_dir, read_json, record_timing, record_value, remember_lesson, timed_stage,
                            write_json)
 from ..config import drill, get_settings
-from ..export.capture import ensure_frontend_built, export_lesson, local_server
+from ..export.capture import ExportCancelled, ensure_frontend_built, export_lesson, local_server
 from ..planner.fallback import add_static_next_topics, closest_sample, fallback_lesson
 from ..planner.ollama_client import OllamaClient, OllamaError, lesson_format_schema
 from ..planner.prompts import build_retry_prompt, build_system_prompt, build_user_prompt
@@ -279,10 +279,14 @@ def run_job(job_id: str, request: ConceptRequest | None = None) -> None:
     run_pipeline(job_id)
 
 
+EXPORT_STOPPED = "The MP4 export was stopped because a new lesson was asked for instead"
+
+
 def export_job(job_id: str, base_url: str | None = None) -> None:
     """Export the MP4 for a lesson whose timeline is ready (also used by Retry export). Never raises.
 
     The lesson already plays in the browser, so a failed MP4 is recorded as export_error, not a failed job.
+    A lesson replaced by Generate again (job.stop_export) stops exporting at once, so the new lesson does not wait.
     """
     JOBS.update(job_id, state="running", export_error=None, mp4_ready=False, export_progress=0.0, export_mode=None)
     _status(job_id, "export")
@@ -291,16 +295,27 @@ def export_job(job_id: str, base_url: str | None = None) -> None:
     def on_progress(fraction: float) -> None:
         JOBS.update(job_id, export_progress=fraction, progress=start + (1.0 - start) * fraction)
 
+    def should_stop() -> bool:
+        job = JOBS.get(job_id)
+        return job is not None and job.stop_export
+
     try:
+        if should_stop():  # replaced before its export began
+            raise ExportCancelled("export stopped: a new lesson was asked for instead")
         ensure_frontend_built()
         if base_url:
-            export_lesson(job_id, base_url, on_progress=on_progress)
+            export_lesson(job_id, base_url, on_progress=on_progress, should_stop=should_stop)
         else:
             with local_server() as url:
-                export_lesson(job_id, url, on_progress=on_progress)
+                export_lesson(job_id, url, on_progress=on_progress, should_stop=should_stop)
         info_path = lesson_dir(job_id) / "export.json"
         mode = read_json(info_path).get("mode") if info_path.is_file() else None
         JOBS.update(job_id, mp4_ready=True, export_progress=1.0, export_mode=mode)
+    except ExportCancelled:
+        log.info("export of %s stopped: replaced by a new lesson", job_id)
+        (lesson_dir(job_id) / "lesson.mp4").unlink(missing_ok=True)  # a cut-off file must never look ready
+        JOBS.update(job_id, export_error=EXPORT_STOPPED, export_progress=None)
+        write_json(lesson_dir(job_id) / "export.json", {"mode": None, "error": EXPORT_STOPPED})
     except Exception as exc:  # noqa: BLE001
         log.exception("export failed")
         JOBS.update(job_id, export_error=str(exc))

@@ -7,6 +7,7 @@ export interface NavState {
   autoplay?: boolean;
   prefill?: Partial<ConceptRequest>;
   autostart?: boolean;
+  replaces?: string; // Generate again: the lesson the new one replaces (its export is stopped)
 }
 
 const EVENT = "blu:navigate";

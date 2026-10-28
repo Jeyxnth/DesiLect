@@ -75,11 +75,12 @@ export default function InputPage() {
     );
   }, [jobId]);
 
-  const start = async (request: ConceptRequest) => {
+  /** replaces: Generate again's lesson id, whose MP4 export the server stops so this lesson starts at once. */
+  const start = async (request: ConceptRequest, replaces?: string) => {
     setError("");
     setJob(null);
     try {
-      setJob(await createLesson({ ...request, topic: request.topic.trim() }));
+      setJob(await createLesson({ ...request, topic: request.topic.trim() }, replaces));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       setError(msg === "Failed to fetch" ? "The backend is not reachable. Is the backend running?" : msg);
@@ -92,12 +93,12 @@ export default function InputPage() {
 
   // "Try next" from a finished lesson (bonus B2): topic, level and language pre-filled, generation starts at once.
   useEffect(() => {
-    const { prefill, autostart } = navState();
+    const { prefill, autostart, replaces } = navState();
     if (!prefill?.topic) return;
     const request = { ...req, ...prefill };
     setReq(request);
     window.history.replaceState({}, "", window.location.pathname); // a reload or Back must not start it again
-    if (autostart) void start(request);
+    if (autostart) void start(request, replaces);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -242,7 +243,7 @@ export default function InputPage() {
           <div className="job-bar"><div className="job-bar-fill" style={{ width: `${Math.round(job.status.progress * 100)}%` }} /></div>
           {job.status.fallback_used && (
             <FallbackNotice reason={job.status.fallback_reason} topic={job.request?.topic}
-              onRetry={job.request ? () => void start(job.request!) : undefined} />
+              onRetry={job.request ? () => void start(job.request!, job.job_id) : undefined} />
           )}
           <p className="job-note">The player opens and starts as soon as the narration is ready; the MP4 keeps exporting there.</p>
         </section>

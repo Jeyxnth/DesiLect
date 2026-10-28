@@ -56,7 +56,7 @@ def test_smooth_export_is_the_default_and_records_its_mode(lesson, monkeypatch):
     capture, out, ran = lesson
     budgets = []
 
-    def smooth(lesson_id, out_dir, base_url, fps, budget, on_progress):
+    def smooth(lesson_id, out_dir, base_url, fps, budget, on_progress, should_stop=None):
         budgets.append(budget)
         return out_dir / "lesson.mp4", 42
 
@@ -160,3 +160,46 @@ def test_export_smoke_full_sample_under_60s():
     assert (out / "captions.srt").is_file()
     assert info["subtitle_codec"] == "mov_text" and info["subtitle_language"] == "eng"  # soft caption track
     assert read_json(out / "export.json")["mode"] == "smooth"
+
+
+def test_a_stopped_export_does_not_fall_back_to_keyframes(lesson, monkeypatch):
+    """Generate again stops the replaced lesson's export: no keyframe export runs after it, and nothing is written."""
+    capture, out, ran = lesson
+
+    def smooth(*a, **k):
+        raise capture.ExportCancelled("export stopped: a new lesson was asked for instead")
+
+    monkeypatch.setattr(capture, "capture_smooth", smooth)
+    with pytest.raises(capture.ExportCancelled):
+        capture.export_lesson("x1", "http://x", should_stop=lambda: True)
+    assert ran == [] and not (out / "export.json").exists()
+
+
+@pytest.mark.skipif(_missing_prereq() is not None, reason=str(_missing_prereq()))
+def test_real_smooth_capture_stops_within_a_few_frames():
+    """The real browser capture polls should_stop every frame: it stops in well under a second, ffmpeg included."""
+    from app.export.capture import ExportCancelled, capture_smooth, local_server
+    from app.cache.store import lesson_dir
+
+    src = REPO_ROOT / "outputs" / "lessons" / "sample-en"
+    if not (src / "timeline.json").is_file():
+        pytest.skip("run make sample first")
+    lid = "test-stop-export"
+    out = lesson_dir(lid)
+    try:
+        for name in ("timeline.json", "lesson.wav", "captions.srt"):
+            shutil.copy(src / name, out / name)
+        if (src / "audio").is_dir():
+            shutil.copytree(src / "audio", out / "audio", dirs_exist_ok=True)
+        polls = []
+
+        def should_stop() -> bool:
+            polls.append(time.perf_counter())
+            return len(polls) > 5
+
+        with local_server() as url:
+            with pytest.raises(ExportCancelled):
+                capture_smooth(lid, out, url, should_stop=should_stop)
+        assert len(polls) == 6 and polls[-1] - polls[0] < 3  # stopped at the sixth frame, not at the end of 43 s
+    finally:
+        shutil.rmtree(out, ignore_errors=True)
