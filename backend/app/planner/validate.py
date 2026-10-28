@@ -17,6 +17,8 @@ from ..config import SCHEMA_DIR
 
 WORD_BUDGET_TOLERANCE = 0.25
 LAST_TRY_WORD_TOLERANCE = 0.5  # the last planner attempt: the timeline fits any length, so only reject a big miss
+WORDS_PER_SECOND = 2.3
+MIN_LESSON_WORDS = round(30 * WORDS_PER_SECOND)  # 30 s, the shortest lesson the app makes: a short last try is kept above this
 EN_ITEM_MAX, EN_LABEL_MAX = 24, 16  # English diagram text; the schema allows 48 / 32 for Indic scripts
 SCENE_TYPES = ("title_card", "diagram", "code_walkthrough")  # order of the oneOf branches in the schema
 
@@ -71,13 +73,15 @@ def _schema_errors(name: str, data: Any) -> list[str]:
     return sorted(set(out))
 
 
-def _words(lesson: dict[str, Any]) -> int:
+def narration_words(lesson: dict[str, Any]) -> int:
     scenes = lesson.get("scenes", [])
     return sum(len(str(s.get("narration", "")).split()) for s in scenes if isinstance(s, dict)) if isinstance(scenes, list) else 0
 
 
-def _semantic_errors(lesson: dict[str, Any], target_words: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE) -> list[str]:
-    """Checks JSON Schema cannot express."""
+def _semantic_errors(
+    lesson: dict[str, Any], target_words: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE, accept_short: bool = False
+) -> list[str]:
+    """Checks JSON Schema cannot express. accept_short: too little narration is only an error below MIN_LESSON_WORDS."""
     errors: list[str] = []
     scenes = [s for s in lesson.get("scenes", []) if isinstance(s, dict)] if isinstance(lesson.get("scenes"), list) else []
     if scenes and scenes[0].get("type") != "title_card":
@@ -117,8 +121,10 @@ def _semantic_errors(lesson: dict[str, Any], target_words: int | None = None, to
                 if isinstance(line_no, int) and line_no > len(lines):
                     errors.append(f"scenes/{i}/highlight_lines: line {line_no} but code has {len(lines)} lines")
     if target_words:
-        words = _words(lesson)
+        words = narration_words(lesson)
         lo, hi = round(target_words * (1 - tolerance)), round(target_words * (1 + tolerance))
+        if accept_short:
+            lo = min(lo, MIN_LESSON_WORDS)
         if not lo <= words <= hi:
             errors.append(f"narration has {words} words in total; it must be between {lo} and {hi} (about {target_words})")
     return errors
@@ -276,7 +282,9 @@ def extract_json_text(raw: str) -> str:
     return text
 
 
-def validate_lesson(data: Any, target_words: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE) -> list[str]:
+def validate_lesson(
+    data: Any, target_words: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE, accept_short: bool = False
+) -> list[str]:
     """Return a list of human-readable errors (empty means valid)."""
     errors = _schema_errors("lesson.schema.json", data)
     if not isinstance(data, dict):
@@ -286,19 +294,22 @@ def validate_lesson(data: Any, target_words: int | None = None, tolerance: float
         if not 3 <= n <= 6:  # friendlier than the schema's message
             errors = [e for e in errors if not e.startswith("scenes:")]
             errors.append(f"scenes: found {n} scenes; a lesson needs 3 to 6")
-    semantic = _semantic_errors(data, target_words, tolerance)
+    semantic = _semantic_errors(data, target_words, tolerance, accept_short)
     if any("/code:" in e for e in semantic):  # the semantic message is clearer than the code pattern's
         errors = [e for e in errors if not (e.split(":")[0].endswith("/code") and "wrong shape" in e)]
     return sorted(set(errors + semantic))
 
 
 def parse_and_validate(
-    raw: str, target_seconds: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE, cut_labels: bool = True
+    raw: str, target_seconds: int | None = None, tolerance: float = WORD_BUDGET_TOLERANCE, cut_labels: bool = True,
+    accept_short: bool = False,
 ) -> tuple[dict[str, Any] | None, list[str]]:
     """Parse model output, sanitise, screen, validate. Returns (lesson | None, errors).
 
     target_seconds enables the word-budget check (about 2.3 words per second, +/- tolerance).
     cut_labels=False (a planner attempt that can still be retried) rejects over-long diagram labels instead of cutting them.
+    accept_short=True (the last attempt) keeps a plan with too little narration, down to MIN_LESSON_WORDS: audio sets the
+    timing (G4), so it is a shorter lesson on the asked topic instead of an unrelated sample.
     """
     try:
         data = json.loads(extract_json_text(raw))
@@ -312,8 +323,8 @@ def parse_and_validate(
     errors = unsafe_strings(lesson) or foreign_script_strings(lesson)
     if errors:
         return None, errors
-    target_words = round(target_seconds * 2.3) if target_seconds else None
-    errors = validate_lesson(lesson, target_words, tolerance)
+    target_words = round(target_seconds * WORDS_PER_SECOND) if target_seconds else None
+    errors = validate_lesson(lesson, target_words, tolerance, accept_short)
     return (None, errors) if errors else (lesson, [])
 
 

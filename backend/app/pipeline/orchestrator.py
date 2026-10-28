@@ -14,7 +14,10 @@ from ..export.capture import ensure_frontend_built, export_lesson, local_server
 from ..planner.fallback import add_static_next_topics, closest_sample, fallback_lesson
 from ..planner.ollama_client import OllamaClient, OllamaError, lesson_format_schema
 from ..planner.prompts import build_retry_prompt, build_system_prompt, build_user_prompt
-from ..planner.validate import LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, clean_quiz, parse_and_validate, parse_next_topics, parse_quiz, shuffle_quiz
+from ..planner.validate import (
+    LAST_TRY_WORD_TOLERANCE, WORD_BUDGET_TOLERANCE, WORDS_PER_SECOND, clean_quiz, narration_words, parse_and_validate, parse_next_topics,
+    parse_quiz, shuffle_quiz,
+)
 from ..timing.timeline import build_timeline
 from ..translate.indictrans import translate_lesson
 from ..tts.registry import bundled_engine, voice_for
@@ -90,9 +93,9 @@ def plan_lesson(
             break
         seconds = time.perf_counter() - start
         attempt_seconds.append(round(seconds, 2))
-        last = attempt == MAX_ATTEMPTS  # the last try is lenient: cut over-long labels rather than fall back
+        last = attempt == MAX_ATTEMPTS  # the last try is lenient: cut over-long labels and keep a short plan rather than fall back
         tolerance = LAST_TRY_WORD_TOLERANCE if last else WORD_BUDGET_TOLERANCE
-        lesson, errors = parse_and_validate(raw, target_seconds, tolerance, cut_labels=last)
+        lesson, errors = parse_and_validate(raw, target_seconds, tolerance, cut_labels=last, accept_short=last)
         log_raw(attempt, seconds, raw + ("\n--- rejected: " + "; ".join(errors) if errors else "\n--- accepted"))
         if lesson is not None:
             accepted_raw = raw
@@ -119,6 +122,11 @@ def plan_lesson(
         attach_quiz(lesson, accepted_raw, quiz_questions, lesson_id or topic, meta, raw_path)
     attach_next_topics(lesson, accepted_raw, topic, meta, raw_path)
     lesson["meta"] = {"fallback": False, "source": f"ollama:{client.model}", "topic": topic[:200]}
+    # Shorter than asked (accepted on the last try): said honestly in the player, and kept out of the reuse cache
+    words, target_words = narration_words(lesson), round(target_seconds * WORDS_PER_SECOND)
+    if words < round(target_words * (1 - WORD_BUDGET_TOLERANCE)):
+        lesson["meta"]["short_of"] = {"target_seconds": target_seconds, "words": words, "target_words": target_words}
+        meta["short_of"] = lesson["meta"]["short_of"]
     return lesson, meta
 
 
@@ -200,7 +208,8 @@ def run_pipeline(
 
     base_url is where the app (frontend + /media) is served for capture; by default a private local
     server is started for the export. plan_from (a lesson id) re-voices that lesson: its stored English plan
-    is reused instead of planning again. A finished lesson that needed no fallback goes into the reuse cache.
+    is reused instead of planning again. A finished lesson that needed no fallback and is not shorter than asked goes
+    into the reuse cache, so Generate again on either one plans afresh.
     """
     job = JOBS.get(job_id)
     if job is None or job.request is None:
@@ -257,7 +266,7 @@ def run_pipeline(
         _status(job_id, "done")
         JOBS.update(job_id, state="done")
     done = JOBS.get(job_id)
-    if done is not None and done.mp4_ready and not done.fallback_used:
+    if done is not None and done.mp4_ready and not done.fallback_used and not lesson.get("meta", {}).get("short_of"):
         remember_lesson(request_cache_key(req), job_id)
 
 

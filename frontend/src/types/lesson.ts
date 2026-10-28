@@ -44,6 +44,7 @@ export interface LessonMeta {
   topic?: string;
   reason?: string; // why the fallback was used, shown to the user
   translation_fallback?: boolean; // translation failed, so the narration stayed in English
+  short_of?: { target_seconds: number; words: number; target_words: number }; // kept on the last planner try though shorter than asked
 }
 
 /** One end-of-lesson question (bonus B1). Text arrives already in the lesson language. */

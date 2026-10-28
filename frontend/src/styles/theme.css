@@ -251,6 +251,8 @@ body {
 :is(.error, .fallback-notice) strong .icon { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-right: var(--sp-1); }
 .error, .fallback-notice, .job-note, .state-card p, .speed-panel p { max-width: 72ch; }
 .fallback-notice p { margin: var(--sp-1) 0 0; }
+.fallback-notice .notice-actions { display: flex; align-items: center; flex-wrap: wrap; gap: var(--sp-2) var(--sp-3); margin-top: var(--sp-3); }
+.notice-actions span { color: var(--muted); font-size: var(--fs-sm); }
 
 /* Empty, loading and error pages */
 .state-card { display: grid; justify-items: start; gap: var(--sp-3); margin: var(--sp-6) auto; max-width: 560px; padding: var(--sp-5);

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getLesson, retryExport, revoiceLesson, watchStatus, type Job } from "../api/jobs";
 import { downloadName } from "../api/slug";
 import { ui } from "../i18n/strings";
-import FallbackNotice from "../components/FallbackNotice";
+import FallbackNotice, { ShortNotice } from "../components/FallbackNotice";
 import Icon from "../components/Icon";
 import SpeedPanel from "../components/SpeedPanel";
 import LessonEnd from "../habit/LessonEnd";
@@ -106,6 +106,14 @@ export default function PlayerPage({ id }: { id: string }) {
     : `Exporting MP4... ${Math.round(status?.timings.export ?? 0)} s`;
 
   const goHome = () => navigate("/");
+  // Generate again (fallback or short lesson): the same request, planned afresh on the input page. Neither kind of lesson
+  // is in the reuse cache, so this never returns the same lesson.
+  const againTopic = job?.request?.topic ?? lesson?.meta?.topic;
+  const generateAgain = againTopic ? () => navigate("/", {
+    autostart: true,
+    prefill: job?.request ?? { topic: againTopic, level: lesson?.level ?? "beginner", language: lang,
+      ...(lesson?.meta?.short_of ? { target_seconds: lesson.meta.short_of.target_seconds } : {}) },
+  }) : undefined;
   const summaryHref = `/summary/${encodeURIComponent(id)}`;
 
   // Nothing to play: a clear error with a way forward, not a red line under an empty header.
@@ -129,7 +137,10 @@ export default function PlayerPage({ id }: { id: string }) {
           <Icon name="plus" /> New lesson
         </a>
       </header>
-      {fallback && <FallbackNotice reason={fallback.reason} source={fallback.source} topic={fallback.topic} />}
+      {fallback && <FallbackNotice reason={fallback.reason} source={fallback.source} topic={fallback.topic} onRetry={generateAgain} />}
+      {lesson?.meta?.short_of && timeline && (
+        <ShortNotice seconds={timeline.total_seconds} targetSeconds={lesson.meta.short_of.target_seconds} onRetry={generateAgain} />
+      )}
       {lesson?.meta?.translation_fallback && (
         <div className="fallback-notice" role="status">
           <strong><Icon name="alert" /> Translation unavailable</strong>

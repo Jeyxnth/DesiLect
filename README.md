@@ -135,7 +135,8 @@ The demo never breaks: each stage has a fallback, and the screen always says whe
 
 | Stage fails | What plays instead | What the screen says |
 |---|---|---|
-| Planner: Ollama stopped, model missing, timeout, or two invalid plans | the closest of four built-in lessons (Python loop, binary search, photosynthesis, Pythagoras), in the chosen language | "Fallback lesson used: a built-in sample", the reason, and which sample |
+| Planner: Ollama stopped, model missing, timeout, or two invalid plans | the closest of four built-in lessons (Python loop, binary search, photosynthesis, Pythagoras), in the chosen language | "Fallback lesson used: a built-in sample", the reason, which sample, and a **Generate again** button (the same request, planned afresh) |
+| Planner: the last plan's narration is short for the length asked (but at least 30 s) | that plan, as a shorter lesson on the topic asked (audio sets the timing) | "Shorter than you asked: about N s instead of M s" with **Generate again** |
 | Translation: model missing or bad output | a built-in sample uses its checked translation; a new lesson stays in English | "Translation unavailable" |
 | Voice: model missing, out of memory, engine error | the closest sample, voiced from its bundled audio (no model has to load) | "Fallback lesson used", reason "Voice generation failed" |
 | Smooth MP4 export: browser error, over its time budget, or a bad file | the keyframe export (one frame per change) | the MP4 still downloads |
@@ -144,7 +145,9 @@ The demo never breaks: each stage has a fallback, and the screen always says whe
 
 The planner's JSON is checked against `shared/schema/lesson.schema.json` plus content rules (scene count, word budget for the
 length, short distinct diagram labels, code at most 12 x 50, no markup, English only). A rejected first plan is retried once with
-the errors listed. Failure drills for all of this: `.venv/Scripts/python scripts/drill.py` (`make drill`; see step 12 below).
+the errors listed. On that last try, narration that is too short is kept rather than replaced by a sample, as long as it is at least 30 s
+(69 words): with a 3B model on a CPU, short narration was the most common reason a real lesson fell back. A fallback or short lesson never
+goes into the reuse cache, so Generate again really plans again. Failure drills for all of this: `.venv/Scripts/python scripts/drill.py` (`make drill`; see step 12 below).
 
 ## How audio sets timing
 

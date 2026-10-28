@@ -329,3 +329,38 @@ def test_repeated_items_are_a_validation_error():
     diagram = next(s for s in lesson["scenes"] if s["type"] == "diagram")
     diagram["items"][1] = diagram["items"][0].upper()
     assert any("repeats an earlier item" in e for e in validate_lesson(lesson))
+
+
+# --- a short plan on the last try is kept, with an honest note, instead of falling back --------------------------
+
+LONG = 110  # 253 words asked; the 118-word sample is under half of that, so only accept_short lets it through
+
+
+def test_last_attempt_keeps_a_short_plan_and_records_it(store):
+    lesson, meta = orch.plan_lesson("How a Python loop works", "beginner", LONG, "t-short", mock_client(good()))
+    assert meta["fallback"] is False and meta["attempts"] == 2  # attempt 1 is still held to the budget and retried
+    assert lesson["meta"]["short_of"] == {"target_seconds": LONG, "words": 118, "target_words": 253} == meta["short_of"]
+    assert validate_lesson(lesson) == []  # meta.short_of is in the shared schema
+    raw = (store / "t-short" / "planner_raw.txt").read_text(encoding="utf-8")
+    first, second = raw.split("=== attempt 2")
+    assert "--- rejected: narration has 118 words in total" in first and "--- accepted" in second
+
+
+def test_only_the_last_attempt_accepts_short():
+    raw = json.dumps(good())
+    assert parse_and_validate(raw, LONG, tolerance=0.5)[0] is None
+    assert parse_and_validate(raw, LONG, tolerance=0.5, accept_short=True)[0] is not None
+
+
+def test_a_plan_under_thirty_seconds_still_falls_back(store):
+    tiny = good()
+    for scene in tiny["scenes"]:
+        scene["narration"] = " ".join(scene["narration"].split()[:10])  # about 40 words: under 69 (30 s)
+    assert parse_and_validate(json.dumps(tiny), LONG, tolerance=0.5, accept_short=True)[0] is None
+    lesson, meta = orch.plan_lesson("How a Python loop works", "beginner", LONG, "t-tiny", mock_client(tiny))
+    assert meta["fallback"] is True and "short_of" not in lesson["meta"]
+
+
+def test_a_plan_within_the_budget_is_not_marked_short(store):
+    lesson, meta = plan(mock_client(good()), store)
+    assert "short_of" not in lesson["meta"] and "short_of" not in meta

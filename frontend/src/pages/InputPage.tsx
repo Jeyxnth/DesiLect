@@ -240,7 +240,10 @@ export default function InputPage() {
             })}
           </ol>
           <div className="job-bar"><div className="job-bar-fill" style={{ width: `${Math.round(job.status.progress * 100)}%` }} /></div>
-          {job.status.fallback_used && <FallbackNotice reason={job.status.fallback_reason} topic={job.request?.topic} />}
+          {job.status.fallback_used && (
+            <FallbackNotice reason={job.status.fallback_reason} topic={job.request?.topic}
+              onRetry={job.request ? () => void start(job.request!) : undefined} />
+          )}
           <p className="job-note">The player opens and starts as soon as the narration is ready; the MP4 keeps exporting there.</p>
         </section>
       )}
