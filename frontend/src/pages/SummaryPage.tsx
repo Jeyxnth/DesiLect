@@ -23,7 +23,7 @@ const OPTION_LETTERS = ["a", "b", "c", "d"];
  * nodes (H4). ?print=1 is the server-PDF view (no toolbar). The sheet shrinks step by step until it fits one page.
  */
 export default function SummaryPage({ id }: { id: string }) {
-  const [lesson, setLesson] = useState<Lesson | null>(null);
+  const [lesson, setLesson] = useState<Lesson | null | undefined>(undefined); // undefined: loading; null: the lesson has no lesson.json
   const [error, setError] = useState("");
   const [step, setStep] = useState(0);
   const sheet = useRef<HTMLDivElement>(null);
@@ -45,8 +45,26 @@ export default function SummaryPage({ id }: { id: string }) {
     else window.__summaryReady = true; // anything still over is clipped by the sheet: never a second page
   }, [lesson, fonts, step]);
 
-  if (error) return <div className="page"><p className="error" role="alert">{error}</p></div>;
-  if (!lesson) return <div className="page"><p>Loading...</p></div>;
+  const lessonHref = `/lesson/${encodeURIComponent(id)}`;
+  const back = (label: string) => (
+    <a className="button" href={lessonHref} onClick={(e) => { e.preventDefault(); navigate(lessonHref); }}>
+      <span aria-hidden="true">←</span> {label}
+    </a>
+  );
+  if (error || lesson === null) {
+    return (
+      <main className="page">
+        <section className="state-card" role={error ? "alert" : "status"}>
+          <h2>{error ? "The summary could not be loaded" : "No summary for this lesson"}</h2>
+          <p>{error || "A summary is built from the lesson plan, and this lesson has none (for example a built-in sample rendered with make sample)."}</p>
+          {back("Back to the lesson")}
+        </section>
+      </main>
+    );
+  }
+  if (lesson === undefined) {
+    return <main className="page"><div className="state-card" role="status"><p><span className="pulse" aria-hidden="true" /> Loading the summary...</p></div></main>;
+  }
 
   const lang = lesson.language;
   const fit = FIT_STEPS[step] ?? FIT_STEPS[FIT_STEPS.length - 1]!;
@@ -57,10 +75,8 @@ export default function SummaryPage({ id }: { id: string }) {
     <div className={`summary-page${printMode ? " print-mode" : ""}`}>
       {!printMode && (
         <div className="summary-toolbar">
-          <a href={`/lesson/${encodeURIComponent(id)}`} onClick={(e) => { e.preventDefault(); navigate(`/lesson/${encodeURIComponent(id)}`); }}>
-            {ui(lang, "back")}
-          </a>
-          <button type="button" className="button" onClick={() => window.print()}>{ui(lang, "printPdf")}</button>
+          {back(ui(lang, "back"))}
+          <button type="button" className="button primary" onClick={() => window.print()}>{ui(lang, "printPdf")}</button>
         </div>
       )}
       <div className="summary-sheet" lang={lang} ref={sheet} style={{ fontSize: `${fit.scale * 10.5}pt` }}>

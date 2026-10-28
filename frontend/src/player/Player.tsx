@@ -168,7 +168,9 @@ export default function Player({ timeline, autoplay = false, onComplete, endExtr
           {timeline.scenes.map((s) => <div key={s.index}>{renderScene(s, s.end, timeline.language)}</div>)}
         </div>
       )}
-      {audioFailed && <p className="notice">Audio could not be loaded; scrub only.</p>}
+      {audioFailed && (
+        <p className="fallback-notice" role="status"><strong>⚠ Audio could not be loaded.</strong> Use Prev / Next or the progress bar to move through the lesson.</p>
+      )}
       <Controls playing={playing} onToggle={toggle} onPrev={prev} onNext={next} onReplay={replay} />
       {ended && !hasQuiz && endExtra}
     </div>

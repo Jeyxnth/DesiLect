@@ -1,5 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { createLesson, watchStatus, type Job } from "../api/jobs";
+import BrandMark from "../components/BrandMark";
 import FallbackNotice from "../components/FallbackNotice";
 import { StreakBadge } from "../habit/LessonEnd";
 import { currentStreak, localDay, removeRevise, useHabit } from "../habit/storage";
@@ -109,93 +110,110 @@ export default function InputPage() {
   const ahead = job?.state === "queued" ? job.status.queue_ahead : null;
 
   return (
-    <div className="page input-page">
-      <div className="input-head">
-        <h1>Blu Visual Teacher</h1>
+    <main className="page input-page">
+      <header className="input-head">
+        <div>
+          <div className="brand">
+            <BrandMark />
+            <h1>Blu Visual Teacher</h1>
+          </div>
+          <p className="tagline">Type a concept and get a short narrated lesson with diagrams and code, in English, Hindi or Tamil. Made on this laptop, offline.</p>
+        </div>
         <StreakBadge count={streak} lang={req.language} />
-      </div>
+      </header>
       <form className="form" onSubmit={submit}>
-        <label>Concept
-          <input
-            value={req.topic}
-            minLength={3}
-            maxLength={120}
-            required
-            disabled={busy}
-            placeholder="Type any concept, e.g. How does a Python loop work?"
-            onChange={(e) => setReq({ ...req, topic: e.target.value })}
-          />
-        </label>
-        <div className="chips" aria-label="Examples">
-          {EXAMPLES.map((t) => (
-            <button type="button" key={t} className="chip" disabled={busy} onClick={() => setReq({ ...req, topic: t })}>{t}</button>
-          ))}
-        </div>
-        <div className="field">
-          <span className="field-label" id="level-label">Level</span>
-          <div className="toggle" role="group" aria-labelledby="level-label">
-            {LEVELS.map((l) => (
-              <button
-                type="button"
-                key={l.value}
-                aria-pressed={req.level === l.value}
-                disabled={busy}
-                onClick={() => setReq({ ...req, level: l.value })}
-              >
-                {l.label}
-              </button>
+        <div className="concept">
+          <label>Concept
+            <input
+              value={req.topic}
+              minLength={3}
+              maxLength={120}
+              required
+              disabled={busy}
+              placeholder="Type any concept, e.g. How does a Python loop work?"
+              onChange={(e) => setReq({ ...req, topic: e.target.value })}
+            />
+          </label>
+          <div className="chips" aria-label="Examples">
+            {EXAMPLES.map((t) => (
+              <button type="button" key={t} className="chip" disabled={busy} onClick={() => setReq({ ...req, topic: t })}>{t}</button>
             ))}
           </div>
         </div>
-        <label>Language
-          <select value={req.language} disabled={busy} onChange={(e) => setReq({ ...req, language: e.target.value as Language })}>
-            <option value="en">English</option>
-            <option value="hi">हिन्दी</option>
-            <option value="ta">தமிழ்</option>
-          </select>
-        </label>
-        <div className="field">
-          <span className="field-label" id="voice-label">Voice</span>
-          <div className="toggle" role="group" aria-labelledby="voice-label">
-            {VOICES.map((v) => (
-              <button
-                type="button"
-                key={v.value}
-                aria-pressed={req.voice === v.value}
-                disabled={busy}
-                onClick={() => setReq({ ...req, voice: v.value })}
-              >
-                {v.label}
-              </button>
-            ))}
+        <div className="form-row">
+          <div className="field">
+            <span className="field-label" id="level-label">Level</span>
+            <div className="toggle" role="group" aria-labelledby="level-label">
+              {LEVELS.map((l) => (
+                <button
+                  type="button"
+                  key={l.value}
+                  aria-pressed={req.level === l.value}
+                  disabled={busy}
+                  onClick={() => setReq({ ...req, level: l.value })}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <label>Language
+            <select value={req.language} disabled={busy} onChange={(e) => setReq({ ...req, language: e.target.value as Language })}>
+              <option value="en">English</option>
+              <option value="hi">हिन्दी</option>
+              <option value="ta">தமிழ்</option>
+            </select>
+          </label>
+        </div>
+        <div className="form-row">
+          <div className="field">
+            <span className="field-label" id="voice-label">Voice</span>
+            <div className="toggle" role="group" aria-labelledby="voice-label">
+              {VOICES.map((v) => (
+                <button
+                  type="button"
+                  key={v.value}
+                  aria-pressed={req.voice === v.value}
+                  disabled={busy}
+                  onClick={() => setReq({ ...req, voice: v.value })}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="field">
+            <span className="field-label" id="speed-label">Voice speed</span>
+            <div className="toggle" role="group" aria-labelledby="speed-label">
+              {SPEEDS.map((s) => (
+                <button
+                  type="button"
+                  key={s.value}
+                  aria-pressed={req.speed === s.value}
+                  disabled={busy}
+                  onClick={() => setReq({ ...req, speed: s.value })}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
-        <div className="field">
-          <span className="field-label" id="speed-label">Voice speed</span>
-          <div className="toggle" role="group" aria-labelledby="speed-label">
-            {SPEEDS.map((s) => (
-              <button
-                type="button"
-                key={s.value}
-                aria-pressed={req.speed === s.value}
-                disabled={busy}
-                onClick={() => setReq({ ...req, speed: s.value })}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <label>Length: {req.target_seconds} s
+        <label>
+          <span className="range-head">Length <output>{req.target_seconds} s</output></span>
           <input type="range" min={30} max={90} step={5} disabled={busy} value={req.target_seconds} onChange={(e) => setReq({ ...req, target_seconds: Number(e.target.value) })} />
         </label>
-        <button type="submit" className="primary" disabled={busy || req.topic.trim().length < 3}>
-          {busy ? "Generating..." : error && job ? "Try again" : "Generate"}
+        <button type="submit" className="primary" aria-busy={busy} disabled={busy || req.topic.trim().length < 3}>
+          {busy ? <><span className="pulse" aria-hidden="true" /> Generating...</> : error && job ? "Try again" : "Generate"}
         </button>
       </form>
 
       {job && (
-        <section className="job" aria-live="polite">
+        <section className="job" aria-live="polite" aria-labelledby="job-heading">
+          <h2 id="job-heading">
+            {job.state === "failed" ? "Lesson not made" : "Making your lesson"}
+            {job.request?.topic && <span className="job-topic">{job.request.topic}</span>}
+          </h2>
           {ahead !== null && ahead > 0 && (
             <p className="muted">Waiting for {ahead} other lesson{ahead > 1 ? "s" : ""} to finish (one is made at a time).</p>
           )}
@@ -217,11 +235,11 @@ export default function InputPage() {
           </ol>
           <div className="job-bar"><div className="job-bar-fill" style={{ width: `${Math.round(job.status.progress * 100)}%` }} /></div>
           {job.status.fallback_used && <FallbackNotice reason={job.status.fallback_reason} topic={job.request?.topic} />}
-          <p className="muted">The player opens and starts as soon as the narration is ready; the MP4 keeps exporting there.</p>
+          <p className="job-note">The player opens and starts as soon as the narration is ready; the MP4 keeps exporting there.</p>
         </section>
       )}
 
-      {error && <p className="error" role="alert">{error}</p>}
+      {error && <p className="error" role="alert"><strong>The lesson could not be made.</strong> {error}</p>}
 
       {habit && habit.revise.length > 0 && (
         <section className="revise-list" lang={req.language} aria-labelledby="revise-heading">
@@ -240,6 +258,6 @@ export default function InputPage() {
           </ul>
         </section>
       )}
-    </div>
+    </main>
   );
 }

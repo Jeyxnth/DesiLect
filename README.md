@@ -507,6 +507,17 @@ draw-on (`stroke-dashoffset`), which the profile did not implicate, so it stays.
 first round and does not grow (torch / onnxruntime keep their arenas). Peaks: the planner 2.4 GB in Ollama (planning only; `keep_alive: 0`
 frees it), translation about 1.7 GB, Tamil voice about 2.1 GB, export up to 2.2 GB (app + Chromium + ffmpeg).
 
+### Design pass (D1, tag `design-1`)
+
+The pass changed the app chrome around the stage:
+- **Tokens.** Spacing and type-scale tokens, plus chrome-only colour tokens that meet WCAG AA.
+- **Buttons.** One button system (primary, secondary, ghost) with hover, pressed, focus and disabled states.
+- **Phone layout.** The 360 px layout works with no horizontal scroll.
+- **States.** Real loading, empty and error states.
+
+The stage CSS was not touched and the `make sample` MP4 is frame-for-frame identical (ffmpeg `framemd5`). Only `transform` and `opacity`
+animate in the chrome, and not at all under "reduce motion". The problem list and before/after notes are in `docs/design-pass.md`.
+
 ### HTTP API (`backend/app/api/routes.py`)
 
 | Method and path | What it does |

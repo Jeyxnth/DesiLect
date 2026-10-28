@@ -21,6 +21,8 @@ Copyright (c) Meta Platforms, Inc. All Rights Reserved. Use is subject to the Ll
 
 Generated assets: the bundled sample narration `shared/tts_cache/*.flac` is output of Kokoro (Apache-2.0) and Indic-TTS (MIT) speaking our
 own sample text; `submissions/*.mp4` are rendered by this app (planner Llama 3.2, see "Built with Llama" above).
+The app mark (`frontend/public/favicon.svg`, drawn inline by `frontend/src/components/BrandMark.tsx`) is our own drawing, made for
+this project; no icon set or third-party image is used anywhere in the UI.
 
 ## Fonts
 

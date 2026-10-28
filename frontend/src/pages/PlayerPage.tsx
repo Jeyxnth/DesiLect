@@ -104,11 +104,29 @@ export default function PlayerPage({ id }: { id: string }) {
     ? `Exporting MP4... ${Math.round(status.export_progress * 100)}%`
     : `Exporting MP4... ${Math.round(status?.timings.export ?? 0)} s`;
 
+  const goHome = () => navigate("/");
+  const summaryHref = `/summary/${encodeURIComponent(id)}`;
+
+  // Nothing to play: a clear error with a way forward, not a red line under an empty header.
+  if (error && !timeline) {
+    return (
+      <main className="page">
+        <section className="state-card" role="alert">
+          <h2>This lesson could not be opened</h2>
+          <p>{error}</p>
+          <button type="button" className="button primary" onClick={goHome}>Make a new lesson</button>
+        </section>
+      </main>
+    );
+  }
+
   return (
-    <div className="page">
+    <main className="page">
       <header className="player-header">
-        <h1>{lesson?.title ?? "Lesson"}</h1>
-        <a href="/" onClick={(e) => { e.preventDefault(); navigate("/"); }}>New lesson</a>
+        <h1 lang={timeline?.language}>{timeline || lesson ? title : "Lesson"}</h1>
+        <a className="button small" href="/" onClick={(e) => { e.preventDefault(); goHome(); }}>
+          <span aria-hidden="true">+</span> New lesson
+        </a>
       </header>
       {fallback && <FallbackNotice reason={fallback.reason} source={fallback.source} topic={fallback.topic} />}
       {lesson?.meta?.translation_fallback && (
@@ -123,50 +141,65 @@ export default function PlayerPage({ id }: { id: string }) {
           endExtra={
             <LessonEnd lang={timeline.language} nextTopics={timeline.next_topics} nextLabels={timeline.next_topic_labels} onTryNext={tryNext}
               streak={habit ? currentStreak(habit, localDay()) : null} saved={saved} onToggleSave={toggleSave}
-              onSummary={() => navigate(`/summary/${encodeURIComponent(id)}`)} />
+              onSummary={lesson ? () => navigate(summaryHref) : undefined} />
           } />
-      ) : !error && <p>Loading...</p>}
+      ) : (
+        <div className="stage-skeleton" role="status"><span className="pulse" aria-hidden="true" /> Loading lesson...</div>
+      )}
       {timeline && (
         <div className="downloads">
           {status?.mp4_ready ? (
-            <a className="button" href={`${media}/lesson.mp4`} download={downloadName(topic, lang, "mp4")}
+            <a className="button primary" href={`${media}/lesson.mp4`} download={downloadName(topic, lang, "mp4")}
               title={status.export_mode === "keyframe" ? "Made with the keyframe export (smooth export was not possible)" : undefined}>
               Download MP4
             </a>
           ) : (
-            <button type="button" className="button" disabled>
+            <button type="button" className="button primary" disabled>
+              {exporting && <span className="pulse" aria-hidden="true" />}
               {exporting ? exportLabel : "Download MP4"}
             </button>
           )}
           {job?.export_error && (
             <button type="button" className="button" onClick={retry}>Retry export</button>
           )}
-          <a href={`${media}/captions.srt`} download={downloadName(topic, lang, "srt")}>Download captions (.srt)</a>
-          <a href={`/summary/${encodeURIComponent(id)}`} onClick={(e) => { e.preventDefault(); navigate(`/summary/${encodeURIComponent(id)}`); }}>
-            {ui(lang, "summary")}
-          </a>
-          <a href={`/api/lessons/${encodeURIComponent(id)}/summary.pdf`} download={downloadName(topic, lang, "pdf").replace(/\.pdf$/, "_summary.pdf")}>
-            {ui(lang, "summaryPdf")}
-          </a>
-        </div>
-      )}
-      {job?.export_error && <p className="error" role="alert">MP4 export failed: {job.export_error}. The lesson still plays here.</p>}
-      {timeline && lesson && (
-        <div className="revoice">
-          <label>Same lesson in
-            <select value={lang} disabled={revoice !== null} onChange={(e) => void startRevoice(e.target.value as Language)}>
-              {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
-            </select>
-          </label>
-          {revoice && (
-            <span className="muted">
-              {revoice.cached ? "Opening the earlier version..." : `Re-voicing (no re-planning): ${revoice.status.stage}...`}
-            </span>
+          <a className="button small" href={`${media}/captions.srt`} download={downloadName(topic, lang, "srt")}>Captions (.srt)</a>
+          {/* the summary is built from lesson.json; a lesson without one (a sample render) has none */}
+          {lesson && (
+            <>
+              <a className="button small" href={summaryHref} onClick={(e) => { e.preventDefault(); navigate(summaryHref); }}>
+                {ui(lang, "summary")}
+              </a>
+              <a className="button small" href={`/api/lessons/${encodeURIComponent(id)}/summary.pdf`}
+                download={downloadName(topic, lang, "pdf").replace(/\.pdf$/, "_summary.pdf")}>
+                {ui(lang, "summaryPdf")}
+              </a>
+            </>
           )}
         </div>
       )}
-      {timeline && <SpeedPanel id={id} refresh={`${status?.mp4_ready}-${status?.stage}`} />}
+      {job?.export_error && (
+        <p className="error" role="alert"><strong>MP4 export failed.</strong> {job.export_error}. The lesson still plays here.</p>
+      )}
+      {timeline && (lesson || job || revoice) && (
+        <div className="player-extras">
+          {lesson && (
+            <div className="revoice">
+              <label>Same lesson in
+                <select value={lang} disabled={revoice !== null} onChange={(e) => void startRevoice(e.target.value as Language)}>
+                  {LANGUAGES.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+                </select>
+              </label>
+              {revoice && (
+                <span className="muted">
+                  {revoice.cached ? "Opening the earlier version..." : `Re-voicing (no re-planning): ${revoice.status.stage}...`}
+                </span>
+              )}
+            </div>
+          )}
+          <SpeedPanel id={id} refresh={`${status?.mp4_ready}-${status?.stage}`} />
+        </div>
+      )}
       {timeline && !job && <p className="muted downloads">MP4 status unavailable.</p>}
-    </div>
+    </main>
   );
 }
