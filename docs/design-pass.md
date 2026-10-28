@@ -161,7 +161,12 @@ serif (`measure.ts`, `heading: true`), so layouts fit the real glyph widths.
 
 - Contrast: every text pair is WCAG AA (4.5:1), and every control or progress edge is at least 3:1. Each pair was
   computed; the numbers are in the table and in `theme.css`.
-- Typecheck clean. Vitest: 24 passed. Backend: 331 passed. Offline check: OK.
+- Typecheck clean. Vitest: 24 passed. Offline check: OK.
+- Backend: 330 of 331 passed in the full run. The one failure is the timing gate
+  `test_export_smoke_full_sample_under_60s`, which must render the sample in under 60 s. On its own it passes, with
+  the render taking 40 s. In the full suite it runs after about 100 s of other browser and model tests on the same
+  laptop and goes over. It was already close to the line before this pass (54 s in D1, 49 s in D2), so it is the
+  intermittent failure noted earlier; it is not caused by the theme.
 - Stage frames from the render page (the MP4 source) were checked in English, Hindi and Tamil, on title, code and
   diagram scenes. Matras are not clipped, captions read, and the serif shows in all three scripts.
 - `make sample`: 1280x720, 43.41 s, exactly as before; the frames differ by design.
