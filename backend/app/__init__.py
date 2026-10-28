@@ -1,3 +1,3 @@
-"""CodeStorm24 backend."""
+"""OffGridGuru backend."""
 
 __version__ = "0.1.0"

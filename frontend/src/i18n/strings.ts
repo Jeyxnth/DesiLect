@@ -26,7 +26,7 @@ const STRINGS = {
   code: { en: "Code", hi: "कोड", ta: "Code" },
   answer: { en: "Answers", hi: "उत्तर", ta: "விடைகள்" },
   printPdf: { en: "Print / Save as PDF", hi: "प्रिंट / PDF सहेजें", ta: "Print / PDF-ஆ சேமிங்க" },
-  madeOffline: { en: "Made offline with CodeStorm24", hi: "CodeStorm24 से ऑफ़लाइन बनाया गया", ta: "CodeStorm24-ல offline-ஆ உருவாக்கப்பட்டது" },
+  madeOffline: { en: "Made offline with OffGridGuru", hi: "OffGridGuru से ऑफ़लाइन बनाया गया", ta: "OffGridGuru-ல offline-ஆ உருவாக்கப்பட்டது" },
   beginner: { en: "Beginner", hi: "शुरुआती", ta: "தொடக்க நிலை" },
   intermediate: { en: "Intermediate", hi: "मध्यम", ta: "இடைநிலை" },
   back: { en: "Back to the lesson", hi: "पाठ पर वापस", ta: "பாடத்துக்குத் திரும்ப" },

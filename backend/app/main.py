@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(name)s %(levelname
 settings = get_settings()  # also forces the offline env flags (H2)
 settings.outputs_dir.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="CodeStorm24", version=__version__)
+app = FastAPI(title="OffGridGuru", version=__version__)
 app.include_router(router)
 app.mount("/media", StaticFiles(directory=settings.outputs_dir), name="media")
 
