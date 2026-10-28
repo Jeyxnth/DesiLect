@@ -1,4 +1,4 @@
-"""Preflight: is this machine ready to run and test Blu Visual Teacher? (make doctor)
+"""Preflight: is this machine ready to run and test CodeStorm24? (make doctor)
 
 Standard library only, so it runs on a fresh laptop before `make setup`.
 Checks marked `since=N` become hard requirements at step N; earlier they are only warnings.

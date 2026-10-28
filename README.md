@@ -1,4 +1,4 @@
-# DesiLect (Blu Visual Teacher)
+# OffGridGuru (CodeStorm24)
 
 Type any concept, such as "How does binary search work?", and get a 30 to 90 second narrated visual lesson in English, Hindi or
 Tamil: animated diagrams, highlighted code and captions in the learner's own script, playing in the browser right away and saved as a
@@ -78,8 +78,8 @@ set up from the README yet.
 so the commands below are spelled out (the `Makefile` targets are the same commands). Run them in Git Bash from the repo root.
 
 ```
-git clone https://github.com/Jeyxnth/DesiLect.git
-cd DesiLect
+git clone https://github.com/Jeyxnth/OffGridGuru.git
+cd OffGridGuru
 
 # 1. Python and Node dependencies (make setup does the first four lines)
 py -3.13 -m venv .venv                                       # or py -3.11; plain `python` may be an older version
@@ -199,7 +199,10 @@ still to do.
 
 ## Team
 
-TODO: names and roles of both team members (fill in before submitting).
+**Team Rogue**: Bhuvaneshwer S and Jeyanth S.
+
+The hackathon summary report is in
+[`docs/OffGridGuru_Hackathon_Summary_Report_Team_Rogue.pdf`](docs/OffGridGuru_Hackathon_Summary_Report_Team_Rogue.pdf).
 
 ## Models, voices, fonts and tools
 
@@ -436,7 +439,7 @@ page and the PDF route never touch Ollama. The page shows:
 - each diagram as a small SVG, drawn by the player's own `DiagramScene` at its final state;
 - the quiz as a worksheet, with the answer key at the bottom;
 - the two next topics;
-- a footer reading "Made offline with Blu Visual Teacher" and the date.
+- a footer reading "Made offline with CodeStorm24" and the date.
 
 All text is rendered as React text nodes. Labels are in `strings.ts` (en/hi/ta), with the stage's Indic fonts and line height.
 

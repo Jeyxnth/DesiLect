@@ -99,7 +99,7 @@ def test_no_quiz_and_no_next_topics_renders_cleanly(server):
         browser.close()
     assert not errors and overflow <= 1
     assert "Quiz" not in text and "Try next" not in text and "Answers" not in text
-    assert "Made offline with Blu Visual Teacher" in text
+    assert "Made offline with CodeStorm24" in text
     r = httpx.get(f"{server}/api/lessons/summary-test-bare/summary.pdf", timeout=60)
     assert pages(r.content) == 1
 

@@ -122,7 +122,7 @@ export default function InputPage() {
         <div>
           <div className="brand">
             <BrandMark />
-            <h1>Blu Visual Teacher</h1>
+            <h1>CodeStorm24</h1>
           </div>
           <p className="tagline">Type a concept and get a short narrated lesson with diagrams and code, in English, Hindi or Tamil. Made on this laptop, offline.</p>
         </div>
