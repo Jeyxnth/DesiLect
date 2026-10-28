@@ -364,3 +364,36 @@ def test_a_plan_under_thirty_seconds_still_falls_back(store):
 def test_a_plan_within_the_budget_is_not_marked_short(store):
     lesson, meta = plan(mock_client(good()), store)
     assert "short_of" not in lesson["meta"] and "short_of" not in meta
+
+
+# --- the prompt asks for length in sentences per scene, per level, and the retry says how much to add -----------
+
+def test_length_is_asked_as_sentences_per_scene():
+    from app.planner.prompts import build_system_prompt, build_user_prompt, scene_plan, sentences_per_scene
+
+    assert [sentences_per_scene(t) for t in (30, 45, 60, 90)] == [2, 2, 2, 3]  # about 12 words a sentence
+    prompt = build_system_prompt("beginner", 90)
+    assert "6 scenes" in prompt and "3 full sentences of narration" in prompt and "including both title_cards" in prompt
+    assert "2 to 3 short sentences" not in prompt  # the old cap that kept long lessons short
+    assert "longer than the example's" in prompt and "longer than the example's" not in build_system_prompt("beginner", 45)
+    assert "3 sentences of narration each" in build_user_prompt("Photosynthesis", "beginner", 90)
+    assert "2 sentences of narration each" in build_user_prompt("Photosynthesis", "beginner", 60)
+    assert scene_plan(90) == (6, 34)
+
+
+def test_each_level_gets_its_own_brief():
+    from app.planner.prompts import build_system_prompt
+
+    beginner, intermediate = build_system_prompt("beginner", 60), build_system_prompt("intermediate", 60)
+    assert "familiar comparison" in beginner and "familiar comparison" not in intermediate
+    assert "correct technical terms" in intermediate and "common mistake" in intermediate and "correct technical terms" not in beginner
+
+
+def test_retry_says_how_much_to_add_or_remove():
+    from app.planner.prompts import build_retry_prompt
+
+    short = build_retry_prompt(["narration has 103 words in total; it must be between 155 and 259 (about 207)"])
+    assert "had 103 words but needs about 207" in short and "Add about 9 more sentences" in short
+    long = build_retry_prompt(["narration has 300 words in total; it must be between 77 and 129 (about 103)"])
+    assert "Remove about 17 sentences" in long
+    assert "words but needs" not in build_retry_prompt(["scenes/1/code: 14 lines, at most 12 allowed"])

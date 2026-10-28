@@ -1,0 +1,283 @@
+{
+ "model": "llama3.2:3b",
+ "rows": [
+  {
+   "topic": "How does binary search work?",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 16.0,
+   "words": 173,
+   "ratio": 1.25,
+   "scenes": 5,
+   "per_scene": [
+    39,
+    24,
+    31,
+    42,
+    37
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 173 words in total; it must be between 104 and 172 (about 138)",
+    "scenes/1/items/1: repeats an earlier item; every item must be different",
+    "scenes/3/items/1: repeats an earlier item; every item must be different"
+   ]
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 14.1,
+   "words": 120,
+   "ratio": 0.87,
+   "scenes": 5,
+   "per_scene": [
+    23,
+    21,
+    26,
+    21,
+    29
+   ],
+   "sentences": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 16.4,
+   "words": 180,
+   "ratio": 1.3,
+   "scenes": 5,
+   "per_scene": [
+    25,
+    42,
+    32,
+    39,
+    42
+   ],
+   "sentences": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 180 words in total; it must be between 104 and 172 (about 138)"
+   ]
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 16.3,
+   "words": 147,
+   "ratio": 1.07,
+   "scenes": 5,
+   "per_scene": [
+    29,
+    26,
+    30,
+    28,
+    34
+   ],
+   "sentences": [
+    2,
+    1,
+    2,
+    1,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 15.8,
+   "words": 139,
+   "ratio": 1.01,
+   "scenes": 5,
+   "per_scene": [
+    21,
+    28,
+    28,
+    29,
+    33
+   ],
+   "sentences": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does binary search work?",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 18.9,
+   "words": 207,
+   "ratio": 1.0,
+   "scenes": 6,
+   "per_scene": [
+    30,
+    24,
+    44,
+    35,
+    32,
+    42
+   ],
+   "sentences": [
+    4,
+    2,
+    3,
+    3,
+    2,
+    3
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 17.8,
+   "words": 197,
+   "ratio": 0.95,
+   "scenes": 6,
+   "per_scene": [
+    27,
+    38,
+    30,
+    33,
+    42,
+    27
+   ],
+   "sentences": [
+    3,
+    3,
+    2,
+    3,
+    3,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 17.1,
+   "words": 208,
+   "ratio": 1.0,
+   "scenes": 6,
+   "per_scene": [
+    34,
+    37,
+    34,
+    33,
+    33,
+    37
+   ],
+   "sentences": [
+    4,
+    3,
+    3,
+    3,
+    2,
+    3
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 19.0,
+   "words": 269,
+   "ratio": 1.3,
+   "scenes": 6,
+   "per_scene": [
+    46,
+    54,
+    51,
+    49,
+    40,
+    29
+   ],
+   "sentences": [
+    3,
+    3,
+    3,
+    2,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 269 words in total; it must be between 155 and 259 (about 207)"
+   ]
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 17.1,
+   "words": 189,
+   "ratio": 0.91,
+   "scenes": 6,
+   "per_scene": [
+    34,
+    25,
+    32,
+    26,
+    39,
+    33
+   ],
+   "sentences": [
+    4,
+    3,
+    3,
+    2,
+    3,
+    3
+   ],
+   "passes": true,
+   "errors": []
+  }
+ ]
+}

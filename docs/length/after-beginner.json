@@ -1,0 +1,279 @@
+{
+ "model": "llama3.2:3b",
+ "rows": [
+  {
+   "topic": "How does binary search work?",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 15.0,
+   "words": 151,
+   "ratio": 1.09,
+   "scenes": 5,
+   "per_scene": [
+    30,
+    24,
+    32,
+    29,
+    36
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    1,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 14.5,
+   "words": 129,
+   "ratio": 0.93,
+   "scenes": 5,
+   "per_scene": [
+    26,
+    23,
+    27,
+    23,
+    30
+   ],
+   "sentences": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 15.4,
+   "words": 148,
+   "ratio": 1.07,
+   "scenes": 5,
+   "per_scene": [
+    31,
+    28,
+    30,
+    26,
+    33
+   ],
+   "sentences": [
+    2,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 14.9,
+   "words": 133,
+   "ratio": 0.96,
+   "scenes": 5,
+   "per_scene": [
+    21,
+    23,
+    26,
+    29,
+    34
+   ],
+   "sentences": [
+    2,
+    1,
+    1,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 15.1,
+   "words": 130,
+   "ratio": 0.94,
+   "scenes": 5,
+   "per_scene": [
+    23,
+    21,
+    26,
+    26,
+    34
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does binary search work?",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 19.5,
+   "words": 212,
+   "ratio": 1.02,
+   "scenes": 6,
+   "per_scene": [
+    31,
+    24,
+    39,
+    38,
+    50,
+    30
+   ],
+   "sentences": [
+    3,
+    2,
+    3,
+    3,
+    3,
+    3
+   ],
+   "passes": false,
+   "errors": [
+    "scenes/1/items/1: repeats an earlier item; every item must be different",
+    "scenes/1/items/2: repeats an earlier item; every item must be different",
+    "scenes/3/items/1: repeats an earlier item; every item must be different"
+   ]
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 16.2,
+   "words": 157,
+   "ratio": 0.76,
+   "scenes": 6,
+   "per_scene": [
+    25,
+    22,
+    32,
+    27,
+    23,
+    28
+   ],
+   "sentences": [
+    4,
+    2,
+    3,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 19.7,
+   "words": 235,
+   "ratio": 1.14,
+   "scenes": 6,
+   "per_scene": [
+    34,
+    36,
+    39,
+    45,
+    43,
+    38
+   ],
+   "sentences": [
+    4,
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 18.8,
+   "words": 227,
+   "ratio": 1.1,
+   "scenes": 6,
+   "per_scene": [
+    28,
+    39,
+    34,
+    44,
+    48,
+    34
+   ],
+   "sentences": [
+    4,
+    3,
+    3,
+    3,
+    3,
+    3
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 18.6,
+   "words": 185,
+   "ratio": 0.89,
+   "scenes": 6,
+   "per_scene": [
+    35,
+    27,
+    25,
+    34,
+    34,
+    30
+   ],
+   "sentences": [
+    4,
+    3,
+    2,
+    2,
+    3,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  }
+ ]
+}

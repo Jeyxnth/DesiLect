@@ -1,0 +1,567 @@
+{
+ "model": "llama3.2:3b",
+ "rows": [
+  {
+   "topic": "How does binary search work?",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 13.6,
+   "words": 151,
+   "ratio": 1.09,
+   "scenes": 5,
+   "per_scene": [
+    23,
+    20,
+    24,
+    38,
+    46
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    3,
+    3
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 12.0,
+   "words": 84,
+   "ratio": 0.61,
+   "scenes": 5,
+   "per_scene": [
+    17,
+    11,
+    19,
+    17,
+    20
+   ],
+   "sentences": [
+    3,
+    1,
+    2,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 84 words in total; it must be between 104 and 172 (about 138)"
+   ]
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 13.2,
+   "words": 125,
+   "ratio": 0.91,
+   "scenes": 5,
+   "per_scene": [
+    20,
+    26,
+    27,
+    21,
+    31
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 13.6,
+   "words": 133,
+   "ratio": 0.96,
+   "scenes": 5,
+   "per_scene": [
+    22,
+    32,
+    25,
+    25,
+    29
+   ],
+   "sentences": [
+    3,
+    3,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 60,
+   "level": "beginner",
+   "budget": 138,
+   "seconds_taken": 14.2,
+   "words": 89,
+   "ratio": 0.64,
+   "scenes": 5,
+   "per_scene": [
+    18,
+    21,
+    13,
+    18,
+    19
+   ],
+   "sentences": [
+    3,
+    3,
+    2,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 89 words in total; it must be between 104 and 172 (about 138)"
+   ]
+  },
+  {
+   "topic": "How does binary search work?",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 13.7,
+   "words": 127,
+   "ratio": 0.92,
+   "scenes": 5,
+   "per_scene": [
+    27,
+    17,
+    31,
+    23,
+    29
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "scenes/1/items/1: repeats an earlier item; every item must be different",
+    "scenes/1/items/2: repeats an earlier item; every item must be different"
+   ]
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 11.7,
+   "words": 96,
+   "ratio": 0.7,
+   "scenes": 5,
+   "per_scene": [
+    16,
+    39,
+    12,
+    21,
+    8
+   ],
+   "sentences": [
+    3,
+    3,
+    1,
+    2,
+    1
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 96 words in total; it must be between 104 and 172 (about 138)"
+   ]
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 13.2,
+   "words": 117,
+   "ratio": 0.85,
+   "scenes": 5,
+   "per_scene": [
+    16,
+    24,
+    35,
+    26,
+    16
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    2,
+    1
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 15.4,
+   "words": 197,
+   "ratio": 1.43,
+   "scenes": 5,
+   "per_scene": [
+    34,
+    39,
+    38,
+    38,
+    48
+   ],
+   "sentences": [
+    3,
+    3,
+    3,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 197 words in total; it must be between 104 and 172 (about 138)"
+   ]
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 60,
+   "level": "intermediate",
+   "budget": 138,
+   "seconds_taken": 13.3,
+   "words": 92,
+   "ratio": 0.67,
+   "scenes": 5,
+   "per_scene": [
+    18,
+    19,
+    13,
+    20,
+    22
+   ],
+   "sentences": [
+    3,
+    2,
+    1,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 92 words in total; it must be between 104 and 172 (about 138)"
+   ]
+  },
+  {
+   "topic": "How does binary search work?",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 14.9,
+   "words": 158,
+   "ratio": 0.76,
+   "scenes": 6,
+   "per_scene": [
+    25,
+    17,
+    30,
+    24,
+    35,
+    27
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    1,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "scenes/1/items/1: repeats an earlier item; every item must be different",
+    "scenes/1/items/2: repeats an earlier item; every item must be different"
+   ]
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 15.2,
+   "words": 159,
+   "ratio": 0.77,
+   "scenes": 6,
+   "per_scene": [
+    25,
+    30,
+    23,
+    19,
+    34,
+    28
+   ],
+   "sentences": [
+    3,
+    3,
+    3,
+    2,
+    3,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 16.2,
+   "words": 164,
+   "ratio": 0.79,
+   "scenes": 6,
+   "per_scene": [
+    21,
+    26,
+    38,
+    31,
+    27,
+    21
+   ],
+   "sentences": [
+    3,
+    2,
+    3,
+    2,
+    2,
+    2
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 15.0,
+   "words": 185,
+   "ratio": 0.89,
+   "scenes": 6,
+   "per_scene": [
+    25,
+    21,
+    30,
+    27,
+    32,
+    50
+   ],
+   "sentences": [
+    3,
+    1,
+    2,
+    2,
+    2,
+    3
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 90,
+   "level": "beginner",
+   "budget": 207,
+   "seconds_taken": 14.8,
+   "words": 137,
+   "ratio": 0.66,
+   "scenes": 6,
+   "per_scene": [
+    18,
+    25,
+    25,
+    26,
+    23,
+    20
+   ],
+   "sentences": [
+    3,
+    3,
+    3,
+    3,
+    2,
+    3
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 137 words in total; it must be between 155 and 259 (about 207)"
+   ]
+  },
+  {
+   "topic": "How does binary search work?",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 14.5,
+   "words": 161,
+   "ratio": 0.78,
+   "scenes": 6,
+   "per_scene": [
+    27,
+    22,
+    19,
+    39,
+    21,
+    33
+   ],
+   "sentences": [
+    3,
+    1,
+    1,
+    2,
+    1,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "scenes/3/items/1: repeats an earlier item; every item must be different"
+   ]
+  },
+  {
+   "topic": "Photosynthesis",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 12.8,
+   "words": 111,
+   "ratio": 0.54,
+   "scenes": 5,
+   "per_scene": [
+    16,
+    23,
+    19,
+    22,
+    31
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    2,
+    2
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 111 words in total; it must be between 155 and 259 (about 207)"
+   ]
+  },
+  {
+   "topic": "How do vaccines work?",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 14.6,
+   "words": 122,
+   "ratio": 0.59,
+   "scenes": 5,
+   "per_scene": [
+    22,
+    26,
+    28,
+    25,
+    21
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    1,
+    1
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 122 words in total; it must be between 155 and 259 (about 207)"
+   ]
+  },
+  {
+   "topic": "How does a hash table work?",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 15.5,
+   "words": 165,
+   "ratio": 0.8,
+   "scenes": 6,
+   "per_scene": [
+    22,
+    25,
+    36,
+    30,
+    34,
+    18
+   ],
+   "sentences": [
+    3,
+    2,
+    2,
+    2,
+    1,
+    1
+   ],
+   "passes": true,
+   "errors": []
+  },
+  {
+   "topic": "Explain how caffeine works",
+   "seconds": 90,
+   "level": "intermediate",
+   "budget": 207,
+   "seconds_taken": 14.3,
+   "words": 107,
+   "ratio": 0.52,
+   "scenes": 6,
+   "per_scene": [
+    18,
+    22,
+    20,
+    14,
+    16,
+    17
+   ],
+   "sentences": [
+    3,
+    3,
+    3,
+    1,
+    2,
+    1
+   ],
+   "passes": false,
+   "errors": [
+    "narration has 107 words in total; it must be between 155 and 259 (about 207)"
+   ]
+  }
+ ]
+}
