@@ -518,6 +518,16 @@ The pass changed the app chrome around the stage:
 The stage CSS was not touched and the `make sample` MP4 is frame-for-frame identical (ffmpeg `framemd5`). Only `transform` and `opacity`
 animate in the chrome, and not at all under "reduce motion". The problem list and before/after notes are in `docs/design-pass.md`.
 
+D2 (tag `design-2`) is a second pass with the taste-skill's linter and real-browser inspector. It made these changes:
+- **Headline.** Display size on the input page; at most two lines for every title.
+- **Hairlines and resting shadows.** Removed: secondary controls are flat tone fills.
+- **Labels and glyphs.** The eyebrow kicker is gone, and our own SVG icons replace emoji and glyphs.
+- **Colour.** One accent.
+- **Motion.** A short staggered entrance (transform and opacity only).
+
+The only remaining inspector FAIL is `few-pictures`: it wants found photographs from the internet, which H2 rules out.
+That and the other open items are explained in `docs/design-pass.md`.
+
 ### HTTP API (`backend/app/api/routes.py`)
 
 | Method and path | What it does |

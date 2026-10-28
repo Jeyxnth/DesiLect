@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { getLesson } from "../api/jobs";
+import Icon from "../components/Icon";
 import { ui } from "../i18n/strings";
 import { navigate } from "../router";
 import DiagramScene from "../scenes/DiagramScene";
@@ -48,7 +49,7 @@ export default function SummaryPage({ id }: { id: string }) {
   const lessonHref = `/lesson/${encodeURIComponent(id)}`;
   const back = (label: string) => (
     <a className="button" href={lessonHref} onClick={(e) => { e.preventDefault(); navigate(lessonHref); }}>
-      <span aria-hidden="true">←</span> {label}
+      <Icon name="left" /> {label}
     </a>
   );
   if (error || lesson === null) {

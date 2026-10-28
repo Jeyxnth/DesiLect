@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import Icon from "../components/Icon";
 import { ui } from "../i18n/strings";
 import type { Language, QuizQuestion } from "../types/lesson";
 
@@ -74,8 +75,8 @@ export default function Quiz({ quiz, lang, onReplay, onSkip, onDone, extra }: {
                     aria-keyshortcuts={String(k + 1)}>
                     <span className="quiz-key" aria-hidden="true">{k + 1}</span>
                     <span className="quiz-text">{option}</span>
-                    {state === "right" && <span className="quiz-mark" aria-label={ui(lang, "correct")}>✓</span>}
-                    {state === "wrong" && <span className="quiz-mark" aria-label={ui(lang, "notQuite")}>✗</span>}
+                    {state === "right" && <span className="quiz-mark"><Icon name="check" label={ui(lang, "correct")} /></span>}
+                    {state === "wrong" && <span className="quiz-mark"><Icon name="cross" label={ui(lang, "notQuite")} /></span>}
                   </button>
                 </li>
               );

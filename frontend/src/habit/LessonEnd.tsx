@@ -1,3 +1,4 @@
+import Icon from "../components/Icon";
 import { ui } from "../i18n/strings";
 import type { Language } from "../types/lesson";
 
@@ -6,7 +7,7 @@ export function StreakBadge({ count, lang }: { count: number; lang: Language }) 
   if (count <= 0) return null;
   return (
     <span className="streak-badge" lang={lang} title={ui(lang, "streak")} aria-label={`${ui(lang, "streak")}: ${ui(lang, count === 1 ? "day" : "days", { n: count })}`}>
-      <span aria-hidden="true">🔥</span> {ui(lang, count === 1 ? "day" : "days", { n: count })}
+      <Icon name="flame" /> {ui(lang, count === 1 ? "day" : "days", { n: count })}
     </span>
   );
 }
@@ -31,14 +32,14 @@ export default function LessonEnd({ lang, nextTopics, nextLabels, onTryNext, str
   return (
     <div className="lesson-end" lang={lang}>
       {topics.length > 0 && (
-        <div className="try-next">
+        <section className="try-next" aria-labelledby="try-next-heading">
+          <h2 id="try-next-heading">{ui(lang, "tryNext")}</h2>
           {topics.map((topic, k) => (
             <button type="button" key={topic} className="try-next-card" onClick={() => onTryNext(topic)}>
-              <span className="try-next-kicker">{ui(lang, "tryNext")}</span>
-              <span className="try-next-topic">{nextLabels?.[k] ?? topic}</span>
+              {nextLabels?.[k] ?? topic} <Icon name="right" />
             </button>
           ))}
-        </div>
+        </section>
       )}
       {(streak !== null || onSummary) && (
         <div className="lesson-end-row">
@@ -46,7 +47,7 @@ export default function LessonEnd({ lang, nextTopics, nextLabels, onTryNext, str
           {onSummary && <button type="button" className="revise-toggle" onClick={onSummary}>{ui(lang, "summary")}</button>}
           {streak !== null && saved !== null && (
             <button type="button" className="revise-toggle" aria-pressed={saved} onClick={onToggleSave}>
-              {saved ? "✓ " : ""}{ui(lang, "saveToRevise")}
+              {saved && <Icon name="check" />}{ui(lang, "saveToRevise")}
             </button>
           )}
         </div>

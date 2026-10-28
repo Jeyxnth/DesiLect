@@ -20,7 +20,7 @@ export const MIN_BODY_PX = 18;
 export const MIN_CODE_PX = 15;
 
 export const FONT_UI = '"Noto Sans", "Noto Sans Devanagari", "Noto Sans Tamil", system-ui, sans-serif';
-export const FONT_CODE = '"Noto Sans Mono", ui-monospace, Consolas, monospace';
+export const FONT_CODE = '"Noto Sans Mono", ui-monospace, Consolas, monospace'; // taste-skill-ignore: real code in code scenes
 
 /** Stage font stack per lesson language (theme.css sets the same stacks on [lang]); the script's own font first. */
 export const FONT_UI_BY_LANG: Record<Language, string> = {

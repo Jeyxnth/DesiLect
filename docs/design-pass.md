@@ -52,3 +52,61 @@ is time-driven (G3) and already limited to short position and opacity moves.
 - No page requested anything outside localhost (Playwright request log on the input, player, quiz and summary pages).
 - `make sample` (`scripts/render_sample.py`): 1280x720, the same duration as before, and every frame hash (ffmpeg
   `framemd5`) identical to the render taken before this pass.
+
+# Design pass D2 (tag `design-2`)
+
+A second pass with the taste-skill (`design-taste-frontend`). Both checks were run:
+- `lint.mjs` on `frontend/src` and `index.html`.
+- `inspect.mjs`, a real-browser meter in the local Chrome at 1440, 768 and 390 px, on the input page and the player
+  (an English and a Tamil lesson).
+
+Same hard limits as D1.
+
+The skill's own art-direction steps were not used: the direction draw, found photographs and footage. They are meant
+for marketing sites; this is an app, and `assets.mjs` needs the internet (see "What still fails").
+
+## Fixed
+
+| Rule | Before | After |
+|---|---|---|
+| Headlines over two lines | Input h1 at 28px (1.9vw), no dominant element on the first screen. A long Tamil lesson title took 3 lines at phone width next to "New lesson" | Input h1 at display size, 72px (5vw) on one line at every width. On phones the lesson title gets the full width, so it takes 2 lines or fewer; "New lesson" sits above it at the right |
+| Gradients | None | None |
+| Resting shadows | The summary sheet's paper edge was a box-shadow plus a 1px line | A 12mm white outline: no shadow, no line, no layout change |
+| Hairlines | A rule above the player extras; rules under the summary headings and over the summary footer; 1px outlines on every secondary button, the keyboard hints, the quiz keys, the streak badge, and the summary code and diagram boxes | Space instead of the rule. Secondary buttons, keyboard hints, quiz keys and the streak badge are flat tone fills (`--ui-fill`, text on it 12:1). Segmented toggles are filled segments 2px apart. The summary footer and diagrams sit on a tone step. Form fields keep their borders, as the skill allows |
+| Decorative labels | A small "Try next" kicker inside each topic card (an eyebrow) | One real heading over the two topic buttons |
+| Emoji and glyphs as UI | ⚠ 🔥 ✓ ✗ ▶ ⏮ ⏭ ❚❚ ↺ ← → in the chrome | Our own small SVG icon set (`components/Icon.tsx`): one 24px grid, 2px round strokes. Done/running/failed stage marks are icons; to-do stages are blank |
+| Monospace outside code | The quiz option keys used the code font | The UI font, with tabular figures. The mono face stays only for real code: the code scenes and the summary code block, marked `taste-skill-ignore` |
+| One accent | The streak badge was orange on brown, a second accent | Tone fill, with the flame in the one accent (sky blue) |
+| Motion | Nothing moved on load (0 and 2 elements) | A staggered entrance for the chrome: each part rises 16px into place, about 70ms after the one before it. Transform and opacity only, once on load, never hiding content (fill `backwards`, so press feedback still works), and off under reduced motion. The stage's picture never moves; only its frame enters |
+| Long lines | An export error ran about 134 characters per line | Callouts and notes capped at 72ch |
+
+The stage frame in the player carries `data-ui`. In the skill's terms it is a real interface fragment: the live lesson,
+the product's own output.
+
+## Inspector result
+
+Lint: **0 FAIL**. One WARN, `padStart(2, "0")` in `habit/storage.ts`, which builds the YYYY-MM-DD date for the streak,
+not index numbers.
+
+Inspect, input page and both players: headlines, gradient, shadow, hairline, outlined-box, eyebrow, mono, emoji,
+contrast, measure, overflow and focal-point all pass. What remains:
+
+- **FAIL `few-pictures`** (it wants at least four real photographs or clips per page).
+
+  The skill gets them from open collections over the internet (`assets.mjs`). That breaks H2: no network at runtime,
+  and no downloaded assets in the build. It is also the wrong fit for this app:
+  - the pictures here are the lesson itself, drawn by our components;
+  - a stock photograph cannot know the topic a learner will type.
+
+  Skipped on purpose, as the brief asked.
+- **WARN `no-footage`.** Same reason: no network, and the lesson is the moving picture.
+- **WARN `still-page`.** 8 moving elements on the input page and 15 on the player; under 16 is a warning. More motion
+  would cost phones frames (H6) for no learning value, and the lesson already moves.
+
+## Checks
+
+- `npx tsc --noEmit`: clean.
+- `npm test`: 24 passed.
+- Backend tests: 323 passed (summary PDFs still one A4 page).
+- `scripts/check_offline.py`: OK.
+- `make sample`: 1280x720, 43.41 s (unchanged), all 1302 frame hashes identical to the render taken before D1.

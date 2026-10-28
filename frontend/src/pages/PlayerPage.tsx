@@ -3,6 +3,7 @@ import { getLesson, retryExport, revoiceLesson, watchStatus, type Job } from "..
 import { downloadName } from "../api/slug";
 import { ui } from "../i18n/strings";
 import FallbackNotice from "../components/FallbackNotice";
+import Icon from "../components/Icon";
 import SpeedPanel from "../components/SpeedPanel";
 import LessonEnd from "../habit/LessonEnd";
 import { addRevise, currentStreak, localDay, recordStreak, removeRevise, useHabit } from "../habit/storage";
@@ -125,13 +126,13 @@ export default function PlayerPage({ id }: { id: string }) {
       <header className="player-header">
         <h1 lang={timeline?.language}>{timeline || lesson ? title : "Lesson"}</h1>
         <a className="button small" href="/" onClick={(e) => { e.preventDefault(); goHome(); }}>
-          <span aria-hidden="true">+</span> New lesson
+          <Icon name="plus" /> New lesson
         </a>
       </header>
       {fallback && <FallbackNotice reason={fallback.reason} source={fallback.source} topic={fallback.topic} />}
       {lesson?.meta?.translation_fallback && (
         <div className="fallback-notice" role="status">
-          <strong>⚠ Translation unavailable</strong>
+          <strong><Icon name="alert" /> Translation unavailable</strong>
           <p>The lesson could not be translated on this machine, so it is shown and narrated in English.</p>
         </div>
       )}

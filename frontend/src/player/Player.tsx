@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import Icon from "../components/Icon";
 import { SETTLE_S, sceneAt } from "../scenes/anim";
 import { say } from "../scenes/i18n";
 import { renderScene } from "../scenes/registry";
@@ -154,7 +155,8 @@ export default function Player({ timeline, autoplay = false, onComplete, endExtr
 
   return (
     <div className="player">
-      <div className={`stage-fit${showQuiz ? " quiz-open" : ""}`} ref={fitRef}>
+      {/* data-ui: the live lesson is the product's own interface (a design meter reads it as such, not as decoration) */}
+      <div className={`stage-fit${showQuiz ? " quiz-open" : ""}`} ref={fitRef} data-ui="stage">
         <div className="stage-scaler" style={{ transform: `scale(${scale})` }}>
           <Stage timeline={timeline} t={t} onSeek={(x) => clock.seek(x)} poster={!playing && t < 0.001} />
         </div>
@@ -169,7 +171,7 @@ export default function Player({ timeline, autoplay = false, onComplete, endExtr
         </div>
       )}
       {audioFailed && (
-        <p className="fallback-notice" role="status"><strong>⚠ Audio could not be loaded.</strong> Use Prev / Next or the progress bar to move through the lesson.</p>
+        <p className="fallback-notice" role="status"><strong><Icon name="alert" /> Audio could not be loaded.</strong> Use Prev / Next or the progress bar to move through the lesson.</p>
       )}
       <Controls playing={playing} onToggle={toggle} onPrev={prev} onNext={next} onReplay={replay} />
       {ended && !hasQuiz && endExtra}

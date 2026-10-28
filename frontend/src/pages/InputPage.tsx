@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createLesson, watchStatus, type Job } from "../api/jobs";
 import BrandMark from "../components/BrandMark";
 import FallbackNotice from "../components/FallbackNotice";
+import Icon from "../components/Icon";
 import { StreakBadge } from "../habit/LessonEnd";
 import { currentStreak, localDay, removeRevise, useHabit } from "../habit/storage";
 import { ui } from "../i18n/strings";
@@ -40,6 +41,11 @@ const VOICES: { value: Voice; label: string }[] = [
 ];
 
 type StageState = "done" | "active" | "todo" | "skipped" | "failed";
+
+/** The mark before each stage; todo and skipped stay blank so only finished, running and failed stages draw the eye. */
+const STAGE_MARKS: Record<StageState, JSX.Element | null> = {
+  done: <Icon name="check" />, active: <Icon name="play" />, todo: null, skipped: null, failed: <Icon name="cross" />,
+};
 
 /** Stage 1: concept input, then live job progress until the lesson can play. */
 export default function InputPage() {
@@ -223,7 +229,7 @@ export default function InputPage() {
               const seconds = job.status.timings[s.id];
               return (
                 <li key={s.id} className={`stage-${state}`}>
-                  <span className="stage-mark" aria-hidden="true">{{ done: "✓", active: "▶", todo: "·", skipped: "–", failed: "✗" }[state]}</span>
+                  <span className="stage-mark" aria-hidden="true">{STAGE_MARKS[state]}</span>
                   <span className="stage-label">{s.label}</span>
                   <span className="stage-time">
                     {state === "skipped" ? "not needed" : seconds !== undefined ? `${seconds.toFixed(1)} s` : ""}
