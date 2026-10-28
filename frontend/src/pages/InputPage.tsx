@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useState, type CSSProperties, type FormEvent } from "react";
 import { createLesson, watchStatus, type Job } from "../api/jobs";
 import BrandMark from "../components/BrandMark";
 import FallbackNotice from "../components/FallbackNotice";
@@ -208,7 +208,8 @@ export default function InputPage() {
         </div>
         <label>
           <span className="range-head">Length <output>{req.target_seconds} s</output></span>
-          <input type="range" min={30} max={90} step={5} disabled={busy} value={req.target_seconds} onChange={(e) => setReq({ ...req, target_seconds: Number(e.target.value) })} />
+          <input type="range" min={30} max={90} step={5} disabled={busy} value={req.target_seconds}
+            style={{ "--fill": `${((req.target_seconds - 30) / 60) * 100}%` } as CSSProperties} onChange={(e) => setReq({ ...req, target_seconds: Number(e.target.value) })} />
         </label>
         <button type="submit" className="primary" aria-busy={busy} disabled={busy || req.topic.trim().length < 3}>
           {busy ? <><span className="pulse" aria-hidden="true" /> Generating...</> : error && job ? "Try again" : "Generate"}

@@ -19,7 +19,7 @@
         "pix_fmt": "yuv420p",
         "audio_codec": "aac",
         "duration": 41.733008,
-        "size_bytes": 812203
+        "size_bytes": 822326
       },
       "check": "ok",
       "export": {
@@ -68,7 +68,7 @@
         "pix_fmt": "yuv420p",
         "audio_codec": "aac",
         "duration": 57.62,
-        "size_bytes": 1120689
+        "size_bytes": 1128517
       },
       "check": "ok",
       "export": {

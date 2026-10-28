@@ -83,11 +83,11 @@ export default function TitleCard({ scene, localT, lang }: SceneProps<TitleCardS
   const ic = fadeIn(localT, ICON_IN, IN_S);
 
   // One line at the largest size that fits; otherwise two balanced lines.
-  let size = fitSize(scene.heading, TITLE_MAX, TITLE_MIN, WIDTH, { bold: true, lang });
+  let size = fitSize(scene.heading, TITLE_MAX, TITLE_MIN, WIDTH, { heading: true, lang });
   let lines = [scene.heading];
   if (size === TITLE_MIN) {
     size = 48;
-    lines = wrapLabel(scene.heading, size, WIDTH, { bold: true, lang }).lines;
+    lines = wrapLabel(scene.heading, size, WIDTH, { heading: true, lang }).lines;
   }
   const lineH = size * 1.2 * LINE_SCALE[lang];
   const headTop = 268 - ((lines.length - 1) * lineH) / 2;
@@ -101,7 +101,7 @@ export default function TitleCard({ scene, localT, lang }: SceneProps<TitleCardS
         <Icon kind={iconKind(`${scene.heading} ${sub}`)} />
       </g>
       <g opacity={h} transform={`translate(0 ${(1 - h) * 28})`}>
-        <text className="scene-text" x="640" y={headTop} textAnchor="middle" fontWeight="700" fontSize={size}>
+        <text className="scene-text scene-heading" x="640" y={headTop} textAnchor="middle" fontWeight="700" fontSize={size}>
           {lines.map((line, i) => (
             <tspan key={i} x="640" dy={i === 0 ? 0 : lineH}>{line}</tspan>
           ))}

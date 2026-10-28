@@ -214,12 +214,12 @@ export default function DiagramScene({ scene, localT, beats, lang }: SceneProps<
   let newest = -1;
   reveal.forEach((r, k) => { if (r <= localT && (newest < 0 || r >= (reveal[newest] ?? 0))) newest = k; });
 
-  const headingSize = fitSize(scene.heading, HEADING_PX, 30, AREA_W, { bold: true, lang });
+  const headingSize = fitSize(scene.heading, HEADING_PX, 30, AREA_W, { heading: true, lang });
   const content = layout.scale < 1 ? `translate(640 ${centre.y}) scale(${layout.scale}) translate(-640 ${-centre.y})` : undefined;
 
   return (
     <svg viewBox="0 0 1280 528" role="img" aria-label={`${scene.heading}: ${scene.items.join(", ")}`}>
-      <text className="scene-text" x={LEFT} y={HEADING_Y} fontWeight="700" fontSize={headingSize}>{scene.heading}</text>
+      <text className="scene-text scene-heading" x={LEFT} y={HEADING_Y} fontWeight="700" fontSize={headingSize}>{scene.heading}</text>
       <g transform={content}>
         {arrows.map((a, idx) => {
           const from = layout.boxes[a.from];

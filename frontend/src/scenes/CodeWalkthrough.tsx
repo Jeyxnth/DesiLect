@@ -65,16 +65,16 @@ export default function CodeWalkthrough({ scene, localT, beats, cues, lang: uiLa
   const term = noteIndex >= 0 ? cueTerms[noteIndex] : null;
   const noteAlpha = term ? fadeIn(localT, cues[noteIndex]?.start ?? 0, NOTE_IN_S) : 0;
   const noteX = x0 + cardW + NOTE_GAP;
-  const headingSize = fitSize(scene.heading, HEADING_PX, 30, STAGE_W - 2 * SAFE, { bold: true, lang: uiLang });
+  const headingSize = fitSize(scene.heading, HEADING_PX, 30, STAGE_W - 2 * SAFE, { heading: true, lang: uiLang });
 
   return (
     <svg viewBox="0 0 1280 528" role="img" aria-label={scene.heading}>
-      <text className="scene-text" x={x0} y={HEADING_Y} fontWeight="700" fontSize={headingSize}>{scene.heading}</text>
+      <text className="scene-text scene-heading" x={x0} y={HEADING_Y} fontWeight="700" fontSize={headingSize}>{scene.heading}</text>
       <rect x={x0} y={CARD_TOP} width={cardW} height={cardH} rx="16" fill="var(--code-bg)" stroke="var(--box-edge)" strokeWidth="1.5" />
       {hl && (
         <g opacity={barAlpha} transform={`translate(0 ${barY})`}>
-          <rect x={x0 + 6} y={0} width={cardW - 12} height={lineH} rx="8" fill="var(--accent)" opacity="0.18" />
-          <rect x={x0 + 6} y={0} width={5} height={lineH} rx="2.5" fill="var(--accent)" />
+          <rect x={x0 + 6} y={0} width={cardW - 12} height={lineH} rx="8" fill="var(--highlight)" opacity="0.18" />
+          <rect x={x0 + 6} y={0} width={5} height={lineH} rx="2.5" fill="var(--highlight)" />
         </g>
       )}
       {tokens.map((toks, i) => {
@@ -91,9 +91,9 @@ export default function CodeWalkthrough({ scene, localT, beats, cues, lang: uiLa
       })}
       {term && (
         <g opacity={noteAlpha} transform={`translate(${(1 - noteAlpha) * 16} 0)`}>
-          <rect x={noteX} y={CARD_TOP} width={NOTE_W} height={132} rx="16" fill="var(--panel-2)" stroke="var(--accent)" strokeWidth="2" />
-          <text className="scene-text scene-muted" x={noteX + 22} y={CARD_TOP + 42} fontSize="20">{say(uiLang, "keyTerm")}</text>
-          <text className="scene-code tok-kw" x={noteX + 22} y={CARD_TOP + 96} fontSize={fitSize(term, 34, 18, NOTE_W - 44, { mono: true })}>{term}</text>
+          <rect x={noteX} y={CARD_TOP} width={NOTE_W} height={132} rx="16" fill="var(--note)" />
+          <text className="scene-text" x={noteX + 22} y={CARD_TOP + 42} fontSize="20">{say(uiLang, "keyTerm")}</text>
+          <text className="scene-code" x={noteX + 22} y={CARD_TOP + 96} fontSize={fitSize(term, 34, 18, NOTE_W - 44, { mono: true })}>{term}</text>
         </g>
       )}
     </svg>

@@ -5,10 +5,11 @@ All files are SIL Open Font License 1.1 (`OFL.txt`) and listed in `LICENSES.md` 
 
 | File | Used for | Status |
 |------|----------|--------|
-| `NotoSans-Regular.ttf`, `NotoSans-Bold.ttf` | English UI, headings and captions | bundled (step 7) |
+| `NotoSans-Regular.ttf`, `NotoSans-Bold.ttf` | English UI, body text and captions | bundled (step 7) |
 | `NotoSansMono-Regular.ttf` | Code in `code_walkthrough` | bundled (step 7) |
-| `NotoSansDevanagari-Regular.woff2`, `NotoSansDevanagari-Bold.woff2` | Hindi captions and headings | bundled as WOFF2 (step 10) |
-| `NotoSansTamil-Regular.woff2`, `NotoSansTamil-Bold.woff2` | Tamil captions and headings | bundled as WOFF2 (step 10) |
+| `NotoSansDevanagari-Regular.woff2`, `NotoSansDevanagari-Bold.woff2` | Hindi captions and body text | bundled as WOFF2 (step 10) |
+| `NotoSansTamil-Regular.woff2`, `NotoSansTamil-Bold.woff2` | Tamil captions and body text | bundled as WOFF2 (step 10) |
+| `NotoSerif-Bold.woff2`, `NotoSerifDevanagari-Bold.woff2`, `NotoSerifTamil-Bold.woff2` | Headings (app and stage) in en / hi / ta | bundled as WOFF2 (chalkboard theme) |
 
 The MP4 captions are drawn by the browser on the render page, so these files also decide how captions look in the video,
 whatever fonts the laptop has installed.

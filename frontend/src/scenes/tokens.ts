@@ -22,6 +22,14 @@ export const MIN_CODE_PX = 15;
 export const FONT_UI = '"Noto Sans", "Noto Sans Devanagari", "Noto Sans Tamil", system-ui, sans-serif';
 export const FONT_CODE = '"Noto Sans Mono", ui-monospace, Consolas, monospace'; // taste-skill-ignore: real code in code scenes
 
+/** Headings (title card, scene headings): the bold serif, per language (theme.css --font-head on [lang]). */
+export const FONT_HEAD = '"Noto Serif", "Noto Serif Devanagari", "Noto Serif Tamil", "Noto Sans", serif';
+export const FONT_HEAD_BY_LANG: Record<Language, string> = {
+  en: '"Noto Serif", "Noto Sans", serif',
+  hi: '"Noto Serif Devanagari", "Noto Serif", "Noto Sans Devanagari", serif',
+  ta: '"Noto Serif Tamil", "Noto Serif", "Noto Sans Tamil", serif',
+};
+
 /** Stage font stack per lesson language (theme.css sets the same stacks on [lang]); the script's own font first. */
 export const FONT_UI_BY_LANG: Record<Language, string> = {
   en: '"Noto Sans", system-ui, sans-serif',

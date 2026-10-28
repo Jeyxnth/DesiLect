@@ -532,6 +532,15 @@ D2 (tag `design-2`) is a second pass with the taste-skill's linter and real-brow
 The only remaining inspector FAIL is `few-pictures`: it wants found photographs from the internet, which H2 rules out.
 That and the other open items are explained in `docs/design-pass.md`.
 
+D3 (tag `design-3`), "Chalkboard and Paper":
+- **App:** a cream paper app with charcoal text and saffron actions.
+- **Stage:** a chalkboard-green stage with chalk text, a saffron newest item and progress, a marigold code highlight
+  and a terracotta key-term note.
+- **Headings:** Noto Serif Bold (Devanagari and Tamil faces included; OFL, bundled as WOFF2).
+
+This pass changes the MP4 look on purpose. Durations are unchanged, and the four submission MP4s were re-exported
+from their own timelines (`scripts/reexport_submissions.py`). Contrast and checks are in `docs/design-pass.md`.
+
 ### HTTP API (`backend/app/api/routes.py`)
 
 | Method and path | What it does |

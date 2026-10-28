@@ -32,6 +32,9 @@ this project; no icon set or third-party image is used anywhere in the UI.
 | Noto Sans Mono | `NotoSansMono-Regular.ttf` | code in `code_walkthrough` scenes | SIL Open Font License, Version 1.1 | same | same |
 | Noto Sans Devanagari | `NotoSansDevanagari-{Regular,Bold}.woff2` (converted from the hinted TTF) | Hindi headings and captions, burned into the MP4 | SIL Open Font License, Version 1.1 | same | same |
 | Noto Sans Tamil | `NotoSansTamil-{Regular,Bold}.woff2` (converted from the hinted TTF) | Tamil headings and captions, burned into the MP4 | SIL Open Font License, Version 1.1 | same | same |
+| Noto Serif | `NotoSerif-Bold.woff2` (converted from the hinted TTF, v2.015) | English headings in the app and on the stage, burned into the MP4 | SIL Open Font License, Version 1.1 (name table, licence record) | same | same |
+| Noto Serif Devanagari | `NotoSerifDevanagari-Bold.woff2` (converted from the hinted TTF, v2.006) | Hindi headings, burned into the MP4 | SIL Open Font License, Version 1.1 | same | same |
+| Noto Serif Tamil | `NotoSerifTamil-Bold.woff2` (converted from the hinted TTF, v2.004) | Tamil headings, burned into the MP4 | SIL Open Font License, Version 1.1 | same | same |
 
 ## Tools
 

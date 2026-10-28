@@ -1,4 +1,4 @@
-"""Convert the bundled Noto TTFs for Hindi and Tamil to WOFF2 (step 10). Run once after updating a TTF.
+"""Convert the bundled Noto TTFs (Hindi and Tamil text, serif headings) to WOFF2 (step 10). Run once after updating a TTF.
 
 Noto publishes these scripts as TTF/OTF only; WOFF2 is the same font, Brotli-compressed (about half the size).
 Needs fontTools and brotli (dev tools, not used at runtime). Writes frontend/public/fonts/<name>.woff2 and removes
@@ -13,7 +13,8 @@ from pathlib import Path
 from fontTools.ttLib import TTFont
 
 FONTS = Path(__file__).resolve().parents[1] / "frontend" / "public" / "fonts"
-NAMES = ["NotoSansDevanagari-Regular", "NotoSansDevanagari-Bold", "NotoSansTamil-Regular", "NotoSansTamil-Bold"]
+NAMES = ["NotoSansDevanagari-Regular", "NotoSansDevanagari-Bold", "NotoSansTamil-Regular", "NotoSansTamil-Bold",
+         "NotoSerif-Bold", "NotoSerifDevanagari-Bold", "NotoSerifTamil-Bold"]  # serif headings: the chalkboard theme
 
 
 def main() -> int:

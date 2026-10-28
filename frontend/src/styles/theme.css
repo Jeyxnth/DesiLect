@@ -36,30 +36,59 @@
   font-display: swap;
 }
 @font-face {
+  font-family: "Noto Serif";
+  src: local("Noto Serif Bold"), url("/fonts/NotoSerif-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Serif Devanagari";
+  src: local("Noto Serif Devanagari Bold"), url("/fonts/NotoSerifDevanagari-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Noto Serif Tamil";
+  src: local("Noto Serif Tamil Bold"), url("/fonts/NotoSerifTamil-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+@font-face {
   font-family: "Noto Sans Mono"; /* taste-skill-ignore: real code only (code scenes, summary code) */
   src: local("Noto Sans Mono"), url("/fonts/NotoSansMono-Regular.ttf") format("truetype");
   font-weight: 400;
   font-display: swap;
 }
 
-/* Design tokens. src/scenes/tokens.ts mirrors the sizes; change both together. */
+/* Design tokens: "Chalkboard and Paper". src/scenes/tokens.ts mirrors the sizes and font stacks; change both together.
+   The app is paper (cream ground, white surfaces, charcoal ink, saffron actions); the lesson stage is a chalkboard
+   (green board, chalk-white text). :root holds the paper set; .stage-canvas, .render-root and the stage placeholder
+   switch to the chalkboard set below, and the summary sheet sets its own print colours. Every pair is WCAG AA. */
 :root {
-  /* colour: dark blue background, one accent, high-contrast text */
-  --bg: #0b1428;
-  --panel: #12203b;          /* stage background */
-  --panel-2: #1b2d50;        /* diagram boxes, side notes */
-  --box-edge: #4a6185;
-  --line: #c3d0e3;           /* arrows */
-  --text: #f5f8fc;
-  --muted: #9fb0c8;
-  --accent: #38bdf8;
-  --warn: #fbbf24;           /* UI warnings only (fallback notice), never on the stage */
-  --caption-band: rgba(5, 10, 22, 0.7);
-  --code-bg: #0a1222;
-  --code-kw: #38bdf8;        /* keywords use the accent */
-  --code-str: #b9e4a8;
-  --code-num: #f7c98b;
-  --code-com: #7d8ea8;
+  --bg: #FBF6EC;             /* cream paper */
+  --panel: #FFFFFF;          /* cards and fields */
+  --panel-2: #FFFFFF;        /* quiz options */
+  --text: #2B2A26;           /* soft charcoal: 13.3:1 on the paper */
+  --muted: #6B665B;          /* 5.3:1 on the paper */
+  --accent: #E2711D;         /* saffron: buttons (with charcoal text, 4.5:1), progress, the newest diagram item */
+  --accent-hover: #EC8A3E;
+  --accent-ink: #A9520F;     /* saffron as text, focus ring or thin line on paper (5.0:1); plain saffron is 2.95:1 */
+  --accent-2: #B8412F;       /* terracotta: emphasis, the key-term note, errors (5.1:1 on the paper) */
+  --highlight: #F2C14E;      /* marigold: the code highlight bar */
+  --board: #1F4D45;          /* the chalkboard green, for anything drawn as the stage outside the canvas */
+  --warn: #C98A1B;           /* fallback notice bar and icon (text uses --warn-ink: the amber itself is 2.7:1) */
+  --warn-ink: #8A5A0F;
+  --warn-bg: #FFF3D6;
+
+  /* stage colours, used on the canvas (overridden there): kept here so the summary diagram and old names resolve */
+  --box-edge: #8C8576;
+  --line: #2B2A26;
+  --caption-band: rgba(11, 31, 27, 0.72);
+  --code-bg: #F4EEE2;
+  --code-kw: #A9520F;
+  --code-str: #2F6E45;
+  --code-num: #9A3829;
+  --code-com: #6B665B;
 
   /* type and spacing */
   --heading-px: 44px;
@@ -68,29 +97,50 @@
   --safe: 64px;
 
   --font-ui: "Noto Sans", "Noto Sans Devanagari", "Noto Sans Tamil", system-ui, sans-serif;
+  --font-head: "Noto Serif", "Noto Serif Devanagari", "Noto Serif Tamil", "Noto Sans", serif; /* headings: bold serif */
   --font-code: "Noto Sans Mono", ui-monospace, Consolas, monospace; /* taste-skill-ignore: real code only */
   --caption-lh: 1.3;
 
-  /* App chrome only (never read by the stage, so the MP4 frames do not depend on them). Contrast on --bg/--panel: AA. */
-  --ui-edge: #6a82a6;        /* control borders, >= 3.4:1 on every surface */
-  --ui-fill: #1d3156;        /* secondary controls: a tone step, not an outline (text on it 12:1) */
-  --ui-hover: #284270;       /* hover fill (text on it 10:1) */
-  --ui-track: #34496f;       /* empty part of a progress bar (accent fill on it: 4.2:1) */
-  --ui-overlay: #081020;     /* quiz sheet over the stage, opaque */
-  --accent-hover: #7dd3fc;
-  --ok: #4ade80;
-  --ok-bg: #12351f;
-  --bad: #f87171;
-  --bad-text: #fca5a5;
-  --bad-bg: #3f1d1d;
-  --warn-bg: #2e2509;
-  --placeholder: #8193ad;    /* 5.2:1 on --panel */
+  /* App chrome only (never read by the stage). */
+  --ui-edge: #8C8576;        /* field borders: 3.7:1 on white, 3.4:1 on the paper */
+  --ui-fill: #EFE6D3;        /* secondary controls: a tone step on the paper (charcoal on it 11.6:1) */
+  --ui-hover: #E6DAC2;       /* hover fill (charcoal on it 10.4:1) */
+  --ui-track: #EFE6D3;       /* empty part of a progress bar (saffron ink fill on it 4.3:1) */
+  --ui-overlay: #FBF6EC;     /* the quiz: a paper worksheet laid over the board */
+  --ok: #3F8F5A;             /* correct: border and mark */
+  --ok-ink: #2F6E45;         /* correct as text (5.3:1 on --ok-bg) */
+  --ok-bg: #E6F2EA;
+  --bad: #B8412F;            /* wrong or error: border, mark and text (4.7:1 on --bad-bg) */
+  --bad-text: #B8412F;
+  --bad-bg: #FBE9E5;
+  --placeholder: #8C8576;
 
   /* spacing (4 px base) and type scale (rem, so the learner's browser text size still applies) */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 32px; --sp-7: 48px;
   --fs-sm: 0.875rem; --fs-base: 1rem; --fs-md: 1.125rem; --fs-lg: 1.375rem; --fs-xl: 1.75rem;
   --r-sm: 8px; --r-md: 12px;
   --tap: 44px;               /* minimum touch target */
+}
+
+/* The chalkboard: the stage canvas (player and MP4), the render page and the stage placeholder.
+   Chalk on the board 8.6:1, muted chalk 6.3:1, saffron progress 3.0:1, saffron newest-box edge on a box 3.9:1,
+   marigold bar 7.3:1 on the code card, chalk on the terracotta note 4.9:1. */
+.stage-canvas, .render-root, .stage-skeleton {
+  --panel: #1F4D45;          /* the board */
+  --panel-2: #173B35;        /* diagram boxes, step pill, a darker slate patch */
+  --box-edge: #8FB3A8;
+  --line: #E9E3D2;           /* arrows and their labels */
+  --text: #F7F3E8;           /* chalk white */
+  --muted: #C5D6CF;
+  --accent: #E2711D;
+  --highlight: #F2C14E;
+  --note: #B8412F;           /* the key-term note */
+  --caption-band: rgba(11, 31, 27, 0.72);
+  --code-bg: #173B35;
+  --code-kw: #F5A562;        /* keywords: light saffron, 6.1:1 */
+  --code-str: #B9E0B0;
+  --code-num: #F2C14E;
+  --code-com: #9DB8AE;
 }
 
 * { box-sizing: border-box; }
@@ -105,10 +155,10 @@ body {
 
 /* Layout */
 .page { max-width: 1100px; margin: 0 auto; padding: var(--sp-5) var(--sp-4) var(--sp-7); line-height: 1.5; }
-.page h1, .page h2 { text-wrap: balance; letter-spacing: -0.01em; line-height: 1.25; }
+.page h1, .page h2 { font-family: var(--font-head); font-weight: 700; text-wrap: balance; letter-spacing: -0.01em; line-height: 1.25; }
 .page p { text-wrap: pretty; }
-.page :is(input, select, button) { color-scheme: dark; } /* native parts (select list, range) in the dark palette */
-.notice { color: var(--warn); }
+.page :is(input, select, button) { color-scheme: light; } /* native parts (select list, range) on paper */
+.notice { color: var(--warn-ink); }
 .scene-text { fill: var(--text); font-family: var(--font-ui); }
 .scene-code { fill: var(--text); font-family: var(--font-code); }
 .scene-muted { fill: var(--muted); }
@@ -122,13 +172,14 @@ body {
 /* The stage is a fixed 1280x720 logical canvas. The player scales it with a CSS transform to keep 16:9.
    No CSS transitions or animations anywhere: visuals are a pure function of time (G3). Only transform
    and opacity change per frame; nothing that moves has a filter or shadow. */
-.stage-fit { width: min(100%, calc((100vh - 140px) * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; position: relative; overflow: hidden; border-radius: 12px; background: var(--panel); }
+.stage-fit { width: min(100%, calc((100vh - 140px) * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; position: relative; overflow: hidden; border-radius: 12px; background: var(--board); }
 .stage-scaler { width: 1280px; height: 720px; transform-origin: 0 0; }
-.stage-canvas { position: relative; width: 1280px; height: 720px; background: var(--panel); overflow: hidden; font-family: var(--font-ui); }
+.stage-canvas { position: relative; width: 1280px; height: 720px; background: var(--panel); color: var(--text); overflow: hidden; font-family: var(--font-ui); } /* chalk: captions inherit it */
 /* Font stack and line height from the lesson language (Stage sets lang from timeline.language; scenes/tokens.ts mirrors this). */
-.stage-canvas[lang="en"] { --font-ui: "Noto Sans", system-ui, sans-serif; }
-.stage-canvas[lang="hi"] { --font-ui: "Noto Sans Devanagari", "Noto Sans", system-ui, sans-serif; --caption-lh: 1.6; }
-.stage-canvas[lang="ta"] { --font-ui: "Noto Sans Tamil", "Noto Sans", system-ui, sans-serif; --caption-lh: 1.6; }
+.stage-canvas[lang="en"] { --font-ui: "Noto Sans", system-ui, sans-serif; --font-head: "Noto Serif", "Noto Sans", serif; }
+.stage-canvas[lang="hi"] { --font-ui: "Noto Sans Devanagari", "Noto Sans", system-ui, sans-serif; --font-head: "Noto Serif Devanagari", "Noto Serif", "Noto Sans Devanagari", serif; --caption-lh: 1.6; }
+.stage-canvas[lang="ta"] { --font-ui: "Noto Sans Tamil", "Noto Sans", system-ui, sans-serif; --font-head: "Noto Serif Tamil", "Noto Serif", "Noto Sans Tamil", serif; --caption-lh: 1.6; }
+.scene-heading { font-family: var(--font-head); } /* scene titles and headings: the bold serif, measured with it (measure.ts) */
 .step-pill { position: absolute; left: var(--safe); top: 20px; height: 36px; line-height: 36px; padding: 0 16px; border-radius: 18px; background: var(--panel-2); color: var(--muted); font-size: 20px; font-weight: 700; white-space: nowrap; }
 .scene-area { position: absolute; left: 0; top: 72px; width: 1280px; height: 528px; }
 .scene-area svg { width: 1280px; height: 528px; display: block; }
@@ -137,7 +188,7 @@ body {
 /* Lines are wrapped in CaptionBar (Intl.Segmenter, at most two); no CSS clamp, which clips Indic matras. */
 .caption-bar .caption-line { display: block; white-space: nowrap; }
 .progress { position: absolute; left: 0; top: 704px; width: 1280px; height: 16px; display: flex; align-items: flex-end; cursor: pointer; background: var(--caption-band); }
-.progress-track { position: relative; width: 100%; height: 6px; background: #050a16; }
+.progress-track { position: relative; width: 100%; height: 6px; background: #13312C; } /* saffron fill on it 4.3:1 */
 .progress-fill { height: 100%; width: 100%; background: var(--accent); transform-origin: 0 50%; }
 .progress-tick { position: absolute; top: -6px; width: 3px; height: 12px; margin-left: -1px; border-radius: 1px; background: var(--muted); }
 .progress-tick.passed { background: var(--text); }
@@ -146,8 +197,7 @@ body {
    Buttons: one shape (44 px tall, 8 px radius), three kinds: primary (accent fill), secondary (outline), ghost (text).
    Motion: only transform (a 1 px press) and opacity (loading pulse) ever animate, and neither does under reduce motion. */
 
-:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-.summary-sheet :focus-visible { outline-color: #0369a1; }
+:focus-visible { outline: 3px solid var(--accent-ink); outline-offset: 2px; }
 
 .button, .controls button, .form button, .revise-toggle, .revise-list button, .quiz-skip, .quiz-btn {
   min-height: var(--tap); display: inline-flex; align-items: center; justify-content: center; gap: var(--sp-2);
@@ -162,7 +212,7 @@ body {
   transform: translateY(1px);
 }
 .button.primary, .form .primary, .quiz-btn, .controls .controls-main {
-  background: var(--accent); color: var(--bg);
+  background: var(--accent); color: var(--text);
 }
 :is(.button.primary, .form .primary, .quiz-btn, .controls .controls-main):not(:disabled):hover {
   background: var(--accent-hover);
@@ -179,7 +229,7 @@ body {
 .controls kbd { display: inline-flex; align-items: center; font-family: var(--font-ui); font-size: 0.75em; font-weight: 400; line-height: 1.4;
   color: var(--text); background: var(--panel); border-radius: 4px; padding: 1px 6px; }
 .controls kbd .icon { width: 1.1em; height: 1.1em; }
-.controls .controls-main kbd { color: var(--bg); background: rgba(11, 20, 40, 0.16); }
+.controls .controls-main kbd { color: var(--text); background: rgba(43, 42, 38, 0.12); }
 
 /* Render page: exactly 1280x720 for capture */
 .render-root { width: 1280px; height: 720px; overflow: hidden; background: var(--panel); }
@@ -190,7 +240,7 @@ body {
 .brand { display: flex; align-items: center; gap: var(--sp-3); }
 .brand-mark { flex: none; width: clamp(36px, 4.6vw, 68px); height: clamp(36px, 4.6vw, 68px); }
 .brand h1 { font-size: clamp(2.25rem, 5vw, 4.5rem); line-height: 1.02; letter-spacing: -0.03em; margin: 0; }
-.tagline { margin: var(--sp-2) 0 0; color: var(--muted); max-width: 62ch; }
+.tagline { margin: var(--sp-2) 0 0; color: var(--text); max-width: 62ch; }
 
 .form { display: grid; gap: var(--sp-5); }
 .form label, .field { display: grid; gap: var(--sp-2); }
@@ -203,7 +253,14 @@ body {
 .form input:not([type="range"]):hover:not(:disabled), .form select:hover:not(:disabled), .revoice select:hover:not(:disabled) { border-color: var(--muted); }
 .form input::placeholder { color: var(--placeholder); }
 .form input:disabled, .form select:disabled { opacity: 0.55; cursor: not-allowed; }
-.form input[type="range"] { width: 100%; height: var(--tap); margin: 0; accent-color: var(--accent); cursor: pointer; }
+.form input[type="range"] { width: 100%; height: var(--tap); margin: 0; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; }
+/* a flat track in the paper tone with the filled part in saffron ink, and a saffron thumb (no native dark track) */
+.form input[type="range"]::-webkit-slider-runnable-track { height: 6px; border-radius: 3px;
+  background: linear-gradient(to right, var(--accent-ink) var(--fill, 0%), var(--ui-hover) var(--fill, 0%)); } /* taste-skill-ignore: two flat colours, the fill amount, not a gradient */
+.form input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; margin-top: -8px; border-radius: 50%; background: var(--accent); border: 3px solid var(--panel); }
+.form input[type="range"]::-moz-range-track { height: 6px; border-radius: 3px; background: var(--ui-hover); }
+.form input[type="range"]::-moz-range-progress { height: 6px; border-radius: 3px; background: var(--accent-ink); }
+.form input[type="range"]::-moz-range-thumb { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); border: 3px solid var(--panel); }
 .range-head { display: flex; justify-content: space-between; align-items: baseline; }
 .range-head output { font-variant-numeric: tabular-nums; color: var(--muted); font-weight: 400; }
 .concept { display: grid; gap: var(--sp-2); }
@@ -215,10 +272,10 @@ body {
 .form .toggle button:first-child { border-radius: var(--r-sm) 0 0 var(--r-sm); }
 .form .toggle button:last-child { border-radius: 0 var(--r-sm) var(--r-sm) 0; }
 .form .toggle button:focus-visible { position: relative; z-index: 1; }
-.form .toggle button[aria-pressed="true"] { background: var(--accent); color: var(--bg); font-weight: 700; }
+.form .toggle button[aria-pressed="true"] { background: var(--accent); color: var(--text); font-weight: 700; }
 .form .primary { width: 100%; font-size: var(--fs-md); }
 /* Busy: still clearly readable (not faded) and plainly not clickable */
-.form .primary[aria-busy="true"], .form .primary[aria-busy="true"]:hover { opacity: 1; background: var(--panel); color: var(--accent); cursor: progress; }
+.form .primary[aria-busy="true"], .form .primary[aria-busy="true"]:hover { opacity: 1; background: var(--ui-fill); color: var(--accent-ink); cursor: progress; }
 
 .muted { color: var(--muted); }
 .pulse { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: pulse 1.2s ease-in-out infinite; }
@@ -235,11 +292,11 @@ body {
 .stage-time { font-variant-numeric: tabular-nums; color: var(--muted); }
 .stage-hint { grid-column: 2 / 4; color: var(--muted); font-weight: 400; font-size: var(--fs-sm); }
 .stage-todo, .stage-skipped { color: var(--muted); }
-.stage-active { color: var(--accent); font-weight: 700; }
+.stage-active { color: var(--accent-ink); font-weight: 700; }
 .stage-active .stage-mark { animation: pulse 1.2s ease-in-out infinite; }
-.stage-failed { color: var(--warn); font-weight: 700; }
+.stage-failed { color: var(--bad); font-weight: 700; }
 .job-bar { height: 6px; background: var(--ui-track); border-radius: 3px; overflow: hidden; }
-.job-bar-fill { height: 100%; background: var(--accent); }
+.job-bar-fill { height: 100%; background: var(--accent-ink); }
 .job-note { margin: 0; color: var(--muted); font-size: var(--fs-sm); }
 
 /* Callouts: error (red), fallback and warnings (amber). Same shape; the colour and the bold first line carry the meaning. */
@@ -247,7 +304,8 @@ body {
 .error { color: var(--bad-text); background: var(--bad-bg); border-color: var(--bad); }
 .error strong { color: var(--text); }
 .fallback-notice { color: var(--text); background: var(--warn-bg); border-color: var(--warn); }
-.fallback-notice strong { color: var(--warn); }
+.fallback-notice strong { color: var(--warn-ink); }
+.fallback-notice strong .icon { color: var(--warn); }
 :is(.error, .fallback-notice) strong .icon { width: 1.1em; height: 1.1em; vertical-align: -0.2em; margin-right: var(--sp-1); }
 .error, .fallback-notice, .job-note, .state-card p, .speed-panel p { max-width: 72ch; }
 .fallback-notice p { margin: var(--sp-1) 0 0; }
@@ -262,6 +320,7 @@ body {
 .stage-skeleton { width: min(100%, calc((100vh - 140px) * 16 / 9)); aspect-ratio: 16 / 9; margin: 0 auto; border-radius: 12px;
   background: var(--panel); display: flex; align-items: center; justify-content: center; gap: var(--sp-2); color: var(--muted); }
 .stage-skeleton .pulse { color: var(--accent); }
+.stage-skeleton { color: var(--muted); }
 
 /* ---------- Player page ---------- */
 .player-header { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); margin-bottom: var(--sp-3); }
@@ -270,7 +329,7 @@ body {
 .player-header .button { flex: none; }
 .downloads { display: flex; flex-wrap: wrap; gap: var(--sp-2); justify-content: center; align-items: center; margin: var(--sp-2) 0 var(--sp-3); }
 .downloads .button.primary { min-width: 12em; }
-.downloads .button.primary:disabled { background: var(--panel); color: var(--muted); opacity: 1; }
+.downloads .button.primary:disabled { background: var(--ui-fill); color: var(--muted); opacity: 1; }
 p.downloads { font-size: var(--fs-sm); }
 .player-extras { display: grid; gap: var(--sp-3); margin-top: var(--sp-6); }
 .revoice { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
@@ -308,17 +367,17 @@ p.downloads { font-size: var(--fs-sm); }
 .quiz-card { width: 100%; max-width: 760px; margin: auto; display: grid; gap: var(--sp-3); }
 .quiz-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2) var(--sp-3); flex-wrap: wrap; }
 .quiz-count { color: var(--muted); margin: 0; white-space: nowrap; font-size: var(--fs-sm); }
-.quiz-question { font-size: var(--fs-lg); font-weight: 700; margin: 0; line-height: 1.35; }
+.quiz-question { font-family: var(--font-head); font-size: var(--fs-lg); font-weight: 700; margin: 0; line-height: 1.35; }
 .quiz-options { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-2); }
 .quiz-option { width: 100%; height: 100%; min-height: var(--tap); display: flex; align-items: center; gap: var(--sp-3); text-align: left;
   padding: var(--sp-2) var(--sp-3); font: inherit; color: var(--text); border-radius: var(--r-sm); cursor: pointer;
   background: var(--panel-2); border: 2px solid var(--ui-edge); transition: transform 120ms ease-out; }
-.quiz-option:not(:disabled):hover { border-color: var(--accent); background: var(--ui-hover); }
+.quiz-option:not(:disabled):hover { border-color: var(--accent-ink); background: var(--ui-fill); }
 .quiz-option:disabled { cursor: default; }
 .quiz-option.right { border-color: var(--ok); background: var(--ok-bg); }
 .quiz-option.wrong { border-color: var(--bad); background: var(--bad-bg); }
 .quiz-option.other { opacity: 0.7; }
-.quiz-key { flex: none; width: 1.75em; height: 1.75em; display: grid; place-items: center; border-radius: 50%; background: var(--panel);
+.quiz-key { flex: none; width: 1.75em; height: 1.75em; display: grid; place-items: center; border-radius: 50%; background: var(--ui-fill);
   color: var(--text); font-size: 0.85em; font-weight: 700; font-variant-numeric: tabular-nums; }
 .quiz-text { flex: 1; }
 .quiz-mark { flex: none; display: flex; }
@@ -327,12 +386,12 @@ p.downloads { font-size: var(--fs-sm); }
 .quiz-option.wrong .quiz-mark { color: var(--bad); }
 .quiz-feedback { display: flex; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 .quiz-feedback p { flex: 1; margin: 0; min-width: 12em; }
-.quiz-feedback .right { color: var(--ok); }
+.quiz-feedback .right { color: var(--ok-ink); }
 .quiz-feedback .wrong { color: var(--bad); }
 .quiz-btn { padding: 0 var(--sp-5); }
 .quiz-skip { margin-left: auto; white-space: nowrap; min-height: 40px; padding: 0 var(--sp-3); font-size: var(--fs-sm); }
 .quiz-end { justify-items: center; text-align: center; gap: var(--sp-2); }
-.quiz-score { font-size: 3em; font-weight: 700; margin: 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.quiz-score { font-family: var(--font-head); font-size: 3em; font-weight: 700; margin: 0; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .quiz-end > .quiz-btn { margin-bottom: var(--sp-3); }
 
 /* Narrow screens: the stage is too short to hold the quiz, so the quiz takes the stage's place at its own height */
@@ -356,20 +415,20 @@ p.downloads { font-size: var(--fs-sm); }
   padding: var(--sp-3) var(--sp-4); border-radius: var(--r-sm); cursor: pointer; background: var(--ui-fill); color: var(--text);
   border: 2px solid transparent; font: inherit; font-weight: 700;
   transition: transform 120ms ease-out; }
-.try-next-card:hover { border-color: var(--accent); background: var(--ui-hover); }
-.try-next-card .icon { color: var(--accent); }
+.try-next-card:hover { border-color: var(--accent-ink); background: var(--ui-hover); }
+.try-next-card .icon { color: var(--accent-ink); }
 .lesson-end-row { display: flex; align-items: center; justify-content: center; gap: var(--sp-2) var(--sp-3); flex-wrap: wrap; }
 .streak-badge { display: inline-flex; align-items: center; gap: var(--sp-1); min-height: 32px; padding: 0 var(--sp-3); border-radius: 999px;
   background: var(--ui-fill); color: var(--text); font-weight: 700; white-space: nowrap; }
 .streak-badge .icon { color: var(--accent); }
-.revise-toggle[aria-pressed="true"] { color: var(--accent); }
+.revise-toggle[aria-pressed="true"] { color: var(--accent-ink); }
 .revise-list { margin-top: var(--sp-6); }
 .revise-list h2 { font-size: var(--fs-md); margin: 0 0 var(--sp-3); }
 .revise-list ul { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--sp-2); }
 .revise-list li { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: var(--sp-3); padding: var(--sp-2) var(--sp-2) var(--sp-2) var(--sp-4);
   background: var(--panel); border-radius: var(--r-sm); }
 .revise-list a { color: var(--text); font-weight: 700; text-decoration: none; }
-.revise-list a:hover { color: var(--accent); text-decoration: underline; }
+.revise-list a:hover { color: var(--accent-ink); text-decoration: underline; }
 .revise-list .muted { font-size: var(--fs-sm); white-space: nowrap; }
 .revise-list button { min-height: 40px; padding: 0 var(--sp-3); font-weight: 400; font-size: var(--fs-sm); color: var(--muted); }
 @media (max-width: 640px) {
@@ -412,17 +471,20 @@ p.downloads { font-size: var(--fs-sm); }
    it is measured on screen, so print and the server PDF lay out the same. Light colours for paper: the shared
    tokens are overridden inside the sheet, which also recolours the reused diagram SVG. */
 @page { size: A4; margin: 12mm; }
-.summary-page { padding: var(--sp-4); display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: var(--sp-3); background: var(--bg); min-height: 100%; }
+.summary-page { --bg: #EFE6D3; padding: var(--sp-4); display: grid; grid-template-columns: minmax(0, 1fr); justify-items: center; gap: var(--sp-3); background: var(--bg); min-height: 100%; }
+.summary-toolbar .button:not(.primary) { background: var(--panel); } /* the page itself is the tone step here */
 .summary-toolbar { width: 210mm; max-width: 100%; display: flex; justify-content: space-between; align-items: center; gap: var(--sp-3); flex-wrap: wrap; }
 .summary-sheet {
-  --panel: #ffffff; --panel-2: #eef3fa; --box-edge: #7b8ba3; --line: #334155; --text: #111827; --muted: #4b5563; --accent: #0369a1;
-  --code-bg: #f3f4f6; --code-kw: #0369a1; --code-str: #166534; --code-num: #9a3412; --code-com: #6b7280;
+  --panel: #FFFFFF; --panel-2: #F6EFE0; --box-edge: #8C8576; --line: #2B2A26; --text: #2B2A26; --muted: #5E5A50; --accent: #B8412F;
+  --code-bg: #F6EFE0; --code-kw: #A9520F; --code-str: #2F6E45; --code-num: #9A3829; --code-com: #6B665B;
   width: 186mm; height: 273mm; overflow: hidden; background: #fff; color: var(--text); padding: 0; box-sizing: border-box;
   display: flex; flex-direction: column; gap: 2.5mm; line-height: 1.35; font-family: "Noto Sans", system-ui, sans-serif;
   margin: 12mm; outline: 12mm solid #fff; /* the paper margin, on screen only; white paper on the blue ground needs no edge line */
 }
 .summary-sheet[lang="hi"] { font-family: "Noto Sans Devanagari", "Noto Sans", system-ui, sans-serif; line-height: 1.6; }
 .summary-sheet[lang="ta"] { font-family: "Noto Sans Tamil", "Noto Sans", system-ui, sans-serif; line-height: 1.6; }
+.summary-sheet :is(h1, h2, h3) { font-family: var(--font-head); }
+.summary-sheet[lang="en"] { --font-head: "Noto Serif", serif; }
 .summary-sheet h1 { font-size: 1.9em; margin: 0; line-height: 1.25; }
 .summary-sheet h2 { font-size: 1.15em; margin: 1.5mm 0 0; color: var(--accent); }
 .summary-sheet h3 { font-size: 1em; margin: 0 0 0.5mm; }

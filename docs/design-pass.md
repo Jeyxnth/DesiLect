@@ -110,3 +110,76 @@ contrast, measure, overflow and focal-point all pass. What remains:
 - Backend tests: 323 passed (summary PDFs still one A4 page).
 - `scripts/check_offline.py`: OK.
 - `make sample`: 1280x720, 43.41 s (unchanged), all 1302 frame hashes identical to the render taken before D1.
+
+# Design pass D3: "Chalkboard and Paper" (tag `design-3`)
+
+A new colour scheme and serif headings. Unlike D1 and D2, this pass changes the stage on purpose, so the MP4 frames
+change. The lesson JSON, timeline, audio, timing and backend did not change. Every MP4 keeps its exact duration.
+
+## The scheme
+
+| Role | Colour | Where |
+|---|---|---|
+| Page (paper) | `#FBF6EC` cream | app background |
+| Surface | `#FFFFFF` | cards, fields, quiz options |
+| Text | `#2B2A26` soft charcoal (13.3:1) | all running text, including the tagline |
+| Muted | `#6B665B` (5.3:1) | secondary notes |
+| Stage | `#1F4D45` chalkboard green, chalk `#F7F3E8` text (8.6:1) | the lesson canvas, player and MP4 |
+| Primary accent | `#E2711D` saffron | buttons (with charcoal text, 4.5:1), the stage progress bar, the newest diagram item, the title icon |
+| Second accent | `#B8412F` terracotta | summary headings, the key-term note (a filled card, chalk text 4.9:1), errors |
+| Highlight | `#F2C14E` marigold | the code highlight bar (7.3:1 on the code card) |
+| Correct | `#3F8F5A` | quiz border and mark; the word "Correct" uses `#2F6E45` (5.3:1) |
+| Wrong / error | `#B8412F` on `#FBE9E5` (4.7:1) | quiz and error callouts |
+| Fallback notice | `#C98A1B` bar and icon on `#FFF3D6` | the title text uses `#8A5A0F` (5.4:1) |
+
+Where the scheme's own colour fails as text, I added a darker "ink" of it:
+- Saffron on cream is 2.95:1, so links, focus rings, the job bar and the active stage use `#A9520F` (5.0:1).
+- The fallback amber is 2.7:1 on its own background, so its text uses `#8A5A0F`.
+
+The scheme's colours stay as fills, bars and icons.
+
+The quiz is a cream paper worksheet laid over the board, so the correct and wrong colours work as given. On the
+green board they would be under 2:1.
+
+Headings use **Noto Serif Bold**, with Noto Serif Devanagari and Noto Serif Tamil for Hindi and Tamil. That covers
+the app headings, the stage's title cards and scene headings, the quiz question and score, and the summary
+headings. Body text, captions and labels stay in Noto Sans.
+
+The three faces came from the Noto repository: `github.com/notofonts/notofonts.github.io`, the same source as the
+other fonts. All three are SIL OFL 1.1, checked in each font's name table. They are converted to WOFF2 by
+`scripts/fonts_to_woff2.py` (360 KB in all) and listed in LICENSES.md. Stage headings are also measured with the
+serif (`measure.ts`, `heading: true`), so layouts fit the real glyph widths.
+
+## Bugs found and fixed while doing it
+
+- The captions were charcoal on the dark caption band. They inherited `body`'s colour, and the stage never set its
+  own. `.stage-canvas` now sets chalk text.
+- The native range slider drew a near-black track on cream. It now has a flat track in the palette and a saffron
+  thumb.
+
+## Checks
+
+- Contrast: every text pair is WCAG AA (4.5:1), and every control or progress edge is at least 3:1. Each pair was
+  computed; the numbers are in the table and in `theme.css`.
+- Typecheck clean. Vitest: 24 passed. Backend: 331 passed. Offline check: OK.
+- Stage frames from the render page (the MP4 source) were checked in English, Hindi and Tamil, on title, code and
+  diagram scenes. Matras are not clipped, captions read, and the serif shows in all three scripts.
+- `make sample`: 1280x720, 43.41 s, exactly as before; the frames differ by design.
+- Submission MP4s: re-exported from their own timelines and audio, with no new plan or voice
+  (`scripts/reexport_submissions.py`). All four use the smooth export and match their timelines to within 0.03 s:
+
+  | Video | Duration (timeline) |
+  |---|---|
+  | caffeine en | 41.00 s (41.00) |
+  | caffeine hi | 61.00 s (60.97) |
+  | binary search en | 41.73 s (41.71) |
+  | binary search hi | 57.62 s (57.62) |
+
+  The captions are unchanged.
+- Taste lint: 0 FAIL. Taste inspector: the same single FAIL as D2 (`few-pictures`, see D2).
+
+  One new WARN, `palette-cream`: the skill flags a cream ground as a generated-page habit. Here it is the chosen
+  brand, the paper of a school notebook, so it stays. The skill's own guidance is to keep a brand's colours and say
+  so in the report.
+
+  The `grey-body` WARN it raised was right, and is fixed: the tagline is now in full ink.

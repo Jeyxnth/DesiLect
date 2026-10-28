@@ -2,10 +2,12 @@
 // so layouts stay a pure function of the scene: the render page waits for document.fonts before drawing.
 import { useEffect, useState } from "react";
 import type { Language } from "../types/lesson";
-import { FONT_CODE, FONT_UI, FONT_UI_BY_LANG } from "./tokens";
+import { FONT_CODE, FONT_HEAD, FONT_HEAD_BY_LANG, FONT_UI, FONT_UI_BY_LANG } from "./tokens";
 
 export interface TextOpts {
   bold?: boolean;
+  /** A heading: bold serif (the stage draws headings with .scene-heading). */
+  heading?: boolean;
   mono?: boolean;
   /** Lesson language: measures with that script's font stack (the one the stage draws with). */
   lang?: Language;
@@ -33,14 +35,17 @@ if (typeof document !== "undefined" && document.fonts) {
     ['400 28px "Noto Sans"', "A"], ['700 28px "Noto Sans"', "A"], ['400 28px "Noto Sans Mono"', "A"],
     ['400 28px "Noto Sans Devanagari"', "क"], ['700 28px "Noto Sans Devanagari"', "क"],
     ['400 28px "Noto Sans Tamil"', "த"], ['700 28px "Noto Sans Tamil"', "த"],
+    ['700 28px "Noto Serif"', "A"], ['700 28px "Noto Serif Devanagari"', "क"], ['700 28px "Noto Serif Tamil"', "த"],
   ];
   for (const [spec, sample] of specs) void document.fonts.load(spec, sample).catch(() => {});
 }
 
 /** Width in px of `text` at `size` px. Falls back to an average-glyph estimate without a canvas. */
 export function textWidth(text: string, size: number, opts: TextOpts = {}): number {
-  const family = opts.mono ? FONT_CODE : opts.lang ? FONT_UI_BY_LANG[opts.lang] : FONT_UI;
-  const font = `${opts.bold ? 700 : 400} ${size}px ${family}`;
+  const family = opts.mono ? FONT_CODE
+    : opts.heading ? (opts.lang ? FONT_HEAD_BY_LANG[opts.lang] : FONT_HEAD)
+    : opts.lang ? FONT_UI_BY_LANG[opts.lang] : FONT_UI;
+  const font = `${opts.bold || opts.heading ? 700 : 400} ${size}px ${family}`;
   const key = `${font}|${text}`;
   const hit = cache.get(key);
   if (hit !== undefined) return hit;
